@@ -1,4 +1,4 @@
-package sprint_1;
+package sprint_1.managers;
 
 public class UpgradeManager {
     

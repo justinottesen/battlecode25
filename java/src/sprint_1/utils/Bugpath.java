@@ -1,6 +1,10 @@
-package sprint_1;
+package sprint_1.utils;
 
-import battlecode.common.*;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import sprint_1.robots.Robot;
 
 /**
  * Bugnav copied from my 2023 code.

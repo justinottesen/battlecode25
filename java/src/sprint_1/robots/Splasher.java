@@ -1,11 +1,11 @@
-package sprint_1;
+package sprint_1.robots;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
-public class Mopper extends Robot {
+public class Splasher extends Robot {
 
-  public Mopper(RobotController rc) {
+  public Splasher(RobotController rc) {
     super(rc);
   }
 

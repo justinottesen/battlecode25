@@ -1,10 +1,12 @@
-package sprint_1;
+package sprint_1.robots;
 
 import java.util.Random;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.MapLocation;
+
+import sprint_1.utils.Pathfinding;
 
 public class Soldier extends Robot {
   static final Random rng = new Random(6147);

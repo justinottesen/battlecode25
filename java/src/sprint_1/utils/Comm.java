@@ -1,4 +1,4 @@
-package sprint_1;
+package sprint_1.utils;
 
 public class Comm {
     

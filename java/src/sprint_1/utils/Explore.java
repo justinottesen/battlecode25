@@ -21,10 +21,10 @@ public class Explore {
     MapLocation[] checkLocs = new MapLocation[5];
     //boolean checker = false;
 
-    public Explore(MapData mapData_){
+    public Explore(){
         this.rc = Robot.rc;
         myVisionRange = GameConstants.VISION_RADIUS_SQUARED;
-        mapData = mapData_;
+        mapData = Robot.mapData;
         generateLocs();
     }
 

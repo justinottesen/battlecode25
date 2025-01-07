@@ -141,4 +141,22 @@ public class MapData {
         targetRuin = newTarget;
         return targetRuin;
     }
+
+    //this method is so we can navigate back to a tower for paint
+    public MapLocation getClosestTower(){
+        if(ruinListSize==0) return null;
+        MapLocation newTarget = null;
+        for (int i = 0; i < ruinListSize; ++i){ //iterate through every known ruin
+            //int ind = i%ruinListSize;
+            int code = (mapData[i] >>> MapData_Data_Length);
+            //rc.setIndicatorString("mapdata data: "+mapData[code]);
+            if ((mapData[code]&4) == 1 || (mapData[code]&8) == 0) continue; //if location isn't our tower, continue
+            int x = code / MAX_MAP_SIZE; int y = code % MAX_MAP_SIZE;
+            MapLocation newLoc = new MapLocation(x,y);
+            if (newTarget == null || rc.getLocation().distanceSquaredTo(newLoc) < rc.getLocation().distanceSquaredTo(newTarget)){
+                newTarget = newLoc;
+            }
+        }
+        return newTarget;
+    }
 }

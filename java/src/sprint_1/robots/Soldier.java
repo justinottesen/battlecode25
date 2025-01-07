@@ -9,14 +9,12 @@ import battlecode.common.MapLocation;
 import sprint_1.utils.Pathfinding;
 import sprint_1.managers.CaptureManager;
 import sprint_1.utils.Explore;
-import sprint_1.utils.MapData;
+//import sprint_1.utils.MapData;
 
 public class Soldier extends Robot {
-  static final Random rng = new Random(6147);
   MapLocation goal;
   Pathfinding pathfinding;
   CaptureManager captureManager;
-  MapData mapData;
   Explore explore;
 
 
@@ -26,13 +24,13 @@ public class Soldier extends Robot {
     //goal = new MapLocation(rng.nextInt(rc.getMapWidth()),rng.nextInt(rc.getMapHeight()));
     pathfinding=new Pathfinding();
     captureManager = new CaptureManager();
-    mapData = new MapData();
-    explore = new Explore(mapData);
+    explore = new Explore();
   }
 
   @Override
   public void run() throws GameActionException {
-    mapData.checkAll();
+    super.run();  //updates mapdata here
+
     MapLocation ruin = mapData.getClosestRuin();
     if(ruin==null){
       goal = explore.getExploreTarget();

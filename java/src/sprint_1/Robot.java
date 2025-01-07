@@ -5,7 +5,7 @@ import battlecode.common.RobotController;
 
 public abstract class Robot {
 
-  protected final RobotController rc;
+  protected static RobotController rc;
 
   public Robot(RobotController rc_) {
     rc = rc_;

@@ -4,6 +4,8 @@ import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
+import sprint_1.robots.*;
+
 public class RobotPlayer {
 
   private static Robot robot;

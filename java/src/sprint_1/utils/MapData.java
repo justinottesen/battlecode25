@@ -1,9 +1,11 @@
-package sprint_1;
+package sprint_1.utils;
 
 import battlecode.common.MapInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
 import battlecode.common.PaintType;
+
+import sprint_1.robots.*;
 
 /**
  * Class that stores persistent info about the map. It is updated every round.

@@ -1,4 +1,4 @@
-package sprint_1;
+package sprint_1.utils;
 
 import battlecode.common.MapLocation;
 
@@ -6,11 +6,11 @@ public class Pathfinding {
     Bugpath bugPath;
 
 
-    Pathfinding(){
+    public Pathfinding(){
         bugPath = new Bugpath();
     }
 
-    void moveTo(MapLocation target){
+    public void moveTo(MapLocation target){
         bugPath.moveTo(target);
     }
 }

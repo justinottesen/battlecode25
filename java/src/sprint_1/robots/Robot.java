@@ -1,11 +1,11 @@
-package sprint_1;
+package sprint_1.robots;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 
 public abstract class Robot {
 
-  protected static RobotController rc;
+  public static RobotController rc;
 
   public Robot(RobotController rc_) {
     rc = rc_;

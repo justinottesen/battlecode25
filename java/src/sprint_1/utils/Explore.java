@@ -21,10 +21,10 @@ public class Explore {
     MapLocation[] checkLocs = new MapLocation[5];
     //boolean checker = false;
 
-    Explore(){
+    public Explore(MapData mapData_){
         this.rc = Robot.rc;
         myVisionRange = GameConstants.VISION_RADIUS_SQUARED;
-        mapData = new MapData();
+        mapData = mapData_;
         generateLocs();
     }
 
@@ -69,7 +69,7 @@ public class Explore {
         if (exploreLoc == null) getEmergencyTarget(tries);
     }
 
-    MapLocation getExploreTarget() {
+    public MapLocation getExploreTarget() {
         //not sure what target round does here
         if (Robot.rc.getRoundNum() - targetRound > 40 || (exploreLoc != null && mapData.visited(exploreLoc.x, exploreLoc.y))) exploreLoc = null;
         if (exploreLoc == null){

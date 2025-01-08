@@ -1,5 +1,71 @@
 package sprint_1.managers;
 
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapInfo;
+import battlecode.common.MapLocation;
+import battlecode.common.PaintType;
+import battlecode.common.UnitType;
+import battlecode.schema.RobotType;
+import sprint_1.robots.Robot;
+import sprint_1.utils.MapData;
+import sprint_1.utils.Pathfinding;
+/**
+ * Capture Manager. Helps turn ruins into our towers
+ */
 public class CaptureManager {
+    static MapData mapData;
+    static Pathfinding pathfinding;
+    public CaptureManager(){
+        mapData = Robot.mapData;
+        pathfinding = new Pathfinding();
+    }
+
+    public void captureTower(){
+        MapLocation ruin = mapData.getClosestRuin();
+        if(ruin == null) return;
+        MapLocation homeTower = mapData.getClosestTower();
+        if(homeTower == null) return; //this one should never run bc the robot will always have its home tower in its mapdata
+        if(Robot.rc.getPaint()<PaintManager.PAINT_THRESHOLD){   //refill if we need it
+            try{
+                PaintManager.refill(homeTower);
+            }catch(GameActionException e){
+                e.printStackTrace();
+            }
+            if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
+                pathfinding.moveTo(homeTower);
+            }
+        }else{
+            //paint the pattern and capture the ruin
+            Direction dir = Robot.rc.getLocation().directionTo(ruin);
+            pathfinding.moveTo(ruin);
+            // Mark the pattern we need to draw to build a tower here if we haven't already.
+            MapLocation shouldBeMarked = ruin.subtract(dir);
+            try{
+                if (Robot.rc.senseMapInfo(shouldBeMarked).getMark() == PaintType.EMPTY && Robot.rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin)){
+                    Robot.rc.markTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin);
+                    //System.out.println("Trying to build a tower at " + targetLoc);
+                }
+                // Fill in any spots in the pattern with the appropriate paint.
+                for (MapInfo patternTile : Robot.rc.senseNearbyMapInfos(ruin, 8)){
+                    if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
+                        if((patternTile.getPaint() == PaintType.ENEMY_PRIMARY || patternTile.getPaint() == PaintType.ENEMY_SECONDARY) && Robot.rc.getType() == UnitType.SOLDIER) continue;  //Soldiers can't paint over enemy paint
+                        boolean useSecondaryColor = patternTile.getMark() == PaintType.ALLY_SECONDARY;
+                        if (Robot.rc.canAttack(patternTile.getMapLocation()))
+                            Robot.rc.attack(patternTile.getMapLocation(), useSecondaryColor);
+                    }
+                }
+                // Complete the ruin if we can.
+                if (Robot.rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin)){
+                    Robot.rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin);
+                    Robot.rc.setTimelineMarker("Tower built", 0, 255, 0);
+                    //System.out.println("Built a tower at " + ruin + "!");
+                }
+            }catch(GameActionException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
     
 }

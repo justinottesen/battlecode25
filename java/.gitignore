@@ -1,3 +1,9 @@
+###### EXTRA #######
+
+# These cause merge conflicts whenever devs push an update
+client_version.txt
+engine_version.txt
+
 ###### GRADLE ######
 
 .gradle

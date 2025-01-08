@@ -34,11 +34,12 @@ public class Soldier extends Robot {
     MapLocation ruin = mapData.getClosestRuin();
     if(ruin==null){
       goal = explore.getExploreTarget();
-      //rc.setIndicatorString("Moving to exploration "+goal);
+      pathfinding.moveTo(goal);
+      rc.setIndicatorString("Moving to exploration "+goal);
     }else{
-      goal = ruin;
-      //rc.setIndicatorString("Moving to ruin "+goal);
+      //goal = ruin;
+      captureManager.captureTower();
+      rc.setIndicatorString("Capturing ruin "+ruin);
     }
-    pathfinding.moveTo(goal);
   }
 }

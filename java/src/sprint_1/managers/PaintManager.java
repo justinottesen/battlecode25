@@ -7,7 +7,7 @@ import sprint_1.robots.Robot;
 import sprint_1.utils.MapData;
 
 public class PaintManager {
-    public static final int PAINT_THRESHOLD = 20;   //fine tune this value to determine when the robot should return to the home base to refill on paint
+    public static final int PAINT_THRESHOLD = 50;   //fine tune this value to determine when the robot should return to the home base to refill on paint
     static MapData mapData;
     public PaintManager(){
 

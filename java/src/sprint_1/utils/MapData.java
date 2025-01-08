@@ -59,6 +59,7 @@ public class MapData {
                         c |= 8;
                     }else{
                         c |= 12;
+                        rc.setIndicatorString("enemy tower spotted @ "+mloc+ " bool: "+((c&12) != 8));
                     }
                 }
             }catch(Exception e){
@@ -150,7 +151,9 @@ public class MapData {
             //int ind = i%ruinListSize;
             int code = (mapData[i] >>> MapData_Data_Length);
             //rc.setIndicatorString("mapdata data: "+mapData[code]);
-            if ((mapData[code]&4) == 1 || (mapData[code]&8) == 0) continue; //if location isn't our tower, continue
+            if ((mapData[code]&12) != 8) continue; //if location isn't our tower, continue
+            //note: this condition is might not still work. needs testing
+            
             int x = code / MAX_MAP_SIZE; int y = code % MAX_MAP_SIZE;
             MapLocation newLoc = new MapLocation(x,y);
             if (newTarget == null || rc.getLocation().distanceSquaredTo(newLoc) < rc.getLocation().distanceSquaredTo(newTarget)){

@@ -1,6 +1,5 @@
 package sprint_1.robots;
 
-import java.util.Map;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;

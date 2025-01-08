@@ -1,11 +1,11 @@
 package sprint_1.robots;
 
-import java.util.Random;
+//import java.util.Random;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.MapLocation;
-
+import battlecode.common.PaintType;
 import sprint_1.utils.Pathfinding;
 import sprint_1.managers.CaptureManager;
 import sprint_1.utils.Explore;
@@ -35,11 +35,14 @@ public class Soldier extends Robot {
     if(ruin==null){
       goal = explore.getExploreTarget();
       pathfinding.moveTo(goal);
-      rc.setIndicatorString("Moving to exploration "+goal);
+      //rc.setIndicatorString("Moving to exploration "+goal);
+      if(Robot.rc.senseMapInfo(Robot.rc.getLocation()).getPaint()==PaintType.EMPTY && Robot.rc.canAttack(Robot.rc.getLocation())){
+        Robot.rc.attack(Robot.rc.getLocation());
+      }
     }else{
       //goal = ruin;
       captureManager.captureTower();
-      rc.setIndicatorString("Capturing ruin "+ruin);
+      //rc.setIndicatorString("Capturing ruin "+ruin);
     }
   }
 }

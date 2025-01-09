@@ -2,12 +2,16 @@ package sprint_1.robots;
 
 import java.util.Random;
 
+import sprint_1.utils.*;
+
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
+import battlecode.common.MapInfo;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.UnitType;
+import battlecode.common.PaintType;
 
 public class Tower extends Robot {
 
@@ -15,6 +19,8 @@ public class Tower extends Robot {
   static final Random rng = new Random(6147);
   static boolean spawnOne = true;
   static boolean spawnMopper = true;
+  int soldierSpawned = 1;
+  int mopperSpawned = 1;
 
 
 
@@ -63,17 +69,29 @@ public class Tower extends Robot {
 
     // If we are losing money as fast or faster than last turn keep spending
     // If we are gaining money, we are saving so don't produce
-    if (rc.getRoundNum() < 500){
-      dir = directions[rng.nextInt(directions.length)];
-      nextLoc = rc.getLocation().add(dir);
-      if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
-        rc.buildRobot(UnitType.SOLDIER, nextLoc);
-      }
-    } else if(rc.getRoundNum() >= 500 && rc.getMoney() > 1250){
-      dir = directions[rng.nextInt(directions.length)];
-      nextLoc = rc.getLocation().add(dir);
-      if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
-        rc.buildRobot(UnitType.SOLDIER, nextLoc);
+    if (!spawnMopper && !spawnOne){
+      if (rc.getRoundNum() < 200){
+        if (soldierSpawned % 4 == 0){
+          dir = directions[rng.nextInt(directions.length)];
+          nextLoc = rc.getLocation().add(dir);
+          if (rc.canBuildRobot(UnitType.MOPPER, nextLoc)){
+            rc.buildRobot(UnitType.MOPPER, nextLoc);
+            mopperSpawned++;
+          }
+        } else {
+          dir = directions[rng.nextInt(directions.length)];
+          nextLoc = rc.getLocation().add(dir);
+          if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
+            rc.buildRobot(UnitType.SOLDIER, nextLoc);
+            soldierSpawned++;
+          }
+        }
+      } else if(rc.getRoundNum() >= 200 && rc.getMoney() > 1250){
+        dir = directions[rng.nextInt(directions.length)];
+        nextLoc = rc.getLocation().add(dir);
+        if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
+          rc.buildRobot(UnitType.SOLDIER, nextLoc);
+        }
       }
     }
 
@@ -92,8 +110,25 @@ public class Tower extends Robot {
       }
       rc.attack(lowestHealth.location);
     }
-  }
 
+    if (rc.getPaint() < 20 && rc.getMoney() > 1000){
+      boolean correctMark = true;
+      for (MapInfo patternTile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){
+        if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
+            correctMark = false;
+        }
+    }
+    if (correctMark){
+        if (Comm.requestMoneyTowerReplacement()){
+          rc.disintegrate();
+        }
+      } else {
+        Comm.requestPatternHelp();
+      }
+      
+      
+    }
+  }
 
 
 };

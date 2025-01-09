@@ -7,9 +7,11 @@ import sprint_1.utils.*;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
+import battlecode.common.MapInfo;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.UnitType;
+import battlecode.common.PaintType;
 
 public class Tower extends Robot {
 
@@ -110,13 +112,20 @@ public class Tower extends Robot {
     }
 
     if (rc.getPaint() < 20 && rc.getMoney() > 1000){
-      if (Robot.rc.canCompleteTowerPattern(rc.getType(), rc.getLocation())){
+      boolean correctMark = true;
+      for (MapInfo patternTile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){
+        if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
+            correctMark = false;
+        }
+    }
+    if (correctMark){
         if (Comm.requestMoneyTowerReplacement()){
           rc.disintegrate();
         }
       } else {
-        Comm.requestPattern
+        Comm.requestPatternHelp();
       }
+      
       
     }
   }

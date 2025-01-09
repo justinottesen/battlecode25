@@ -6,6 +6,7 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.UnitType;
 
 public class Tower extends Robot {
@@ -37,6 +38,34 @@ public class Tower extends Robot {
             rc.buildRobot(UnitType.SOLDIER, nextLoc);
             spawnOne=false;
         }
+
+
+        // Only programmed in resource towers as current gameplan does not involve defense
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(9 , rc.getTeam().opponent());
+        RobotInfo lowestHealth = enemyRobots[0];
+        // Check if there is an enemy you can one shot 
+        for (RobotInfo enemy : enemyRobots){
+          if (enemy.getHealth() < lowestHealth.getHealth()){
+            lowestHealth = enemy;
+          }
+          if(enemy.getHealth() <= rc.getType().aoeAttackStrength){
+            rc.attack(null);
+          }
+          if(enemy.getHealth() > rc.getType().aoeAttackStrength && enemy.getHealth() <= rc.getType().attackStrength){
+            rc.attack(enemy.location);
+          }
+        }
+        if (rc.getType().aoeAttackStrength * enemyRobots.length > rc.getType().attackStrength){
+          rc.attack(null);
+        } else {
+          rc.attack(lowestHealth.location);
+        }
+
+        
+
+        
+
+
   }
 
 };

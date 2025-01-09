@@ -8,6 +8,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.PaintType;
 import sprint_1.utils.Pathfinding;
 import sprint_1.managers.CaptureManager;
+import sprint_1.utils.Comm;
 import sprint_1.utils.Explore;
 //import sprint_1.utils.MapData;
 
@@ -32,7 +33,10 @@ public class Soldier extends Robot {
     super.run();  //updates mapdata here
 
     MapLocation ruin = mapData.getClosestRuin();
-    if(ruin==null){
+    MapLocation moneyTowerRequest = Comm.receiveMoneyTowerRequest();
+    if(moneyTowerRequest!=null){
+
+    }else if(ruin==null){
       goal = explore.getExploreTarget();
       pathfinding.moveTo(goal);
       //rc.setIndicatorString("Moving to exploration "+goal);

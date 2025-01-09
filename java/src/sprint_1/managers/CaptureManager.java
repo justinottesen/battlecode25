@@ -61,5 +61,17 @@ public class CaptureManager {
         }
     }
 
+    public void rebuildTower(MapLocation rebuildLocation) throws GameActionException{
+        if(rebuildLocation == null) return;
+        //check if the pattern is complete
+        pathfinding.moveTo(rebuildLocation);
+        // Complete the ruin if we can.
+        if (Robot.rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, rebuildLocation)){
+            Robot.rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, rebuildLocation);
+            Robot.rc.setTimelineMarker("Tower rebuilt", 0, 255, 0);
+            //System.out.println("Built a tower at " + ruin + "!");
+        }
+    }
+
     
 }

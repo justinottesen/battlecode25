@@ -13,6 +13,7 @@ public class Tower extends Robot {
 
   static final Random rng = new Random(6147);
   static boolean spawnOne = true;
+  static boolean spawnMopper = true;
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
         Direction.NORTH,
@@ -31,12 +32,19 @@ public class Tower extends Robot {
   @Override
   public void run() throws GameActionException {
     // Pick a direction to build in.
-        Direction dir = directions[rng.nextInt(directions.length)];
-        MapLocation nextLoc = rc.getLocation().add(dir);
-        if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc) && spawnOne){
-            rc.buildRobot(UnitType.SOLDIER, nextLoc);
-            spawnOne=false;
-        }
+    Direction dir = directions[rng.nextInt(directions.length)];
+    MapLocation nextLoc = rc.getLocation().add(dir);
+    if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc) && spawnOne){
+        rc.buildRobot(UnitType.SOLDIER, nextLoc);
+        spawnOne=false;
+    }
+
+    dir = directions[rng.nextInt(directions.length)];
+    nextLoc = rc.getLocation().add(dir);
+    if (rc.canBuildRobot(UnitType.MOPPER, nextLoc) && spawnMopper) {
+      rc.buildRobot(UnitType.MOPPER, nextLoc);
+      spawnMopper = false;
+    }
   }
 
 };

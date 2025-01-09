@@ -1,41 +1,31 @@
 package sprint_1.robots;
 
-import java.util.Random;
-
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.UnitType;
+import battlecode.common.*;
+import sprint_1.managers.MicroManager;
 
 public class Mopper extends Robot {
 
+  MicroManager microManager;
+
   public Mopper(RobotController rc) {
     super(rc);
-  }
 
-  static final Random rng = new Random(6147);
-  static boolean spawnOne = true;
-  /** Array containing all the possible movement directions. */
-  static final Direction[] directions = {
-      Direction.NORTH,
-      Direction.NORTHEAST,
-      Direction.EAST,
-      Direction.SOUTHEAST,
-      Direction.SOUTH,
-      Direction.SOUTHWEST,
-      Direction.WEST,
-      Direction.NORTHWEST,
-  };
+    microManager = new MicroManager(rc);
+  }
 
   @Override
   public void run() throws GameActionException {
-    // Pick a direction to build in.
-    Direction dir = directions[rng.nextInt(directions.length)];
-    MapLocation nextLoc = rc.getLocation().add(dir);
-    if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc) && spawnOne){
-      rc.buildRobot(UnitType.SOLDIER, nextLoc);
-      spawnOne=false;
+    microManager.doMicro();
+
+    // Mop tiles if possible
+    if (rc.isActionReady()) {
+      MapInfo[] mapInfos = rc.senseNearbyMapInfos(GameConstants.MARK_RADIUS_SQUARED); 
+      for (MapInfo info : mapInfos) {
+        if (info.getPaint() == PaintType.ENEMY_PRIMARY || info.getPaint() == PaintType.ENEMY_SECONDARY) {
+          rc.attack(info.getMapLocation());
+          break;
+        }
+      }
     }
   }
 

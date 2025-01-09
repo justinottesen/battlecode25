@@ -46,7 +46,7 @@ public class Comm {
         return false;
     }
 
-    //should be called by all robots to constantly check for money tower requests
+    //should be called by all robots to constantly check for money tower requests (designed to work for both pattern help and rebuilding)
     //returns the tower MapLocation if it received a message, null if it received no message
     public static MapLocation receiveMoneyTowerRequest() throws GameActionException{
         Message[] receivedMessages = Robot.rc.readMessages(Robot.rc.getRoundNum());

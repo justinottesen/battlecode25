@@ -4,6 +4,7 @@ package sprint_1.robots;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.PaintType;
 import sprint_1.utils.Pathfinding;
@@ -47,6 +48,18 @@ public class Soldier extends Robot {
       //goal = ruin;
       captureManager.captureTower();
       //rc.setIndicatorString("Capturing ruin "+ruin);
+    }
+
+    //attack a tower if possible
+    attackTower();
+  }
+
+  private void attackTower() throws GameActionException{
+    RobotInfo[] enemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+    for(RobotInfo enemy : enemies){
+      if(enemy.getType().isTowerType() && rc.canAttack(enemy.getLocation())){
+        rc.attack(enemy.getLocation());
+      }
     }
   }
 }

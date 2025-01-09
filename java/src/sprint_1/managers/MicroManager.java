@@ -149,17 +149,3 @@ public class MicroManager {
     }
   }
 }
-
-/*
- * Ally Ally - Done
- * Ally Enemy - Done
- * Ally Neutral - Done
- * 
- * Enemy Ally - Done
- * Enemy Enemy - Done
- * Enemy Neutral
- * 
- * Neutral Ally - Done
- * Neutral Enemy
- * Neutral Neutral - Done
- */

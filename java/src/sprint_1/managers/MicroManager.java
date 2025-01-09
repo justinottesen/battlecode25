@@ -123,6 +123,14 @@ public class MicroManager {
       if (this.canMove && !other.canMove) { return true; }
       if (!this.canMove && other.canMove) { return false; }
 
+      // Move towards enemy paint (but not onto it)
+      if (this.minEnemyPaintDist < other.minEnemyPaintDist && this.minEnemyPaintDist > 0) { return true; }
+      if (this.minEnemyPaintDist > other.minEnemyPaintDist && other.minEnemyPaintDist > 0) { return false; }
+
+      // Move towards friends
+      if (this.minAllyDist < other.minAllyDist) { return true; }
+      if (this.minAllyDist > other.minAllyDist) { return false; }
+      
       // Paint Type
       if (!paintType.equals(other.paintType)) {
         // Prefer Friendly paint over others
@@ -132,15 +140,7 @@ public class MicroManager {
         // Prefer Neutral paint over enemy
         return this.paintType.equals(PaintType.EMPTY);
       }
-
-      // Move towards enemy paint
-      if (this.minEnemyPaintDist < other.minEnemyPaintDist) { return true; }
-      if (this.minEnemyPaintDist > other.minEnemyPaintDist) { return false; }
-
-      // Move towards friends
-      if (this.minAllyDist < other.minAllyDist) { return true; }
-      if (this.minAllyDist > other.minAllyDist) { return false; }
-
+      
       // Prefer not moving over moving
       if (this.dir == Direction.CENTER) { return true; }
       if (other.dir == Direction.CENTER) { return false; }

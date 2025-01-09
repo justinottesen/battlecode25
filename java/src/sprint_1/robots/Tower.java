@@ -17,6 +17,7 @@ public class Tower extends Robot {
   static boolean spawnMopper = true;
 
 
+
     /** Array containing all the possible movement directions. */
     static final Direction[] directions = {
         Direction.NORTH,
@@ -30,58 +31,60 @@ public class Tower extends Robot {
     };
   public Tower(RobotController rc) {
     super(rc);
+
   }
 
   @Override
   public void run() throws GameActionException {
+    Direction dir;
+    MapLocation nextLoc;
+    if (spawnOne){
+      dir = directions[rng.nextInt(directions.length)];
+      nextLoc = rc.getLocation().add(dir);
+      if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
+          rc.buildRobot(UnitType.SOLDIER, nextLoc);
+          spawnOne = false;
+      }
+    }
+
+    if (spawnMopper){
+      dir = directions[rng.nextInt(directions.length)];
+      nextLoc = rc.getLocation().add(dir);
+      if (rc.canBuildRobot(UnitType.MOPPER, nextLoc)) {
+        rc.buildRobot(UnitType.MOPPER, nextLoc);
+        spawnMopper = false;
+      }
+    }
+
+
     // Pick a direction to build in.
 
 
-    Direction dir = directions[rng.nextInt(directions.length)];
-    MapLocation nextLoc = rc.getLocation().add(dir);
-    if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc) && spawnOne){
+
+    // If we are losing money as fast or faster than last turn keep spending
+    // If we are gaining money, we are saving so don't produce
+    if(rc.getRoundNum() > 500 && rc.getMoney() > 1250){
+      dir = directions[rng.nextInt(directions.length)];
+      nextLoc = rc.getLocation().add(dir);
+      if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
         rc.buildRobot(UnitType.SOLDIER, nextLoc);
-        spawnOne=false;
+      }
     }
 
-    dir = directions[rng.nextInt(directions.length)];
-    nextLoc = rc.getLocation().add(dir);
-    if (rc.canBuildRobot(UnitType.MOPPER, nextLoc) && spawnMopper) {
-      rc.buildRobot(UnitType.MOPPER, nextLoc);
-      spawnMopper = false;
-    }
-    
 
     // Only programmed in towers without defense boost as current gameplan does not involve defense
     RobotInfo[] enemyRobots = rc.senseNearbyRobots(rc.getType().actionRadiusSquared , rc.getTeam().opponent());
-    RobotInfo lowestHealth = enemyRobots[0];
-    boolean attacked = false;
+    
+    if (enemyRobots.length > 0){
+      RobotInfo lowestHealth = enemyRobots[0];
+      rc.attack(null);
     // Check if there is an enemy you can one shot 
-    for (RobotInfo enemy : enemyRobots){
-      if (enemy.getHealth() < lowestHealth.getHealth()){
-        lowestHealth = enemy;
-      }
-      if(enemy.getHealth() <= rc.getType().aoeAttackStrength){
-        rc.attack(null);
-        attacked = true;
-        break;
-      }
-    }
-    if (!attacked){
-      for (RobotInfo enemy : enemyRobots){ 
-        if(enemy.getHealth() > rc.getType().aoeAttackStrength && enemy.getHealth() <= rc.getType().attackStrength){
-          rc.attack(enemy.location);
-          attacked = true;
-          break;
+      for (RobotInfo enemy : enemyRobots){
+        if (enemy.getHealth() < lowestHealth.getHealth() && enemy.getHealth() >= rc.getType().attackStrength){
+          lowestHealth = enemy;
         }
       }
-    }
-    if (!attacked){
-      if (rc.getType().aoeAttackStrength * enemyRobots.length > rc.getType().attackStrength){
-        rc.attack(null);
-      } else {
-        rc.attack(lowestHealth.location);
-      }
+      rc.attack(lowestHealth.location);
     }
   }
 

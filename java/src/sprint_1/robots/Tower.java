@@ -63,7 +63,13 @@ public class Tower extends Robot {
 
     // If we are losing money as fast or faster than last turn keep spending
     // If we are gaining money, we are saving so don't produce
-    if(rc.getRoundNum() > 500 && rc.getMoney() > 1250){
+    if (rc.getRoundNum() < 500){
+      dir = directions[rng.nextInt(directions.length)];
+      nextLoc = rc.getLocation().add(dir);
+      if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
+        rc.buildRobot(UnitType.SOLDIER, nextLoc);
+      }
+    } else if(rc.getRoundNum() >= 500 && rc.getMoney() > 1250){
       dir = directions[rng.nextInt(directions.length)];
       nextLoc = rc.getLocation().add(dir);
       if (rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){

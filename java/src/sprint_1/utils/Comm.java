@@ -11,7 +11,7 @@ public class Comm {
     final static int MAP_SZ_SQ = MAX_MAP_SIZE * MAX_MAP_SIZE;
 
     //returns true if it sends the message, false if it found no robot to send the message to
-    public static boolean requestPaintTowerReplacement() throws GameActionException{
+    public static boolean requestMoneyTowerReplacement() throws GameActionException{
         RobotInfo[] nearbyRobots = Robot.rc.senseNearbyRobots(-1,Robot.rc.getTeam());
         if(nearbyRobots.length==0) return false;    //no nearby robots, return false
 
@@ -28,7 +28,7 @@ public class Comm {
     }
 
     //returns the tower MapLocation if it received a message, null if it received no message
-    public static MapLocation receivePaintTowerRequest() throws GameActionException{
+    public static MapLocation receiveMoneyTowerRequest() throws GameActionException{
         Message[] receivedMessages = Robot.rc.readMessages(Robot.rc.getRoundNum());
         if(receivedMessages.length==0) return null;
 

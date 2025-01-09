@@ -36,7 +36,7 @@ public class Comm {
         int message = -1;
 
         while(index<receivedMessages.length){
-            message = receivedMessages[i].getBytes();
+            message = receivedMessages[index].getBytes();
             if((message & 7) == 0) break;  //only read the message
         }
         if(message==-1) return null;    //no message had the 3 bit message type 000

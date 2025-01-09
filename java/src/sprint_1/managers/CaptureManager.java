@@ -15,9 +15,12 @@ import sprint_1.utils.Pathfinding;
 public class CaptureManager {
     static MapData mapData;
     static Pathfinding pathfinding;
+    static UnitType buildTowerType;
+
     public CaptureManager(){
         mapData = Robot.mapData;
         pathfinding = new Pathfinding();
+        buildTowerType = UnitType.LEVEL_ONE_MONEY_TOWER;
     }
 
     public void captureTower() throws GameActionException{
@@ -37,7 +40,7 @@ public class CaptureManager {
             // Mark the pattern we need to draw to build a tower here if we haven't already.
             MapLocation shouldBeMarked = ruin.subtract(dir);
             if (Robot.rc.canSenseLocation(shouldBeMarked) && Robot.rc.senseMapInfo(shouldBeMarked).getMark() == PaintType.EMPTY && Robot.rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin)){
-                Robot.rc.markTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin);
+                Robot.rc.markTowerPattern(buildTowerType, ruin);
                 //System.out.println("Trying to build a tower at " + targetLoc);
             }
             // Fill in any spots in the pattern with the appropriate paint.
@@ -50,8 +53,8 @@ public class CaptureManager {
                 }
             }
             // Complete the ruin if we can.
-            if (Robot.rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin)){
-                Robot.rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin);
+            if (Robot.rc.canCompleteTowerPattern(buildTowerType, ruin)){
+                Robot.rc.completeTowerPattern(buildTowerType, ruin);
                 Robot.rc.setTimelineMarker("Tower built", 0, 255, 0);
                 //System.out.println("Built a tower at " + ruin + "!");
             }

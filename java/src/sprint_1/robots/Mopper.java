@@ -17,7 +17,7 @@ public class Mopper extends Robot {
   @Override
   public void run() throws GameActionException {
     microManager.doMicro();
-
+    
     // Mop tiles if possible
     if (rc.isActionReady()) {
       MapInfo[] mapInfos = rc.senseNearbyMapInfos(GameConstants.MARK_RADIUS_SQUARED); 

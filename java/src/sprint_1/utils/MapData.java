@@ -162,4 +162,11 @@ public class MapData {
         }
         return newTarget;
     }
+    /*
+    public MapLocation getClosestResourcePatternCandidateLocation(){
+        //requires a 5x5 space with no enemy paint and no walls
+        //additionally, requires no tower pattern overlap
+
+    }
+        */
 }

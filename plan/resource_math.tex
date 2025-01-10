@@ -114,9 +114,9 @@
 
   Because new towers have such a large paint reward, the limiting resource will likely be chips. Special resource patterns should be created wherever painting occurs, but towers should be prioritized.
 
-  \begin{center}
-    LOOK MORE INTO THIS
-  \end{center}
+  \medskip
+
+  The other benefit of following the above strategy of prioritizing more towers over tower upgrades is that the resource boost is per tower. With one tower, the overall resource production rate increases by 3, but with two, it increases by 6.
 
   \section*{Disintegration}
 
@@ -158,10 +158,20 @@
     \end{tikzpicture}
   \end{center}
 
+  With SRPs, this makes the disintegration strategy less effective. The following table shows the number of SRPs along with the chip and/or paint production rates:
   \begin{center}
-    SRPs SHOULD SHIFT THIS MATH, LOOK INTO THOSE CALCULATIONS
+    \begin{tabular}{c | c | c | c}
+      SRPs & Money Tower Chips & Money Tower Paint & Paint Tower Paint \\
+      \hline
+      0 & 20 & 10 & 5 \\
+      1 & 23 & 11.5 & 8 \\
+      2 & 26 & 13 & 11 \\
+      3 & 29 & 14.5 & 14 \\
+      4 & 32 & 16 & 17
+    \end{tabular}
   \end{center}
-
+  So, with 4 or more SRPs, paint towers are more effective for their intended purpose.
+    
   \section*{Robots}
 
   The following table shows the costs of creating different robot types:

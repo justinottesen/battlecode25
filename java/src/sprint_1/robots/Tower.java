@@ -21,6 +21,7 @@ public class Tower extends Robot {
   static boolean spawnMopper = true;
   int soldierSpawned = 1;
   int mopperSpawned = 1;
+  int firstTurn = -1;
 
 
 
@@ -37,7 +38,7 @@ public class Tower extends Robot {
     };
   public Tower(RobotController rc) {
     super(rc);
-
+    firstTurn = rc.getRoundNum();
   }
 
   @Override
@@ -110,23 +111,22 @@ public class Tower extends Robot {
       }
       rc.attack(lowestHealth.location);
     }
-
-    if (rc.getPaint() < 20 && rc.getMoney() > 1000){
-      boolean correctMark = true;
-      for (MapInfo patternTile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){
-        if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
-            correctMark = false;
-        }
-    }
-    if (correctMark){
-        if (Comm.requestMoneyTowerReplacement()){
-          rc.disintegrate();
-        }
-      } else {
-        Comm.requestPatternHelp();
+    if (firstTurn > 2){
+      if (rc.getPaint() < 20 && rc.getMoney() > 1000){
+        boolean correctMark = true;
+        for (MapInfo patternTile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){
+          if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
+              correctMark = false;
+          }
       }
-      
-      
+      if (correctMark){
+          if (Comm.requestMoneyTowerReplacement()){
+            rc.disintegrate();
+          }
+        } else {
+          Comm.requestPatternHelp();
+        }
+      }
     }
   }
 

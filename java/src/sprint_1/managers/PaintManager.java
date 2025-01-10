@@ -14,7 +14,7 @@ public class PaintManager {
     }
 
     public static void refill(MapLocation homeTower) throws GameActionException{
-        if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2) return;   //too far away from tower, cannot refill
+        if(homeTower==null||Robot.rc.getLocation().distanceSquaredTo(homeTower)>2) return;   //too far away from tower, cannot refill
         if(Robot.rc.canSenseRobotAtLocation(homeTower)){
             RobotInfo homeTowerInfo = Robot.rc.senseRobotAtLocation(homeTower);
 

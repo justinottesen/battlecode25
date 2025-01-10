@@ -36,16 +36,17 @@ public class Soldier extends Robot {
 
     MapLocation ruin = mapData.getClosestRuin();
     MapLocation moneyTowerRequest = Comm.receiveMoneyTowerRequest();
-    
-    if(Robot.rc.getPaint()<PaintManager.PAINT_THRESHOLD){   //refill if we need it
+    if(moneyTowerRequest!=null) captureManager.setRebuildLocation(moneyTowerRequest);
+    if(captureManager.getRebuildLocation()!=null){
+      captureManager.rebuildTower();
+      Robot.rc.setIndicatorString("Attempting to rebuild tower at "+captureManager.getRebuildLocation());
+    }else if(Robot.rc.getPaint()<PaintManager.PAINT_THRESHOLD){   //refill if we need it
       MapLocation homeTower = mapData.getClosestTower();
       PaintManager.refill(homeTower);
       if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
           pathfinding.moveTo(homeTower);
       }
-    }else if(moneyTowerRequest!=null){
-      captureManager.rebuildTower(moneyTowerRequest);
-    }else if(ruin==null){
+    }else if(ruin==null || (captureManager.isInIgnoreList(ruin)&&captureManager.betterBuilderAvailable(ruin))){
       goal = explore.getExploreTarget();
       pathfinding.moveTo(goal);
       //rc.setIndicatorString("Moving to exploration "+goal);

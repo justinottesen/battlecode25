@@ -117,15 +117,15 @@ public class Tower extends Robot {
         if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
             correctMark = false;
         }
-    }
-    if (correctMark){
+      }
+      
+      if (correctMark){
         if (Comm.requestMoneyTowerReplacement()){
           rc.disintegrate();
         }
       } else {
         Comm.requestPatternHelp();
       }
-      
       
     }
   }

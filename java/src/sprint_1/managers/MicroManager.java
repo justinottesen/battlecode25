@@ -82,7 +82,7 @@ public class MicroManager {
 
     if (bestMicro.dir == Direction.CENTER) { return true; }
     
-    if (bestMicro.canMove) {  
+    if (rc.canMove(bestMicro.dir)) {  
       rc.move(bestMicro.dir);
       return true;
     }
@@ -105,11 +105,13 @@ public class MicroManager {
       this.dir = dir;
       this.location = rc.getLocation().add(dir);
       this.canMove = !(dir != Direction.CENTER && !rc.canMove(dir));
+      if (!canMove) { return; }
       MapInfo info = rc.senseMapInfo(this.location);
       paintType = info.getPaint();
     }
 
     void updateRobot(RobotInfo robot) {
+      if (!canMove) { return; }
       int dist = robot.getLocation().distanceSquaredTo(location);
       // Ignore Towers for now
       if (robot.getType().isTowerType()) { return; }
@@ -121,6 +123,7 @@ public class MicroManager {
     }
 
     void updateMapInfo(MapInfo mapInfo) {
+      if (!canMove) { return; }
       // Only care about enemy paint for now
       if (mapInfo.getPaint().isAlly() || mapInfo.getPaint() == PaintType.EMPTY) { return; }
       int dist = mapInfo.getMapLocation().distanceSquaredTo(location);
@@ -130,7 +133,7 @@ public class MicroManager {
     boolean isBetterThan(MicroInfo other) {
 
       // Prefer spaces which can actually be moved to
-      if (this.canMove && !other.canMove) { return true; }
+      if (!other.canMove) { return true; }
       if (!this.canMove && other.canMove) { return false; }
 
       // Move towards enemy paint (but not onto it)

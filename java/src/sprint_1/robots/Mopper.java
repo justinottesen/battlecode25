@@ -41,10 +41,9 @@ public class Mopper extends Robot {
       pathfinding.moveTo(explore.getExploreTarget());
     }
 
-    RobotInfo[] enemyRobotsWithinMopSwingRange = rc.senseNearbyRobots(2,rc.getTeam().opponent());
-    if(enemyRobotsWithinMopSwingRange.length>0){
-      Direction mopSwingDirection = rc.getLocation().directionTo(enemyRobotsWithinMopSwingRange[0].getLocation());
-      if(rc.canMopSwing(mopSwingDirection)) rc.mopSwing(mopSwingDirection);
+    if (rc.isActionReady()){
+      Direction mopSwingDirection = pickMopSwingDirection();
+      if(mopSwingDirection!=Direction.CENTER && rc.canMopSwing(mopSwingDirection)) rc.mopSwing(mopSwingDirection);
     }
 
     // Mop tiles if possible
@@ -73,6 +72,27 @@ public class Mopper extends Robot {
         }
       }
     }
+  }
+
+  private Direction pickMopSwingDirection() throws GameActionException{
+    RobotInfo[] enemyRobotsWithinMopSwingRange = rc.senseNearbyRobots(2,rc.getTeam().opponent());
+    if(enemyRobotsWithinMopSwingRange.length==0)  return Direction.CENTER;
+    Direction[] cardinaDirections = Direction.cardinalDirections();
+
+    int mostEnemiesHit = 0;
+    Direction chosenDirection = Direction.CENTER;
+    for(Direction d : cardinaDirections){
+      int directionEnemiesHit = 0;
+      for(RobotInfo enemy : enemyRobotsWithinMopSwingRange){
+        Direction dirToEnemy = rc.getLocation().directionTo(enemy.getLocation());
+        if(dirToEnemy.dx==d.dx || dirToEnemy.dy==d.dy) ++directionEnemiesHit;
+      }
+      if(directionEnemiesHit>mostEnemiesHit){
+        mostEnemiesHit=directionEnemiesHit;
+        chosenDirection=d;
+      }
+    }
+    return chosenDirection;
   }
 
 };

@@ -42,9 +42,11 @@ public class Soldier extends Robot {
       Robot.rc.setIndicatorString("Attempting to rebuild tower at "+captureManager.getRebuildLocation());
     }else if(Robot.rc.getPaint()<PaintManager.PAINT_THRESHOLD){   //refill if we need it
       MapLocation homeTower = mapData.getClosestTower();
-      PaintManager.refill(homeTower);
-      if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
-          pathfinding.moveTo(homeTower);
+      if(homeTower!=null){
+        PaintManager.refill(homeTower);
+        if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
+            pathfinding.moveTo(homeTower);
+        }
       }
     }else if(ruin==null || (captureManager.isInIgnoreList(ruin)&&captureManager.betterBuilderAvailable(ruin))){
       goal = explore.getExploreTarget();

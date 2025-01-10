@@ -9,6 +9,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.PaintType;
 import sprint_1.utils.Pathfinding;
 import sprint_1.managers.CaptureManager;
+import sprint_1.managers.PaintManager;
 import sprint_1.utils.Comm;
 import sprint_1.utils.Explore;
 //import sprint_1.utils.MapData;
@@ -35,8 +36,15 @@ public class Soldier extends Robot {
 
     MapLocation ruin = mapData.getClosestRuin();
     MapLocation moneyTowerRequest = Comm.receiveMoneyTowerRequest();
-    if(moneyTowerRequest!=null){
-
+    
+    if(Robot.rc.getPaint()<PaintManager.PAINT_THRESHOLD){   //refill if we need it
+      MapLocation homeTower = mapData.getClosestTower();
+      PaintManager.refill(homeTower);
+      if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
+          pathfinding.moveTo(homeTower);
+      }
+    }else if(moneyTowerRequest!=null){
+      captureManager.rebuildTower(moneyTowerRequest);
     }else if(ruin==null){
       goal = explore.getExploreTarget();
       pathfinding.moveTo(goal);

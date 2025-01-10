@@ -8,6 +8,7 @@ import battlecode.common.MapLocation;
 import battlecode.common.PaintType;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
+import battlecode.common.UnitType;
 
 public class MicroManager {
 
@@ -26,8 +27,23 @@ public class MicroManager {
     // Can't do anything if on cooldown
     if (!rc.isMovementReady()) { return false; }
 
-    RobotInfo[] units = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-    if (units.length == 0) return false;
+    RobotInfo[] robots = rc.senseNearbyRobots();
+    int interesting_count = 0;
+    for (RobotInfo robot : robots) {
+      // All enemies are interesting
+      if (robot.getTeam() == rc.getTeam().opponent()) {
+        interesting_count++;
+        continue;
+      }
+      // Friendly moppers & towers are not interesting
+      if (robot.getType().isTowerType() || robot.getType() == UnitType.MOPPER) {
+        continue;
+      }
+      interesting_count++;
+    }
+    if (interesting_count == 0) {
+      return false;
+    }
     
     // Allocate info for 3x3 grid
     microInfos = new MicroInfo[9];
@@ -42,7 +58,6 @@ public class MicroManager {
     microInfos[8] = new MicroInfo(Direction.CENTER);
 
     // Check for enemies and allies
-    RobotInfo[] robots = rc.senseNearbyRobots();
     for (RobotInfo robot : robots) {
       microInfos[0].updateRobot(robot);
       microInfos[1].updateRobot(robot);

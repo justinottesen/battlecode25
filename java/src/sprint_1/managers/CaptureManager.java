@@ -28,36 +28,29 @@ public class CaptureManager {
         if(ruin == null) return;
         MapLocation homeTower = mapData.getClosestTower();
         if(homeTower == null) return; //this one should never run bc the robot will always have its home tower in its mapdata
-        if(Robot.rc.getPaint()<PaintManager.PAINT_THRESHOLD){   //refill if we need it
-            PaintManager.refill(homeTower);
-            if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
-                pathfinding.moveTo(homeTower);
+        //paint the pattern and capture the ruin
+        Direction dir = Robot.rc.getLocation().directionTo(ruin);
+        pathfinding.moveTo(ruin);
+        // Mark the pattern we need to draw to build a tower here if we haven't already.
+        MapLocation shouldBeMarked = ruin.subtract(dir);
+        if (Robot.rc.canSenseLocation(shouldBeMarked) && Robot.rc.senseMapInfo(shouldBeMarked).getMark() == PaintType.EMPTY && Robot.rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin)){
+            Robot.rc.markTowerPattern(buildTowerType, ruin);
+            //System.out.println("Trying to build a tower at " + targetLoc);
+        }
+        // Fill in any spots in the pattern with the appropriate paint.
+        for (MapInfo patternTile : Robot.rc.senseNearbyMapInfos(ruin, 8)){
+            if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
+                if((patternTile.getPaint() == PaintType.ENEMY_PRIMARY || patternTile.getPaint() == PaintType.ENEMY_SECONDARY) && Robot.rc.getType() == UnitType.SOLDIER) continue;  //Soldiers can't paint over enemy paint
+                boolean useSecondaryColor = patternTile.getMark() == PaintType.ALLY_SECONDARY;
+                if (Robot.rc.canAttack(patternTile.getMapLocation()))
+                    Robot.rc.attack(patternTile.getMapLocation(), useSecondaryColor);
             }
-        }else{
-            //paint the pattern and capture the ruin
-            Direction dir = Robot.rc.getLocation().directionTo(ruin);
-            pathfinding.moveTo(ruin);
-            // Mark the pattern we need to draw to build a tower here if we haven't already.
-            MapLocation shouldBeMarked = ruin.subtract(dir);
-            if (Robot.rc.canSenseLocation(shouldBeMarked) && Robot.rc.senseMapInfo(shouldBeMarked).getMark() == PaintType.EMPTY && Robot.rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin)){
-                Robot.rc.markTowerPattern(buildTowerType, ruin);
-                //System.out.println("Trying to build a tower at " + targetLoc);
-            }
-            // Fill in any spots in the pattern with the appropriate paint.
-            for (MapInfo patternTile : Robot.rc.senseNearbyMapInfos(ruin, 8)){
-                if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
-                    if((patternTile.getPaint() == PaintType.ENEMY_PRIMARY || patternTile.getPaint() == PaintType.ENEMY_SECONDARY) && Robot.rc.getType() == UnitType.SOLDIER) continue;  //Soldiers can't paint over enemy paint
-                    boolean useSecondaryColor = patternTile.getMark() == PaintType.ALLY_SECONDARY;
-                    if (Robot.rc.canAttack(patternTile.getMapLocation()))
-                        Robot.rc.attack(patternTile.getMapLocation(), useSecondaryColor);
-                }
-            }
-            // Complete the ruin if we can.
-            if (Robot.rc.canCompleteTowerPattern(buildTowerType, ruin)){
-                Robot.rc.completeTowerPattern(buildTowerType, ruin);
-                Robot.rc.setTimelineMarker("Tower built", 0, 255, 0);
-                //System.out.println("Built a tower at " + ruin + "!");
-            }
+        }
+        // Complete the ruin if we can.
+        if (Robot.rc.canCompleteTowerPattern(buildTowerType, ruin)){
+            Robot.rc.completeTowerPattern(buildTowerType, ruin);
+            Robot.rc.setTimelineMarker("Tower built", 0, 255, 0);
+            //System.out.println("Built a tower at " + ruin + "!");
         }
     }
 

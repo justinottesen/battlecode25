@@ -19,6 +19,9 @@ public class MicroManager {
     // Can't do anything if on cooldown
     if (!rc.isMovementReady()) { return false; }
 
+    RobotInfo[] units = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+    if (units.length == 0) return false;
+    
     // Allocate info for 3x3 grid
     microInfos = new MicroInfo[9];
     microInfos[0] = new MicroInfo(Direction.NORTH);

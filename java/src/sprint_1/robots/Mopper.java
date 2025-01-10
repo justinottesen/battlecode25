@@ -25,7 +25,7 @@ public class Mopper extends Robot {
     if(Robot.rc.getPaint()<PaintManager.PAINT_THRESHOLD){   //refill if we need it
       MapLocation homeTower = mapData.getClosestTower();
       PaintManager.refill(homeTower);
-      if(Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
+      if(homeTower!=null && Robot.rc.getLocation().distanceSquaredTo(homeTower)>2){
           pathfinding.moveTo(homeTower);
       }
       //rc.setIndicatorString("Refilling to "+homeTower);

@@ -213,12 +213,14 @@ public class Bugpath {
             if (rc.canMove(dir2)) dist2 = newLoc.distanceSquaredTo(prevTarget);
             if (dist1 < dist && dist1 < dist2) {
                 //rotateRightAux = true;
-                rc.move(dir1);
+                if(rc.canMove(dir1))
+                    rc.move(dir1);
                 return true;
             }
             if (dist2 < dist && dist2 < dist1) {
                 //rotateRightAux = false;
-                rc.move(dir2);
+                if(rc.canMove(dir2))
+                    rc.move(dir2);
                 return true;
             }
         } catch(Throwable t){

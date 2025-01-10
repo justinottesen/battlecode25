@@ -12,6 +12,7 @@ import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.UnitType;
 import battlecode.common.PaintType;
+import battlecode.common.UnitType;
 
 public class Tower extends Robot {
 
@@ -111,7 +112,7 @@ public class Tower extends Robot {
       }
       rc.attack(lowestHealth.location);
     }
-    if (firstTurn > 2){
+    if (firstTurn > 2 && rc.getType() == UnitType.LEVEL_ONE_MONEY_TOWER){
       if (rc.getPaint() < 20 && rc.getMoney() > 1000){
         boolean correctMark = true;
         for (MapInfo patternTile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){

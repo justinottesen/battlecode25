@@ -2,11 +2,10 @@ package sprint_1.utils;
 
 import battlecode.common.MapInfo;
 import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
 import battlecode.common.PaintType;
+import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
-
-import sprint_1.robots.*;
+import sprint_1.robots.Robot;
 
 /**
  * Class that stores persistent info about the map. It is updated every round.
@@ -26,8 +25,8 @@ public class MapData {
     MapLocation targetRuin = null;
 
     int[] mapData = new int[MAP_SZ_SQ];
-    //first bit = seen / not seen
-    //second bit = wall / not wall
+    //first bit = seen(1) / not seen(0)
+    //second bit = wall(1) / not wall(0)
     //third-fourth bit =         00 = no ruin, 01 = unclaimed ruin, 10 = our ruin, 11 opponent ruin
     //fifth-sixth bit paint     00 = no paint, 01 = your primary paint, 10 = your secondary paint, 11 = opponent paint
     //seventh-eigth bit  mark    00 = no mark, 01 = primary mark, 10, secondary mark
@@ -163,12 +162,25 @@ public class MapData {
         return newTarget;
     }
     
-    /*
+    
     public boolean isResourcePatternCandidateLocation(MapLocation m){
         //requires a 5x5 space with no enemy paint and no walls
         //additionally, requires no tower pattern overlap
-        int code = m.x*MAX_MAP_SIZE + m.y;
-
+        int index = m.x*MAX_MAP_SIZE + m.y;
+        for (int i = -2; i < 3; i++){
+            for (int j = -2; j < 3; j++){
+                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 1) == 0){
+                    return false;
+                }
+                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 2) == 2){
+                    return false;
+                }
+                if (!((mapData[index + j + (i * MAX_MAP_SIZE)] & 24) == 0)){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
-    */
+    
 }

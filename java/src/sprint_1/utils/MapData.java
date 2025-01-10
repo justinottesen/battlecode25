@@ -172,10 +172,10 @@ public class MapData {
                 if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 1) == 0){
                     return false;
                 }
-                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 2) == 1){
+                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 2) == 2){
                     return false;
                 }
-                if ((mapData[index + j + (i * MAX_MAP_SIZE)] | 24) != 0){
+                if (!((mapData[index + j + (i * MAX_MAP_SIZE)] & 24) == 0)){
                     return false;
                 }
             }

@@ -1,6 +1,13 @@
 package sprint_1.managers;
 
-import battlecode.common.*;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
+import battlecode.common.MapInfo;
+import battlecode.common.MapLocation;
+import battlecode.common.PaintType;
+import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 
 public class MicroManager {
 
@@ -63,7 +70,8 @@ public class MicroManager {
     }
     
     // Pick best direction
-    MicroInfo bestMicro = microInfos[0];
+    MicroInfo bestMicro = microInfos[8]; // Start with 8 (center, guaranteed can move
+    if (microInfos[0].isBetterThan(bestMicro)) { bestMicro = microInfos[8]; }
     if (microInfos[1].isBetterThan(bestMicro)) { bestMicro = microInfos[1]; }
     if (microInfos[2].isBetterThan(bestMicro)) { bestMicro = microInfos[2]; }
     if (microInfos[3].isBetterThan(bestMicro)) { bestMicro = microInfos[3]; }
@@ -71,7 +79,6 @@ public class MicroManager {
     if (microInfos[5].isBetterThan(bestMicro)) { bestMicro = microInfos[5]; }
     if (microInfos[6].isBetterThan(bestMicro)) { bestMicro = microInfos[6]; }
     if (microInfos[7].isBetterThan(bestMicro)) { bestMicro = microInfos[7]; }
-    if (microInfos[8].isBetterThan(bestMicro)) { bestMicro = microInfos[8]; }
 
     if (bestMicro.dir == Direction.CENTER) { return true; }
     

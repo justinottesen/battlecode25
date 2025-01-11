@@ -4,8 +4,8 @@ import battlecode.common.*;
 
 public class Soldier extends Robot {
 
-  public Soldier(RobotController rc) {
-    super(rc);
+  public Soldier(RobotController rc_) {
+    super(rc_);
   }
 
   public void run() {}

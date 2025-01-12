@@ -65,6 +65,8 @@ public class Pathfinding {
   /**
    * Gets the next move that should be made to reach the target
    * 
+   * TODO: Add a limit to the number of calculations per round? Or a bytecode stopping point?
+   * 
    * @return The direction the robot should take to reach the target
    */
   public Direction getMove() {

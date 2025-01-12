@@ -88,11 +88,10 @@ public class Pathfinding {
     // Check the cache to see if we have calculated this before
     MapLocation loc = current;
     MapLocation prev = null;
-    while (!stepCache.empty() && !current.equals(stepCache.front())) { System.out.println("Dequeue"); stepCache.dequeue(); }
+    while (!stepCache.empty() && !current.equals(stepCache.front())) { stepCache.dequeue(); }
     if (current.equals(stepCache.front())) {
       loc = stepCache.back();
       stepCache.dequeue();
-      System.out.println("Using step cache");
     }
     int count = 0;
 
@@ -131,7 +130,6 @@ public class Pathfinding {
       } catch (Exception e) {
         e.printStackTrace();
       }
-      System.out.println("Calculated " + count + " moves this time");
       return move;
     }
     loc = prev;

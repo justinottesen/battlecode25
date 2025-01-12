@@ -22,6 +22,8 @@ public class Tower extends Robot {
     
     // Spawn Robots
     spawnRobots();
+
+    // TODO: Add communication logic for the map symmetry type
   }
 
   /**

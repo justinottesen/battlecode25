@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Mopper extends Robot {
 
-  public Mopper(RobotController rc_) {
+  public Mopper(RobotController rc_) throws GameActionException {
     super(rc_);
   }
 

@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Splasher extends Robot {
 
-  public Splasher(RobotController rc_) {
+  public Splasher(RobotController rc_) throws GameActionException {
     super(rc_);
   }
 

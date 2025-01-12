@@ -4,11 +4,11 @@ import battlecode.common.*;
 
 public class Tower extends Robot {
 
-  protected final int TOWER_ATTACK_RADIUS;
+  private final int TOWER_ATTACK_RADIUS;
 
-  protected final MapLocation LOCATION;
+  private final MapLocation LOCATION;
 
-  public Tower(RobotController rc_) {
+  public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
 
     TOWER_ATTACK_RADIUS = rc.getType().actionRadiusSquared; // NOTE: This will have to change if upgrades modify radius

@@ -8,14 +8,16 @@ public class Pathfinding {
   private final RobotController rc;
 
   private Stack<MapLocation> targets;
+  private Queue<MapLocation> stepCache;
 
-  private final int MAX_TARGETS = 3;
-  private final int MAX_PATH_LENGTH = 10;
+  private final int MAX_TARGETS = 3; // Recursive calls using Bug Navigation
+  private final int MAX_PATH_LENGTH = 10; // Number of steps to current target
 
   public Pathfinding(RobotController rc_, MapData mapData_) {
     mapData = mapData_;
     rc = rc_;
     targets = new Stack<MapLocation>(MAX_TARGETS);
+    stepCache = new Queue<MapLocation>(MAX_PATH_LENGTH);
   }
 
   /**
@@ -35,13 +37,14 @@ public class Pathfinding {
     // New target
     targets.clear();
     if (target != null) { targets.push(target); }
+    stepCache.clear();
     return true;
   }
 
   /**
    * Clears the current target
    */
-  public void clearTarget() { targets.clear(); }
+  public void clearTarget() { targets.clear(); stepCache.clear(); }
 
   /**
    * Gets the target destination for pathfinding
@@ -82,37 +85,54 @@ public class Pathfinding {
     // No need to move if at the target
     if (targets.empty()) { return Direction.CENTER; }
 
-    // Try greedily moving towards target
+    // Check the cache to see if we have calculated this before
     MapLocation loc = current;
-    MapLocation prev = current;
-    Direction firstMove = null;
-    Direction secondMove = null;
-    int pathLength = 0;
-    while (loc != null && !targets.top().equals(loc) && mapData.known(loc) && pathLength < MAX_PATH_LENGTH) {
+    MapLocation prev = null;
+    while (!stepCache.empty() && !current.equals(stepCache.front())) { System.out.println("Dequeue"); stepCache.dequeue(); }
+    if (current.equals(stepCache.front())) {
+      loc = stepCache.back();
+      stepCache.dequeue();
+      System.out.println("Using step cache");
+    }
+    int count = 0;
+
+    // Try greedily moving towards target
+    Direction prevMove = null;
+    while (loc != null && !targets.top().equals(loc) && mapData.known(loc) && stepCache.used() < stepCache.capacity()) {
       prev = loc;
       Direction move = getGreedyMove(loc);
       if (move == null) {
         loc = null;
       } else {
         loc = loc.add(move);
-        ++pathLength;
+        count += 1;
+        // Don't add unknowns to the queue
+        if (mapData.known(loc)) {
+          // Combine cardinal directions into one move
+          if (prevMove != null && (prevMove.dx == 0 ^ prevMove.dy == 0) && (move.dx == 0 ^ move.dy == 0)) {
+            stepCache.popBack();
+          }
+          stepCache.enqueue(loc);
+        }
         try {
           rc.setIndicatorLine(prev, loc, 255, 0, 0);
         } catch (Exception e) {
           e.printStackTrace();
         }
-        if (firstMove == null) { firstMove = move; }
-        else if (firstMove != null && secondMove == null) { secondMove = move; }
       }
+      prevMove = move;
     }
 
     // If we got to the target or an unknown square, return the move
-    if (loc != null && (targets.top().equals(loc) || !mapData.known(loc) || pathLength >= MAX_PATH_LENGTH)) {
-      // Combine cardinal directions
-      if ((firstMove.dx == 0 ^ firstMove.dy == 0) && (secondMove.dx == 0 ^ secondMove.dy == 0)) {
-        return current.directionTo(current.add(firstMove).add(secondMove));
+    if (loc != null && (targets.top().equals(loc) || !mapData.known(loc) || stepCache.used() == stepCache.capacity())) {
+      Direction move = current.directionTo(stepCache.front());
+      try {
+        rc.setIndicatorLine(current, current.add(move), 0, 0, 0);
+      } catch (Exception e) {
+        e.printStackTrace();
       }
-      return firstMove;
+      System.out.println("Calculated " + count + " moves this time");
+      return move;
     }
     loc = prev;
     try {
@@ -123,7 +143,7 @@ public class Pathfinding {
 
     // If we hit an obstacle, bugnav around it
     
-    Direction leftBugDir = closestLeftDirection(loc, loc.directionTo(targets.top()));
+    Direction leftBugDir = closestAvailableLeftDirection(loc, loc.directionTo(targets.top()));
     MapLocation newLeftTarget = null;
     if (leftBugDir != null) {
       int turnIndex = 0; // If +2, we have rounded a corner
@@ -156,9 +176,9 @@ public class Pathfinding {
     }
 
     // Bugnav right
-    Direction rightBugDir = closestRightDirection(loc, loc.directionTo(targets.top()));
+    Direction rightBugDir = closestAvailableRightDirection(loc, loc.directionTo(targets.top()));
     MapLocation newRightTarget = null;
-    if (rightBugDir != null) {
+    if (rightBugDir != null && !rightBugDir.equals(leftBugDir)) {
       int turnIndex = 0; // If +2, we have rounded a corner
       newRightTarget = loc.add(rightBugDir);
       try {
@@ -193,10 +213,11 @@ public class Pathfinding {
     int leftDistHeuristic = newLeftTarget == null ? mapData.MAX_DISTANCE_SQ : current.distanceSquaredTo(newLeftTarget) + newLeftTarget.distanceSquaredTo(targets.top());
     int rightDistanceHeuristic = newRightTarget == null ? mapData.MAX_DISTANCE_SQ : current.distanceSquaredTo(newRightTarget) + newRightTarget.distanceSquaredTo(targets.top());
     if (targets.push(leftDistHeuristic < rightDistanceHeuristic ? newLeftTarget : newRightTarget)) {
+      stepCache.clear();
       return getMove();
     } else {
       System.out.println("No more pathfinding stack space");
-      return closestDirection(current, loc.directionTo(targets.top()));
+      return closestAvailableDirection(current, loc.directionTo(targets.top()));
     }
   }
 
@@ -236,7 +257,7 @@ public class Pathfinding {
    * @param dir The goal direction
    * @return The closest available move to take
    */
-  public Direction closestDirection(MapLocation loc, Direction dir) {
+  public Direction closestAvailableDirection(MapLocation loc, Direction dir) {
     if (mapData.passable(loc.add(dir))) { return dir; } // 0
 
     Direction leftDir = dir.rotateLeft();
@@ -271,7 +292,7 @@ public class Pathfinding {
    * @param dir The goal direction
    * @return The closest available move to take
    */
-  public Direction closestLeftDirection(MapLocation loc, Direction dir) {
+  public Direction closestAvailableLeftDirection(MapLocation loc, Direction dir) {
     if (mapData.passable(loc.add(dir))) { return dir; } // 0
 
     dir = dir.rotateLeft();
@@ -297,7 +318,7 @@ public class Pathfinding {
    * @param dir The goal direction
    * @return The closest available move to take
    */
-  public Direction closestRightDirection(MapLocation loc, Direction dir) {
+  public Direction closestAvailableRightDirection(MapLocation loc, Direction dir) {
     if (mapData.passable(loc.add(dir))) { return dir; } // 0
 
     dir = dir.rotateRight();
@@ -314,5 +335,4 @@ public class Pathfinding {
 
     return null;
   }
-
 }

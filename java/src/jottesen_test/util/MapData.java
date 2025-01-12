@@ -39,14 +39,77 @@ public class MapData {
    * Checks all visible squares around the robot and adds their information to the
    * mapData grid.
    * 
-   * TODO: Make a version which only checks newly visible squares (after moving)
    */
   public void updateAllVisible() {
     for (MapInfo info : rc.senseNearbyMapInfos()) {
       updateData(info);
     }
   }
-
+  
+  /**
+   * Updates only the newly visible squares and updates them to the mapData grid
+   * @param lastDir The Direction the robot just moved
+   */
+  public void updateNewlyVisible(Direction lastDir) throws GameActionException {
+    if (lastDir == Direction.CENTER) { return; }
+    // This needs to be updated if the vision radius changes
+    assert GameConstants.VISION_RADIUS_SQUARED == 20;
+    
+    MapLocation current = rc.getLocation();
+    Direction leftDir = lastDir.rotateLeft().rotateLeft();
+    Direction rightDir = lastDir.rotateRight().rotateRight();
+    // Cardinal direction
+    if (lastDir.dx == 0 ^ lastDir.dy == 0) {
+      MapLocation center = current.translate(4 * lastDir.dx, 4 * lastDir.dy);
+      MapLocation leftLoc = center.add(leftDir);
+      MapLocation rightLoc = center.add(rightDir);
+      updateData(rc.senseMapInfo(center));
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      leftLoc = leftLoc.add(leftDir);
+      rightLoc = rightLoc.add(rightDir);
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      leftDir = leftDir.rotateLeft();
+      rightDir = rightDir.rotateRight();
+      leftLoc = leftLoc.add(leftDir);
+      rightLoc = rightLoc.add(rightDir);
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      leftLoc = leftLoc.add(leftDir);
+      rightLoc = rightLoc.add(rightDir);
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+    } else {
+      MapLocation center = current.translate(3 * lastDir.dx, 3 * lastDir.dy);
+      MapLocation leftLoc = center.add(leftDir);
+      MapLocation rightLoc = center.add(rightDir);
+      updateData(rc.senseMapInfo(center));
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      leftDir = leftDir.rotateLeft();
+      rightDir = rightDir.rotateRight();
+      leftLoc = leftLoc.add(leftDir);
+      rightLoc = rightLoc.add(rightDir);
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      leftLoc = leftLoc.add(leftDir);
+      rightLoc = rightLoc.add(rightDir);
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      leftLoc = leftLoc.add(leftDir);
+      rightLoc = rightLoc.add(rightDir);
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      leftLoc = leftLoc.add(leftDir);
+      rightLoc = rightLoc.add(rightDir);
+      updateData(rc.senseMapInfo(leftLoc));
+      updateData(rc.senseMapInfo(rightLoc));
+      updateData(rc.senseMapInfo(center.add(leftDir)));
+      updateData(rc.senseMapInfo(center.add(rightDir)));
+    }
+  }
+  
   /**
    * Takes the info for a single space and updates the robot's knowledge with
    * that information.
@@ -57,17 +120,12 @@ public class MapData {
     // Update this square
     int index = getIndex(info.getMapLocation());
     if (mapData[index] != 0) { return; }
-    try {
-      rc.setIndicatorDot(info.getMapLocation(), 255, 0, 255);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
     if (info.hasRuin()) { mapData[index] |= RUIN; }
     else if (info.isWall()) { mapData[index] |= WALL; }
     else { mapData[index] |= EMPTY; }
 
     // If symmetry is not known, try to figure it out
-    if (!symmetryKnown()) {
+    if (!symmetryKnown() && rc.getRoundNum() > 2) {
       if ((symmetryType & HORIZONTAL) > 0) {
         int h_index = symmetryIndex(index, HORIZONTAL);
         if (mapData[h_index] != UNKNOWN && mapData[h_index] != mapData[index]) {
@@ -76,15 +134,15 @@ public class MapData {
         }
       }
       if ((symmetryType & VERTICAL) > 0) {
-        int h_index = symmetryIndex(index, VERTICAL);
-        if (mapData[h_index] != UNKNOWN && mapData[h_index] != mapData[index]) {
+        int v_index = symmetryIndex(index, VERTICAL);
+        if (mapData[v_index] != UNKNOWN && mapData[v_index] != mapData[index]) {
           System.out.println("Ruled out VERTICAL");
           symmetryType ^= VERTICAL;
         }
       }
       if ((symmetryType & ROTATIONAL) > 0) {
-        int h_index = symmetryIndex(index, ROTATIONAL);
-        if (mapData[h_index] != UNKNOWN && mapData[h_index] != mapData[index]) {
+        int r_index = symmetryIndex(index, ROTATIONAL);
+        if (mapData[r_index] != UNKNOWN && mapData[r_index] != mapData[index]) {
           System.out.println("Ruled out ROTATIONAL");
           symmetryType ^= ROTATIONAL;
         }
@@ -94,11 +152,6 @@ public class MapData {
     // Copy data over symmetrically
     if (symmetryKnown()) {
       mapData[symmetryIndex(index, symmetryType)] = mapData[index];
-      try {
-        rc.setIndicatorDot(getLoc(symmetryIndex(index, symmetryType)), 255, 255, 0);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
     }
   }
 

@@ -36,7 +36,7 @@ public class Soldier extends Robot {
       }
       if (rc.canMove(dir)) {
         rc.move(dir);
-        mapdata.updateAllVisible();
+        mapdata.updateNewlyVisible(dir);
         if (rc.getLocation().equals(MAP_CENTER)) {
           touchedCenter = true;
         }

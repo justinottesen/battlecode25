@@ -90,12 +90,21 @@ public class Pathfinding {
     // Check the cache to see if we have calculated this before
     MapLocation loc = current;
     MapLocation prev = null;
-    while (!stepCache.empty() && !current.equals(stepCache.front())) { stepCache.dequeue(); }
+    while (!stepCache.empty() && !current.equals(stepCache.front())) { try {
+      rc.setIndicatorDot(stepCache.front(), 255, 0, 255);
+    } catch (Exception e) { e.printStackTrace(); }
+    stepCache.dequeue(); }
     if (current.equals(stepCache.front())) {
       loc = stepCache.back();
       stepCache.dequeue();
+      try {
+        rc.setIndicatorDot(current, 255, 255, 0);
+      } catch (Exception e) { e.printStackTrace(); }
+    } else {
+      try {
+        rc.setIndicatorDot(current, 0, 255, 255);
+      } catch (Exception e) { e.printStackTrace(); }
     }
-    int count = 0;
 
     // Try greedily moving towards target
     Direction prevMove = null;
@@ -106,11 +115,10 @@ public class Pathfinding {
         loc = null;
       } else {
         loc = loc.add(move);
-        count += 1;
         // Don't add unknowns to the queue
         if (mapData.known(loc)) {
           // Combine cardinal directions into one move
-          if (prevMove != null && (prevMove.dx == 0 ^ prevMove.dy == 0) && (move.dx == 0 ^ move.dy == 0)) {
+          if (prevMove != null && !prevMove.equals(move) && (prevMove.dx == 0 ^ prevMove.dy == 0) && (move.dx == 0 ^ move.dy == 0)) {
             stepCache.popBack();
           }
           stepCache.enqueue(loc);

@@ -13,6 +13,7 @@ public class MapData {
 
   public final int MAP_WIDTH;
   public final int MAP_HEIGHT;
+  public final MapLocation MAP_CENTER;
 
   public final int MAX_DISTANCE_SQ;
 
@@ -73,6 +74,7 @@ public class MapData {
     TEAM = rc.getTeam();
     MAP_WIDTH = rc.getMapWidth();
     MAP_HEIGHT = rc.getMapHeight();
+    MAP_CENTER = new MapLocation(MAP_WIDTH / 2, MAP_HEIGHT / 2);
     MAX_DISTANCE_SQ = MAP_WIDTH * MAP_WIDTH + MAP_HEIGHT * MAP_HEIGHT;
 
     SRP_ARRAY = rc.getResourcePattern();

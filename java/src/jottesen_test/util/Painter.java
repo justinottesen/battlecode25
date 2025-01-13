@@ -107,9 +107,10 @@ public class Painter {
   /**
    * Handles the logic for capturing a ruin
    * @param pathfinding The class to help with movement, with the ruin set as the target
+   * @return Whether the ruin was successfully captured
    * @throws GameActionException
    */
-  public void capture(Pathfinding pathfinding) throws GameActionException {
+  public boolean capture(Pathfinding pathfinding) throws GameActionException {
     MapLocation current = rc.getLocation();
     int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
     int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
@@ -130,8 +131,8 @@ public class Painter {
     int my_x_offset = current.x - low_x;
     int my_y_offset = current.y - low_y;
     if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
-        my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE && paint(current)) {
-      return;
+        my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+      paint(current);
     }
   
     // Try painting the rest of the ruin
@@ -151,7 +152,14 @@ public class Painter {
         }
       }
     }
+
+    // Try to complete the ruin
+    if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc)) {
+      rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc);
+      return true;
+    }
       
+    return false;
   }
 
 }

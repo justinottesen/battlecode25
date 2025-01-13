@@ -36,6 +36,32 @@ public final class Soldier extends Robot {
     // Can't move, might as well try and paint
     if (!rc.isMovementReady() && rc.isActionReady()) { painter.paint(); return; }
 
+    // UPDATE GOAL ------------------------------------------------------------
+    
+    // If low on paint, set goal to refill
+    if (rc.getPaint() < GameConstants.INCREASED_COOLDOWN_THRESHOLD * rc.getType().paintCapacity / 100) {
+      goal = REFILL_PAINT;
+      pathfinding.setTarget(mapData.closestFriendlyTower());
+    }
+
+    // If we find a tower while refilling paint, refill and set back idle
+    if (goal == REFILL_PAINT) {
+      if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
+        RobotInfo tower = rc.senseRobotAtLocation(pathfinding.getTarget());
+        if (tower == null) {
+          pathfinding.setTarget(mapData.closestFriendlyTower());
+          return;
+        }
+        int paintAmount = rc.getType().paintCapacity - rc.getPaint();
+        if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
+        if (rc.canTransferPaint(pathfinding.getTarget(), -paintAmount)) {
+          rc.transferPaint(pathfinding.getTarget(), -paintAmount);
+          goal = IDLE;
+          pathfinding.setTarget(mapData.MAP_CENTER);
+        }
+      }
+    }
+
     // Look for nearby ruins if we aren't already fighting a tower
     if (goal < FIGHT_TOWER) {
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
@@ -58,11 +84,15 @@ public final class Soldier extends Robot {
       }
     }
 
-    // Fight tower
-    if (goal == FIGHT_TOWER) {
-      painter.fight(goalTower, pathfinding);
-    } else if (goal == CAPTURE_RUIN) {
-      painter.capture(pathfinding);
+    // Do micro things
+    switch (goal) {
+      case FIGHT_TOWER:
+        painter.fight(goalTower, pathfinding);
+        break;
+      case CAPTURE_RUIN:
+        painter.capture(pathfinding);
+        break;
+      default: break;
     }
 
     return;

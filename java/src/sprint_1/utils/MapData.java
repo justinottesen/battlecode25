@@ -169,13 +169,13 @@ public class MapData {
         int index = m.x*MAX_MAP_SIZE + m.y;
         for (int i = -2; i < 3; i++){
             for (int j = -2; j < 3; j++){
-                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 1) == 0){
+                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 1) == 0){    //out of vision
                     return false;
                 }
-                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 2) == 2){
+                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 2) == 2){    //wall
                     return false;
                 }
-                if (!((mapData[index + j + (i * MAX_MAP_SIZE)] & 24) == 0)){
+                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 24) != 0){    //ruin (need to check a larger radius in the future)
                     return false;
                 }
             }

@@ -2,6 +2,7 @@ package sprint_1.managers;
 
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapInfo;
 import battlecode.common.MapLocation;
 import battlecode.common.PaintType;
@@ -59,24 +60,33 @@ public class CaptureManager {
         MapLocation homeTower = mapData.getClosestTower();
         if(homeTower == null) return; //this one should never run bc the robot will always have its home tower in its mapdata
         //paint the pattern and capture the ruin
-        Direction dir = Robot.rc.getLocation().directionTo(ruin);
         pathfinding.moveTo(ruin);
-        // Mark the pattern we need to draw to build a tower here if we haven't already.
-        MapLocation shouldBeMarked = ruin.subtract(dir);
-        if (Robot.rc.canSenseLocation(shouldBeMarked) && Robot.rc.senseMapInfo(shouldBeMarked).getMark() == PaintType.EMPTY && Robot.rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, ruin)){
-            Robot.rc.markTowerPattern(buildTowerType, ruin);
-            //System.out.println("Trying to build a tower at " + targetLoc);
-        }
         boolean patternComplete = true;
-
+        int ruinx = ruin.x, ruiny = ruin.y;
         // Fill in any spots in the pattern with the appropriate paint.
-        for (MapInfo patternTile : Robot.rc.senseNearbyMapInfos(ruin, 8)){
-            if (patternTile.getMark() != patternTile.getPaint() && patternTile.getMark() != PaintType.EMPTY){
-                patternComplete = false;
-                if((patternTile.getPaint() == PaintType.ENEMY_PRIMARY || patternTile.getPaint() == PaintType.ENEMY_SECONDARY) && Robot.rc.getType() == UnitType.SOLDIER) continue;  //Soldiers can't paint over enemy paint
-                boolean useSecondaryColor = patternTile.getMark() == PaintType.ALLY_SECONDARY;
-                if (Robot.rc.canAttack(patternTile.getMapLocation()))
-                    Robot.rc.attack(patternTile.getMapLocation(), useSecondaryColor);
+        //Money tower pattern: 01110 11011 10001 11011 01110
+        int index = -1;
+        for(int dx = -2; dx<3;++dx){
+            for(int dy = -2; dy<3;++dy){
+                ++index;
+                if(dx==0&&dy==0) continue; //skip the ruin tile itself
+                MapLocation patternTile = new MapLocation(ruinx+dx,ruiny+dy);
+                if(!Robot.rc.canSenseLocation(patternTile)){
+                     patternComplete = false; 
+                     continue; //if we can't sense a maplocation, skip it
+                }
+                PaintType patternTilePaint = Robot.rc.senseMapInfo(patternTile).getPaint();
+                if((patternTilePaint == PaintType.ENEMY_PRIMARY || patternTilePaint == PaintType.ENEMY_SECONDARY) && Robot.rc.getType() == UnitType.SOLDIER) continue;  //Soldiers can't paint over enemy paint
+                boolean useSecondaryColor = ((GameConstants.MONEY_TOWER_PATTERN >> index) & 1) == 1;
+                if(patternTilePaint == PaintType.EMPTY || (patternTilePaint == PaintType.ALLY_PRIMARY && useSecondaryColor) || (patternTilePaint == PaintType.ALLY_SECONDARY && !useSecondaryColor)){
+                    //if the tile is empty, or the paint type is different than its supposed to be
+                    if(Robot.rc.canAttack(patternTile)){
+                        Robot.rc.attack(patternTile,useSecondaryColor);
+                    }else{
+                        patternComplete = false;    //since we know that a tile is wrong and we can't paint it
+                        //break;
+                    }
+                }
             }
         }
         // Complete the ruin if we can.

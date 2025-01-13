@@ -1,5 +1,7 @@
 package jottesen_test;
 
+import jottesen_test.util.*;
+
 import battlecode.common.*;
 
 public abstract class Robot {
@@ -9,21 +11,34 @@ public abstract class Robot {
   protected final Team TEAM;
   protected final Team OPPONENT;
 
-  protected final int MAP_WIDTH;
-  protected final int MAP_HEIGHT;
-  protected final MapLocation MAP_CENTER;
+  // Common utility classes
+  protected final MapData mapData;
+  protected final Communication comms;
   
   public Robot(RobotController rc_) throws GameActionException {
     rc = rc_;
-
+    
     TEAM = rc.getTeam();
     OPPONENT = TEAM.opponent();
+    
+    mapData = new MapData(rc);
+    mapData.updateAllVisible();
 
-    MAP_WIDTH = rc.getMapWidth();
-    MAP_HEIGHT = rc.getMapHeight();
-    MAP_CENTER = new MapLocation(MAP_WIDTH / 2, MAP_HEIGHT / 2);
-
+    comms = new Communication(rc);
   };
 
-  public abstract void run() throws GameActionException;
+  final public void run() throws GameActionException {
+    doMicro(); // Act based on immediate surroundings
+    doMacro(); // Secondarily act to achieve big picture goal
+  }
+
+  /**
+   * Handles the micro game of the robot.
+   */
+  protected abstract void doMicro() throws GameActionException;
+
+  /**
+   * Handles the macro game of the robot.
+   */
+  protected abstract void doMacro() throws GameActionException;
 }

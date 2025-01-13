@@ -3,10 +3,9 @@ package jottesen_test;
 import battlecode.common.*;
 import jottesen_test.util.*;
 
-public class Soldier extends Robot {
+public final class Soldier extends Robot {
 
   // Utility Classes
-  private final MapData mapdata;
   private final Pathfinding pathfinding;
   private final Painter painter;
 
@@ -22,27 +21,15 @@ public class Soldier extends Robot {
 
   public Soldier(RobotController rc_) throws GameActionException {
     super(rc_);
-
-    mapdata = new MapData(rc);
-    mapdata.updateAllVisible();
-    painter = new Painter(rc, mapdata);
-    pathfinding = new Pathfinding(rc, mapdata);
+    
+    painter = new Painter(rc, mapData);
+    pathfinding = new Pathfinding(rc, mapData);
     goal = IDLE;
-    pathfinding.setTarget(MAP_CENTER);
+    pathfinding.setTarget(mapData.MAP_CENTER);
     rc.setIndicatorString("GOAL - IDLE");
-    painter.paint();
   }
 
-  @Override
-  public void run() throws GameActionException {
-    doMicro(); // Act based on immediate surroundings
-    doMacro(); // Secondarily act to achieve big picture goal
-  }
-
-  /**
-   * Handles the micro game of the robot.
-   */
-  private void doMicro() throws GameActionException {
+  protected void doMicro() throws GameActionException {
     // Can't do anything, no point
     if (!rc.isMovementReady() && !rc.isActionReady()) { return; }
 
@@ -81,17 +68,14 @@ public class Soldier extends Robot {
     return;
   }
 
-  /**
-   * Handles the macro game of the robot.
-   */
-  private void doMacro() throws GameActionException {
+  protected void doMacro() throws GameActionException {
     if (rc.isMovementReady()) {
       Direction dir = pathfinding.getMove();
       if (dir == null) {
         System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
         rc.move(dir);
-        mapdata.updateNewlyVisible(dir); // TODO: Make a `move` method which groups this with the rc.move call
+        mapData.updateNewlyVisible(dir); // TODO: Make a `move` method which groups this with the rc.move call
       }
     }
     painter.paint();

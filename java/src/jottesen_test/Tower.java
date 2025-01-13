@@ -2,7 +2,7 @@ package jottesen_test;
 
 import battlecode.common.*;
 
-public class Tower extends Robot {
+public final class Tower extends Robot {
 
   private final int TOWER_ATTACK_RADIUS;
 
@@ -16,14 +16,12 @@ public class Tower extends Robot {
     LOCATION = rc.getLocation();
   }
 
-  public void run() throws GameActionException {
-    // Attack enemies
+  protected void doMicro() throws GameActionException {
     attackEnemies();
-    
-    // Spawn Robots
-    spawnRobots();
+  }
 
-    // TODO: Add communication logic for the map symmetry type
+  protected void doMacro() throws GameActionException {
+    spawnRobots();
   }
 
   /**
@@ -69,49 +67,108 @@ public class Tower extends Robot {
    * @throws GameActionException
    */
   private void spawnRobots() throws GameActionException {
-    // Early Game Special Cases
-    if (rc.getRoundNum() == 1) {
-      Direction r_dir = LOCATION.directionTo(MAP_CENTER);
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-        return;
-      }
-      Direction l_dir = r_dir.rotateLeft();
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-        return;
-      }
-      r_dir = r_dir.rotateRight();
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-        return;
-      }
-      l_dir = l_dir.rotateLeft();
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-        return;
-      }
-      r_dir = r_dir.rotateRight();
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-        return;
-      }
-      l_dir = l_dir.rotateLeft();
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-        return;
-      }
-      r_dir = r_dir.rotateRight();
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-        return;
-      }
-      l_dir = l_dir.rotateLeft();
-      if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-        rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-        return;
-      }
+    switch (rc.getRoundNum()) {
+      case 1: spawnRound1(); break;
+      case 2: spawnRound2(); break;
+      default: break;
+    }
+  }
+
+  /**
+   * Handles robot spawning for round 1
+   * 
+   * @throws GameActionException
+   */
+  private void spawnRound1() throws GameActionException {
+    Direction r_dir = LOCATION.directionTo(mapData.MAP_CENTER);
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
       return;
     }
+    Direction l_dir = r_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
+      return;
+    }
+    r_dir = r_dir.rotateRight();
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
+      return;
+    }
+    l_dir = l_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
+      return;
+    }
+    r_dir = r_dir.rotateRight();
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
+      return;
+    }
+    l_dir = l_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
+      return;
+    }
+    r_dir = r_dir.rotateRight();
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
+      return;
+    }
+    l_dir = l_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
+      return;
+    }
+    return;
+  }
+
+  /**
+   * Handles robot spawning for round 2
+   * 
+   * @throws GameActionException
+   */
+  private void spawnRound2() throws GameActionException {
+    Direction r_dir = LOCATION.directionTo(mapData.MAP_CENTER);
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
+      return;
+    }
+    Direction l_dir = r_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
+      return;
+    }
+    r_dir = r_dir.rotateRight();
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
+      return;
+    }
+    l_dir = l_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
+      return;
+    }
+    r_dir = r_dir.rotateRight();
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
+      return;
+    }
+    l_dir = l_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
+      return;
+    }
+    r_dir = r_dir.rotateRight();
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
+      return;
+    }
+    l_dir = l_dir.rotateLeft();
+    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
+      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
+      return;
+    }
+    return;
   }
 }

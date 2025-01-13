@@ -26,7 +26,7 @@ public class Painter {
    * @return Whether we actually painted the space or not
    */
   public boolean paint(MapLocation loc) throws GameActionException {
-    if (!rc.canPaint(loc)) { return false; }
+    if (!rc.canPaint(loc) || !rc.canAttack(loc)) { return false; }
     // Only paint if it isn't the color we already want
     boolean useSecondary = mapData.useSecondaryPaint(loc);
     PaintType current = rc.senseMapInfo(loc).getPaint();
@@ -85,9 +85,8 @@ public class Painter {
     // If we can't attack move in
     if (distance_sq > ACTION_RADIUS_SQ && rc.isMovementReady()) {
       Direction moveIn = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc, true, true);
-      MapLocation resultLoc = rc.getLocation().add(moveIn);
       // But only move in range of enemy if we are ready to attack
-      if (moveIn != null && rc.canMove(moveIn) && (resultLoc.distanceSquaredTo(enemyLoc) > enemy_range_sq || rc.isActionReady())) {
+      if (moveIn != null && rc.canMove(moveIn) && (rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || rc.isActionReady())) {
         rc.move(moveIn);
       }
     }
@@ -123,7 +122,6 @@ public class Painter {
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
           paintCache[x_offset * GameConstants.PATTERN_SIZE + y_offset] = new MapLocation(low_x + x_offset, low_y + y_offset);
-          System.out.println("INDEX: " + (x_offset * GameConstants.PATTERN_SIZE + y_offset) + " - LOCATION: " + paintCache[x_offset * GameConstants.PATTERN_SIZE + y_offset]);
         }
       }
     }
@@ -142,7 +140,7 @@ public class Painter {
         if (paint(loc)) { break; }
         // If we couldn't reach it, move towards it and try again
         if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
-          Direction dir = pathfinding.getGreedyMove(current, loc, true);
+          Direction dir = pathfinding.getGreedyMove(current, loc, true, !rc.isActionReady());
           if (dir == null || rc.canMove(dir)) { continue; }
           rc.move(dir);
           current = rc.getLocation();

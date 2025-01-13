@@ -164,18 +164,21 @@ public class MapData {
     
     
     public boolean isResourcePatternCandidateLocation(MapLocation m){
+        if(m.x<2||m.x>Robot.rc.getMapWidth()-3||m.y<2||m.y>Robot.rc.getMapHeight()-3) return false; //not every tile of the patternis on the map, return false
         //requires a 5x5 space with no enemy paint and no walls
         //additionally, requires no tower pattern overlap
         int index = m.x*MAX_MAP_SIZE + m.y;
         for (int i = -2; i < 3; i++){
             for (int j = -2; j < 3; j++){
+                /*
                 if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 1) == 0){    //out of vision
                     return false;
                 }
+                */
                 if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 2) == 2){    //wall
                     return false;
                 }
-                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 24) != 0){    //ruin (need to check a larger radius in the future)
+                if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 12) != 0){    //ruin (need to check a larger radius in the future)
                     return false;
                 }
             }

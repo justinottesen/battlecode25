@@ -87,7 +87,7 @@ public class Painter {
       Direction moveIn = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc, true, true);
       // But only move in range of enemy if we are ready to attack
       if (moveIn != null && rc.canMove(moveIn) && (rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || rc.isActionReady())) {
-        rc.move(moveIn);
+        mapData.move(moveIn);
       }
     }
 
@@ -97,7 +97,7 @@ public class Painter {
     // If enemy can see us, back up
     if (distance_sq <= enemy_range_sq && rc.isMovementReady()) {
       Direction backup = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc.directionTo(rc.getLocation()), true, true);
-      if (backup != null && rc.canMove(backup)) { rc.move(backup); }
+      if (backup != null && rc.canMove(backup)) { mapData.move(backup); }
     }
 
     // Whatever square we end on, try to paint it
@@ -143,7 +143,7 @@ public class Painter {
         if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
           Direction dir = pathfinding.getGreedyMove(current, loc, true, !rc.isActionReady());
           if (dir == null || rc.canMove(dir)) { continue; }
-          rc.move(dir);
+          mapData.move(dir);
           current = rc.getLocation();
           // Check if there is paint under our feet
           if (paint(current)) { break; }

@@ -88,13 +88,19 @@ public class Pathfinding {
     if (current.equals(stepCache.front())) {
       loc = stepCache.back();
       stepCache.dequeue();
+
+      // If we can't move in that direction anymore (body blocker), clear the cache and recalculate
+      if (rc.isMovementReady() && rc.senseRobotAtLocation(stepCache.front()) != null) {
+        loc = current;
+        stepCache.clear();
+      }
     }
 
     // Try greedily moving towards target
     Direction prevMove = null;
     while (loc != null && !targets.top().equals(loc) && mapData.known(loc) && stepCache.used() < stepCache.capacity()) {
       prev = loc;
-      Direction move = getGreedyMove(loc);
+      Direction move = getGreedyMove(loc, targets.top(), current.equals(loc));
       if (move == null) {
         loc = null;
       } else {

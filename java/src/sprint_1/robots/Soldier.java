@@ -3,6 +3,7 @@ package sprint_1.robots;
 //import java.util.Random;
 
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.RobotController;
 import battlecode.common.RobotInfo;
 import battlecode.common.MapLocation;
@@ -49,8 +50,15 @@ public class Soldier extends Robot {
         }
       }
     }else if(ruin==null || (captureManager.isInIgnoreList(ruin)&&captureManager.betterBuilderAvailable(ruin))){
-      goal = explore.getExploreTarget();
-      pathfinding.moveTo(goal);
+      if(mapData.isResourcePatternCandidateLocation(rc.getLocation()))
+        captureManager.markResourcePatternCenter(rc.getLocation());
+
+      captureManager.captureResourcePattern();
+
+      if(rc.getMovementCooldownTurns()<GameConstants.COOLDOWN_LIMIT){
+        goal = explore.getExploreTarget();
+        pathfinding.moveTo(goal);
+      }
       //rc.setIndicatorString("Moving to exploration "+goal);
       if(Robot.rc.senseMapInfo(Robot.rc.getLocation()).getPaint()==PaintType.EMPTY && Robot.rc.canAttack(Robot.rc.getLocation())){
         Robot.rc.attack(Robot.rc.getLocation());

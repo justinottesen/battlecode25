@@ -84,7 +84,9 @@ public class CaptureManager {
                         Robot.rc.attack(patternTile,useSecondaryColor);
                     }else{
                         patternComplete = false;    //since we know that a tile is wrong and we can't paint it
-                        //break;
+
+                        break;
+
                     }
                 }
             }
@@ -136,5 +138,65 @@ public class CaptureManager {
         }
     }
 
+    public void markResourcePatternCenter(MapLocation center) throws GameActionException{
+        MapInfo[] mapInfos = Robot.rc.senseNearbyMapInfos(center,9);
+        //resource pattern centers can't be less than 9 away from each other
+        for(MapInfo m : mapInfos){
+            if(m.getMark() == PaintType.ALLY_PRIMARY || m.getMark() == PaintType.ALLY_SECONDARY) return;
+        }
+        if(Robot.rc.canMark(center)) Robot.rc.mark(center, false);
+    }
+
+    public void captureResourcePattern() throws GameActionException{
+
+        //look for a center:
+        MapLocation center = null;
+        MapInfo[] mapInfos = Robot.rc.senseNearbyMapInfos();
+        for(MapInfo m : mapInfos){
+            if(m.getMark()==PaintType.ALLY_PRIMARY){
+                if(center==null || Robot.rc.getLocation().distanceSquaredTo(center)>Robot.rc.getLocation().distanceSquaredTo(m.getMapLocation())){
+                    //get the closest center to the robot
+                    center = m.getMapLocation();
+                }
+            }
+        }
+
+        if(center==null) return;
+
+        pathfinding.moveTo(center);
+        //boolean patternComplete = true;
+        int centerx = center.x, centery = center.y;
+        // Fill in any spots in the pattern with the appropriate paint.
+        //Special Resource pattern: 10101 01010 10001 01010 10101
+        int index = -1;
+        for(int dx = -2; dx<3;++dx){
+            for(int dy = -2; dy<3;++dy){
+                ++index;
+                MapLocation patternTile = new MapLocation(centerx+dx,centery+dy);
+                if(!Robot.rc.canSenseLocation(patternTile)){
+                     //patternComplete = false; 
+                     continue; //if we can't sense a maplocation, skip it
+                }
+                PaintType patternTilePaint = Robot.rc.senseMapInfo(patternTile).getPaint();
+                if((patternTilePaint == PaintType.ENEMY_PRIMARY || patternTilePaint == PaintType.ENEMY_SECONDARY) && Robot.rc.getType() == UnitType.SOLDIER) continue;  //Soldiers can't paint over enemy paint
+                boolean useSecondaryColor = ((GameConstants.RESOURCE_PATTERN >> index) & 1) == 1;
+                if(patternTilePaint == PaintType.EMPTY || (patternTilePaint == PaintType.ALLY_PRIMARY && useSecondaryColor) || (patternTilePaint == PaintType.ALLY_SECONDARY && !useSecondaryColor)){
+                    //if the tile is empty, or the paint type is different than its supposed to be
+                    if(Robot.rc.canAttack(patternTile)){
+                        Robot.rc.attack(patternTile,useSecondaryColor);
+                    }else{
+                        //patternComplete = false;    //since we know that a tile is wrong and we can't paint it
+                        break;
+                    }
+                }
+            }
+        }
+        // Complete the ruin if we can.
+        if (Robot.rc.canCompleteResourcePattern(center)){
+            Robot.rc.completeResourcePattern(center);
+            Robot.rc.mark(center,true);
+            //System.out.println("Completed resourc pattern at "+center);
+        }
+    }
     
 }

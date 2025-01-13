@@ -28,18 +28,24 @@ public class MapData {
   private final int TILE_TYPE_BITMASK = 0b11;
   
   // Bits 2-4: Tower Type Data (Only applicable for ruins)
-  private final int UNCLAIMED_RUIN     = 0b00100;
-  private final int MONEY_TOWER        = 0b01000;
-  private final int PAINT_TOWER        = 0b01100;
-  private final int DEFENSE_TOWER      = 0b10000;
-  private final int TOWER_TYPE_BITMASK = 0b11100;
+  private final int UNCLAIMED_RUIN     = 0b001_00;
+  private final int MONEY_TOWER        = 0b010_00;
+  private final int PAINT_TOWER        = 0b011_00;
+  private final int DEFENSE_TOWER      = 0b100_00;
+  private final int TOWER_TYPE_BITMASK = 0b111_00;
 
   // Bit 5: Friendly = 1, foe = 0 (Only applicable for claimed ruins)
-  private final int FRIENDLY_TOWER = 0b100000;
+  private final int FRIENDLY_TOWER = 0b1_000_00;
 
   // Bits 6-16: Last round updated (Only applicable for ruins)
-  private final int LAST_UPDATED_BITMASK = 0b11111111111000000;
+  private final int LAST_UPDATED_BITMASK = 0b11111111111_0_000_00;
   private final int LAST_UPDATED_BITSHIFT = 6;
+
+  // Bits 17-18: Paint status of tiles (Only applicable for empty)
+  private final int ENEMY_PAINT        = 0b01_00000000000_0_000_00;
+  private final int FRIENDLY_PRIMARY   = 0b10_00000000000_0_000_00;
+  private final int FRIENDLY_SECONDARY = 0b11_00000000000_0_000_00;
+  private final int PAINT_BITMASK      = 0b11_00000000000_0_000_00;
 
   private int symmetryType     = 0b111;
   private final int ROTATIONAL = 0b001;
@@ -182,19 +188,19 @@ public class MapData {
     if (symmetryKnown()) {
       int symIndex = symmetryIndex(index, symmetryType);
       if (symIndex == UNKNOWN) {
-        mapData[symIndex] = mapData[index];
+        mapData[symIndex] = mapData[index] & TILE_TYPE_BITMASK;
         if (info.hasRuin()) { knownRuins[ruinIndex++] = index; }
       }
     }
     
-    // If it is a ruin, more info can be gathered
+    // If it is a ruin or empty, more info can be gathered
     if ((mapData[index] & TILE_TYPE_BITMASK) == RUIN) {
-      int roundNum = rc.getRoundNum();
-      mapData[index] &= ~LAST_UPDATED_BITMASK;
-      mapData[index] |= roundNum << LAST_UPDATED_BITSHIFT;
-      mapData[index] &= ~TILE_TYPE_BITMASK;
       RobotInfo towerInfo = rc.senseRobotAtLocation(loc);
       if (towerInfo != null) {
+        int roundNum = rc.getRoundNum();
+        mapData[index] &= ~LAST_UPDATED_BITMASK;
+        mapData[index] |= roundNum << LAST_UPDATED_BITSHIFT;
+        mapData[index] &= ~TILE_TYPE_BITMASK;
         mapData[index] |= switch (towerInfo.getType().getBaseType()) {
           case UnitType.LEVEL_ONE_DEFENSE_TOWER -> DEFENSE_TOWER;
           case UnitType.LEVEL_ONE_PAINT_TOWER -> PAINT_TOWER;
@@ -206,6 +212,17 @@ public class MapData {
         }
       } else {
         mapData[index] |= UNCLAIMED_RUIN;
+      }
+    } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
+      PaintType paint = info.getPaint();
+      int roundNum = rc.getRoundNum();
+      mapData[index] &= ~LAST_UPDATED_BITMASK;
+      mapData[index] |= roundNum << LAST_UPDATED_BITSHIFT;
+      mapData[index] &= ~PAINT_BITMASK;
+      if (paint.isEnemy()) {
+        mapData[index] |= ENEMY_PAINT;
+      } else if (paint.isAlly()) {
+        mapData[index] |= paint.isSecondary() ? FRIENDLY_SECONDARY : FRIENDLY_PRIMARY;
       }
     }
   }

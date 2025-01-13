@@ -8,7 +8,9 @@ public final class Mopper extends Robot {
     super(rc_);
   }
 
-  protected void doMicro() {}
+  protected void doMicro() {
+    
+  }
 
   protected void doMacro() {}
 }

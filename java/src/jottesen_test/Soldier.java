@@ -22,14 +22,13 @@ public class Soldier extends Robot {
   @Override
   public void run() throws GameActionException {
     if (currentRuin == null) {
-      MapLocation[] ruins = rc.senseNearbyRuins(-1);
-      for (MapLocation ruin : ruins) {
-        currentRuin = ruin; break;
+      currentRuin = mapdata.closestUnclaimedRuin();
+      if (currentRuin != null) {
+        System.out.println(currentRuin.toString());
       }
     }
-    rc.setIndicatorDot(MAP_CENTER, 255, 255, 255);
     if (rc.isMovementReady()) {
-      Direction dir = pathfinding.getMove(touchedCenter ? currentRuin : MAP_CENTER);
+      Direction dir = pathfinding.getMove(currentRuin == null ? MAP_CENTER : currentRuin);
       if (dir == null) {
         System.out.println("Pathfinding returned null dir");
         return;

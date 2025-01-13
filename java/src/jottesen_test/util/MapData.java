@@ -1,5 +1,7 @@
 package jottesen_test.util;
 
+import javax.management.monitor.GaugeMonitor;
+
 import battlecode.common.*;
 
 /**
@@ -9,6 +11,7 @@ import battlecode.common.*;
 public class MapData {
 
   private final RobotController rc;
+  private final Team TEAM;
 
   public final int MAP_WIDTH;
   public final int MAP_HEIGHT;
@@ -17,22 +20,44 @@ public class MapData {
 
   private final int[] mapData;
   private final int UNKNOWN = 0b0;
-  private final int EMPTY = 0b1;
-  private final int RUIN = 0b10;
-  private final int WALL = 0b100;
 
-  private int symmetryType = 0b111;
-  private final int ROTATIONAL = 0b1;
-  private final int HORIZONTAL = 0b10;
-  private final int VERTICAL = 0b100;
+  // Bits 0-1: Immutable characteristics
+  private final int EMPTY             = 0b01;
+  private final int RUIN              = 0b10;
+  private final int WALL              = 0b11;
+  private final int TILE_TYPE_BITMASK = 0b11;
+  
+  // Bits 2-4: Tower Type Data (Only applicable for ruins)
+  private final int UNCLAIMED_RUIN     = 0b00100;
+  private final int MONEY_TOWER        = 0b01000;
+  private final int PAINT_TOWER        = 0b01100;
+  private final int DEFENSE_TOWER      = 0b10000;
+  private final int TOWER_TYPE_BITMASK = 0b11100;
+
+  // Bit 5: Friendly = 1, foe = 0 (Only applicable for claimed ruins)
+  private final int FRIENDLY_TOWER = 0b100000;
+
+  // Bits 6-16: Last round updated (Only applicable for ruins)
+  private final int LAST_UPDATED_BITMASK = 0b11111111111000000;
+  private final int LAST_UPDATED_BITSHIFT = 6;
+
+  private int symmetryType     = 0b111;
+  private final int ROTATIONAL = 0b001;
+  private final int HORIZONTAL = 0b010;
+  private final int VERTICAL   = 0b100;
+
+  private final int[] knownRuins;
+  private int ruinIndex;
 
   public MapData(RobotController rc_) {
     rc = rc_;
+    TEAM = rc.getTeam();
     MAP_WIDTH = rc.getMapWidth();
     MAP_HEIGHT = rc.getMapHeight();
     MAX_DISTANCE_SQ = MAP_WIDTH * MAP_WIDTH + MAP_HEIGHT * MAP_HEIGHT;
 
     mapData = new int[MAP_WIDTH * MAP_HEIGHT];
+    knownRuins = new int[MAP_WIDTH / GameConstants.PATTERN_SIZE * MAP_HEIGHT / GameConstants.PATTERN_SIZE];
   }
 
   /**
@@ -40,7 +65,7 @@ public class MapData {
    * mapData grid.
    * 
    */
-  public void updateAllVisible() {
+  public void updateAllVisible() throws GameActionException {
     for (MapInfo info : rc.senseNearbyMapInfos()) {
       updateData(info);
     }
@@ -63,95 +88,125 @@ public class MapData {
       MapLocation center = current.translate(4 * lastDir.dx, 4 * lastDir.dy);
       MapLocation leftLoc = center.add(leftDir);
       MapLocation rightLoc = center.add(rightDir);
-      updateData(rc.senseMapInfo(center));
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(center)) { updateData(rc.senseMapInfo(center)); }
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
       leftLoc = leftLoc.add(leftDir);
       rightLoc = rightLoc.add(rightDir);
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
       leftDir = leftDir.rotateLeft();
       rightDir = rightDir.rotateRight();
       leftLoc = leftLoc.add(leftDir);
       rightLoc = rightLoc.add(rightDir);
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
       leftLoc = leftLoc.add(leftDir);
       rightLoc = rightLoc.add(rightDir);
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
     } else {
       MapLocation center = current.translate(3 * lastDir.dx, 3 * lastDir.dy);
       MapLocation leftLoc = center.add(leftDir);
       MapLocation rightLoc = center.add(rightDir);
-      updateData(rc.senseMapInfo(center));
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(center)) { updateData(rc.senseMapInfo(center)); }
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
       leftDir = leftDir.rotateLeft();
       rightDir = rightDir.rotateRight();
       leftLoc = leftLoc.add(leftDir);
       rightLoc = rightLoc.add(rightDir);
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
       leftLoc = leftLoc.add(leftDir);
       rightLoc = rightLoc.add(rightDir);
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
       leftLoc = leftLoc.add(leftDir);
       rightLoc = rightLoc.add(rightDir);
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
       leftLoc = leftLoc.add(leftDir);
       rightLoc = rightLoc.add(rightDir);
-      updateData(rc.senseMapInfo(leftLoc));
-      updateData(rc.senseMapInfo(rightLoc));
-      updateData(rc.senseMapInfo(center.add(leftDir)));
-      updateData(rc.senseMapInfo(center.add(rightDir)));
+      if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
+      if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
+      if (rc.onTheMap(center.add(leftDir))) { updateData(rc.senseMapInfo(center.add(leftDir))); }
+      if (rc.onTheMap(center.add(rightDir))) { updateData(rc.senseMapInfo(center.add(rightDir))); }
     }
   }
-  
+
   /**
    * Takes the info for a single space and updates the robot's knowledge with
    * that information.
    * 
    * @param info The `MapInfo` of the tile to be updated
    */
-  public void updateData(MapInfo info) {
+  public void updateData(MapInfo info) throws GameActionException {
     // Update this square
-    int index = getIndex(info.getMapLocation());
-    if (mapData[index] != 0) { return; }
-    if (info.hasRuin()) { mapData[index] |= RUIN; }
-    else if (info.isWall()) { mapData[index] |= WALL; }
-    else { mapData[index] |= EMPTY; }
+    MapLocation loc = info.getMapLocation();
+    int index = getIndex(loc);
 
-    // If symmetry is not known, try to figure it out
-    if (!symmetryKnown() && rc.getRoundNum() > 2) {
-      if ((symmetryType & HORIZONTAL) > 0) {
-        int h_index = symmetryIndex(index, HORIZONTAL);
-        if (mapData[h_index] != UNKNOWN && mapData[h_index] != mapData[index]) {
-          System.out.println("Ruled out HORIZONTAL");
-          symmetryType ^= HORIZONTAL;
+    // First time seeing square
+    if (mapData[index] == 0) {
+      if (info.hasRuin()) { mapData[index] = RUIN; knownRuins[ruinIndex++] = index; }
+      else if (info.isWall()) { mapData[index] = WALL; }
+      else { mapData[index] = EMPTY; }
+      
+      // If symmetry is not known, try to figure it out
+      if (!symmetryKnown() && rc.getRoundNum() > 2) {
+        if ((symmetryType & HORIZONTAL) > 0) {
+          int h_index = symmetryIndex(index, HORIZONTAL);
+          if (mapData[h_index] != UNKNOWN && mapData[h_index] != mapData[index]) {
+            System.out.println("Ruled out HORIZONTAL");
+            symmetryType ^= HORIZONTAL;
+          }
         }
-      }
-      if ((symmetryType & VERTICAL) > 0) {
-        int v_index = symmetryIndex(index, VERTICAL);
-        if (mapData[v_index] != UNKNOWN && mapData[v_index] != mapData[index]) {
-          System.out.println("Ruled out VERTICAL");
-          symmetryType ^= VERTICAL;
+        if ((symmetryType & VERTICAL) > 0) {
+          int v_index = symmetryIndex(index, VERTICAL);
+          if (mapData[v_index] != UNKNOWN && mapData[v_index] != mapData[index]) {
+            System.out.println("Ruled out VERTICAL");
+            symmetryType ^= VERTICAL;
+          }
         }
-      }
-      if ((symmetryType & ROTATIONAL) > 0) {
-        int r_index = symmetryIndex(index, ROTATIONAL);
-        if (mapData[r_index] != UNKNOWN && mapData[r_index] != mapData[index]) {
-          System.out.println("Ruled out ROTATIONAL");
-          symmetryType ^= ROTATIONAL;
+        if ((symmetryType & ROTATIONAL) > 0) {
+          int r_index = symmetryIndex(index, ROTATIONAL);
+          if (mapData[r_index] != UNKNOWN && mapData[r_index] != mapData[index]) {
+            System.out.println("Ruled out ROTATIONAL");
+            symmetryType ^= ROTATIONAL;
+          }
         }
       }
     }
-
+      
     // Copy data over symmetrically
     if (symmetryKnown()) {
-      mapData[symmetryIndex(index, symmetryType)] = mapData[index];
+      int symIndex = symmetryIndex(index, symmetryType);
+      if (symIndex == UNKNOWN) {
+        mapData[symIndex] = mapData[index];
+        if (info.hasRuin()) { knownRuins[ruinIndex++] = index; }
+      }
+    }
+    
+    // If it is a ruin, more info can be gathered
+    if ((mapData[index] & TILE_TYPE_BITMASK) == RUIN) {
+      int roundNum = rc.getRoundNum();
+      mapData[index] &= ~LAST_UPDATED_BITMASK;
+      mapData[index] |= roundNum << LAST_UPDATED_BITSHIFT;
+      mapData[index] &= ~TILE_TYPE_BITMASK;
+      RobotInfo towerInfo = rc.senseRobotAtLocation(loc);
+      if (towerInfo != null) {
+        mapData[index] |= switch (towerInfo.getType().getBaseType()) {
+          case UnitType.LEVEL_ONE_DEFENSE_TOWER -> DEFENSE_TOWER;
+          case UnitType.LEVEL_ONE_PAINT_TOWER -> PAINT_TOWER;
+          case UnitType.LEVEL_ONE_MONEY_TOWER -> MONEY_TOWER;
+          default -> 0;
+        };
+        if (towerInfo.getTeam().equals(TEAM)) { 
+          mapData[index] |= FRIENDLY_TOWER;
+        }
+      } else {
+        mapData[index] |= UNCLAIMED_RUIN;
+      }
     }
   }
 
@@ -162,7 +217,7 @@ public class MapData {
    * @param loc The location to check passability of
    * @return Whether the location is passable or not
    */
-  public boolean passable(MapLocation loc) { return (readData(loc) & (RUIN | WALL)) == 0; }
+  public boolean passable(MapLocation loc) { return (readData(loc) & TILE_TYPE_BITMASK) < RUIN; }
 
   /**
    * Determines whether a given location is known
@@ -231,5 +286,95 @@ public class MapData {
       case ROTATIONAL -> (MAP_WIDTH - (x + 1)) * MAP_HEIGHT + MAP_HEIGHT - (y + 1);
       default -> -1;
     };
+  }
+
+  /**
+   * Returns the closest known ruin (claimed or unclaimed) to the robot
+   * @return The location of the closest known ruin
+   */
+  public MapLocation closestRuin() {
+    if (ruinIndex == 0) { return null; }
+    MapLocation current = rc.getLocation();
+    MapLocation closestRuin = getLoc(knownRuins[0]);
+    int closestDist = current.distanceSquaredTo(closestRuin);
+    for (int i = 1; i < ruinIndex; ++i) {
+      MapLocation ruinLoc = getLoc(knownRuins[i]);
+      int ruinDist = current.distanceSquaredTo(ruinLoc);
+      if (ruinDist < closestDist) {
+        closestDist = ruinDist;
+        closestRuin = ruinLoc;
+      }
+    }
+    return closestRuin;
+  }
+
+  /**
+   * Returns the closest known unclaimed (or unknown if claimed) ruin to the robot
+   * @return The location of the closest known unclaimed ruin
+   */
+  public MapLocation closestUnclaimedRuin() {
+    if (ruinIndex == 0) { return null; }
+    MapLocation current = rc.getLocation();
+    MapLocation closestTower = null;
+    int closestDist = 0;
+    for (int i = 0; i < ruinIndex; ++i) {
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) > UNCLAIMED_RUIN) { continue; }
+      MapLocation towerLoc = getLoc(knownRuins[i]);
+      int ruinDist = current.distanceSquaredTo(towerLoc);
+      if (closestTower == null || ruinDist < closestDist) {
+        closestTower = towerLoc;
+        closestDist = ruinDist;
+      }
+    }
+    return closestTower;
+  }
+  
+  /**
+   * Returns the closest known friendly tower to the robot
+   * @return The location of the closest known friendly tower
+   */
+  public MapLocation closestFriendlyTower() throws GameActionException {
+    if (ruinIndex == 0) { return null; }
+    MapLocation current = rc.getLocation();
+    MapLocation closestTower = null;
+    int closestDist = 0;
+    for (int i = 0; i < ruinIndex; ++i) {
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == 0) { continue; }
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == UNCLAIMED_RUIN) { continue; }
+      if ((mapData[knownRuins[i]] & FRIENDLY_TOWER) == 0) { continue; }
+      MapLocation towerLoc = getLoc(knownRuins[i]);
+      int ruinDist = current.distanceSquaredTo(towerLoc);
+      if (closestTower != null) {
+        System.out.println(towerLoc.toString() + " " + ruinDist + " | " + closestTower.toString() + " " + closestDist);
+      }
+      if (closestTower == null || ruinDist < closestDist) {
+        closestTower = towerLoc;
+        closestDist = ruinDist;
+      }
+    }
+    return closestTower;
+  }
+
+  /**
+   * Returns the closest known enemy tower to the robot
+   * @return The location of the closest known enemy tower
+   */
+  public MapLocation closestEnemyTower() {
+    if (ruinIndex == 0) { return null; }
+    MapLocation current = rc.getLocation();
+    MapLocation closestTower = null;
+    int closestDist = 0;
+    for (int i = 0; i < ruinIndex; ++i) {
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == 0) { continue; }
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == UNCLAIMED_RUIN) { continue; }
+      if ((mapData[knownRuins[i]] & FRIENDLY_TOWER) > 0) { continue; }
+      MapLocation towerLoc = getLoc(knownRuins[i]);
+      int ruinDist = current.distanceSquaredTo(towerLoc);
+      if (closestTower == null || ruinDist < closestDist) {
+        closestTower = towerLoc;
+        closestDist = ruinDist;
+      }
+    }
+    return closestTower;
   }
 }

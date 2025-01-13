@@ -84,7 +84,7 @@ public class Painter {
 
     // If we can't attack move in
     if (distance_sq > ACTION_RADIUS_SQ && rc.isMovementReady()) {
-      Direction moveIn = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc, true, true);
+      Direction moveIn = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc, true, Pathfinding.Mode.NO_ENEMY);
       // But only move in range of enemy if we are ready to attack
       if (moveIn != null && rc.canMove(moveIn) && (rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || rc.isActionReady())) {
         mapData.move(moveIn);
@@ -96,7 +96,7 @@ public class Painter {
 
     // If enemy can see us, back up
     if (distance_sq <= enemy_range_sq && rc.isMovementReady()) {
-      Direction backup = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc.directionTo(rc.getLocation()), true, true);
+      Direction backup = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc.directionTo(rc.getLocation()), true, Pathfinding.Mode.NO_ENEMY);
       if (backup != null && rc.canMove(backup)) { mapData.move(backup); }
     }
 
@@ -141,7 +141,7 @@ public class Painter {
         if (paint(loc)) { break; }
         // If we couldn't reach it, move towards it and try again
         if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
-          Direction dir = pathfinding.getGreedyMove(current, loc, true, !rc.isActionReady());
+          Direction dir = pathfinding.getGreedyMove(current, loc, true, rc.isActionReady() ? Pathfinding.Mode.NO_ENEMY : Pathfinding.Mode.ALLY_ONLY);
           if (dir == null || rc.canMove(dir)) { continue; }
           mapData.move(dir);
           current = rc.getLocation();

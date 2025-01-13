@@ -13,6 +13,12 @@ public class Pathfinding {
   private final int MAX_TARGETS = 3; // Recursive calls using Bug Navigation
   private final int MAX_PATH_LENGTH = 10; // Number of steps to current target
 
+  public enum Mode {
+    ANY,
+    NO_ENEMY,
+    ALLY_ONLY
+  }
+
   public Pathfinding(RobotController rc_, MapData mapData_) {
     rc = rc_;
     mapData = mapData_;
@@ -54,22 +60,40 @@ public class Pathfinding {
   public MapLocation getTarget() { return targets.bottom(); }
 
   /**
-   * Updates the target to the provided and returns the move that should be
-   * made to reach that target
-   * 
    * @param target The new target for pathfinding
    * @return The move that should be made to reach the target
    */
   public Direction getMove(MapLocation target) throws GameActionException { setTarget(target); return getMove(); }
-  
+
   /**
+   * Updates the target to the provided and returns the move that should be
+   * made to reach that target
+   * 
+   * @param target The new target for pathfinding
+   * @param mode The mode to use for generated moves
+   * @return The move that should be made to reach the target
+   */
+  public Direction getMove(MapLocation target, Mode mode) throws GameActionException { setTarget(target); return getMove(mode); }
+
+   /**
    * Gets the next move that should be made to reach the target
    * 
    * TODO: Add a limit to the number of calculations per round? Or a bytecode stopping point?
    * 
    * @return The direction the robot should take to reach the target
    */
-  public Direction getMove() throws GameActionException {
+  public Direction getMove() throws GameActionException { return getMove(Mode.ANY); }
+
+  /**
+   * Gets the next move that should be made to reach the target
+   * 
+   * @param the mode to use for generated moves
+   * 
+   * TODO: Add a limit to the number of calculations per round? Or a bytecode stopping point?
+   * 
+   * @return The direction the robot should take to reach the target
+   */
+  public Direction getMove(Mode mode) throws GameActionException {
     final MapLocation current = rc.getLocation();
 
     // Can't move to a nonexistant target (or if we don't exist somehow)
@@ -89,8 +113,14 @@ public class Pathfinding {
       loc = stepCache.back();
       stepCache.dequeue();
 
-      // If we can't move in that direction anymore (body blocker), clear the cache and recalculate
-      if (!stepCache.empty() && rc.isMovementReady() && rc.senseRobotAtLocation(stepCache.front()) != null) {
+      // If we can't move in that direction anymore (body blocker / paint), clear the cache and recalculate
+      if (!stepCache.empty() && rc.isMovementReady() && 
+        (rc.senseRobotAtLocation(stepCache.front()) != null || 
+          switch (mode) { 
+          case Mode.ANY -> false;
+          case Mode.ALLY_ONLY -> !rc.senseMapInfo(stepCache.front()).getPaint().isAlly(); 
+          case Mode.NO_ENEMY -> rc.senseMapInfo(stepCache.front()).getPaint().isEnemy(); 
+          })) {
         loc = current;
         stepCache.clear();
       }
@@ -100,7 +130,8 @@ public class Pathfinding {
     Direction prevMove = null;
     while (loc != null && !targets.top().equals(loc) && mapData.known(loc) && stepCache.used() < stepCache.capacity()) {
       prev = loc;
-      Direction move = getGreedyMove(loc, targets.top(), current.equals(loc));
+      // Reduce distance for greedy since extra moves can take you out of vision range
+      Direction move = getGreedyMove(loc, targets.top(), rc.getLocation().equals(loc), rc.getLocation().isWithinDistanceSquared(loc, GameConstants.VISION_RADIUS_SQUARED / 2) ? mode : Mode.ANY);
       if (move == null) {
         loc = null;
       } else {
@@ -177,7 +208,7 @@ public class Pathfinding {
     int rightDistanceHeuristic = newRightTarget == null ? mapData.MAX_DISTANCE_SQ : current.distanceSquaredTo(newRightTarget) + newRightTarget.distanceSquaredTo(targets.top());
     if (targets.push(leftDistHeuristic < rightDistanceHeuristic ? newLeftTarget : newRightTarget)) {
       stepCache.clear();
-      return getMove();
+      return getMove(mode);
     } else {
       System.out.println("No more pathfinding stack space");
       return closestAvailableDirection(current, loc.directionTo(targets.top()));
@@ -217,7 +248,7 @@ public class Pathfinding {
    * @param checkCanMove Whether to check if the robot can move to a location
    * @return The direction to take to move towards the target 
    */
-  public Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove) throws GameActionException { return getGreedyMove(loc, dir, checkCanMove, false); }
+  public Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove) throws GameActionException { return getGreedyMove(loc, dir, checkCanMove, Mode.ANY); }
 
   /**
    * Finds the closest legal move to the specified direction
@@ -227,7 +258,7 @@ public class Pathfinding {
    * @param onlyAllyPaint Whether to only allow moves onto ally paint
    * @return The direction to take to move towards the target 
    */
-  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove, boolean onlyAllyPaint) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), checkCanMove, onlyAllyPaint); }
+  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove, Mode mode) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), checkCanMove, mode); }
 
   /**
    * Finds the closest legal move to the specified direction
@@ -237,26 +268,38 @@ public class Pathfinding {
    * @param onlyAllyPaint Whether to only allow moves onto ally paint
    * @return The direction to take to move towards the target 
    */
-  public Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove, boolean onlyAllyPaint) throws GameActionException {
+  public Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove, Mode mode) throws GameActionException {
     // Try going towards it
     MapLocation next = loc.add(dir);
     if (mapData.passable(next) && 
         (!checkCanMove || rc.canMove(dir)) &&
-        (!onlyAllyPaint || rc.senseMapInfo(next).getPaint().isAlly())) { return dir; }
+        (switch (mode) { 
+          case Mode.ANY -> true;
+          case Mode.ALLY_ONLY -> rc.senseMapInfo(next).getPaint().isAlly(); 
+          case Mode.NO_ENEMY -> !rc.senseMapInfo(next).getPaint().isEnemy(); 
+        })) { return dir; }
     
     // Try turning left
     Direction leftDir = dir.rotateLeft();
     next = loc.add(leftDir);
     if (rc.onTheMap(next) && mapData.passable(next) &&
         (!checkCanMove || rc.canMove(leftDir)) &&
-        (!onlyAllyPaint || rc.senseMapInfo(next).getPaint().isAlly())) { return leftDir; }
+        (switch (mode) { 
+          case Mode.ANY -> true;
+          case Mode.ALLY_ONLY -> rc.senseMapInfo(next).getPaint().isAlly(); 
+          case Mode.NO_ENEMY -> !rc.senseMapInfo(next).getPaint().isEnemy(); 
+        })) { return leftDir; }
 
     // Try turning right
     dir = dir.rotateRight();
     next = loc.add(dir);
     if (rc.onTheMap(next) && mapData.passable(next) &&
-    (!checkCanMove || rc.canMove(dir)) &&
-    (!onlyAllyPaint || rc.senseMapInfo(next).getPaint().isAlly())) { return dir; }
+        (!checkCanMove || rc.canMove(dir)) &&
+        (switch (mode) { 
+          case Mode.ANY -> true;
+          case Mode.ALLY_ONLY -> rc.senseMapInfo(next).getPaint().isAlly(); 
+          case Mode.NO_ENEMY -> !rc.senseMapInfo(next).getPaint().isEnemy(); 
+        })) { return dir; }
 
     // Give up if none work
     return null;

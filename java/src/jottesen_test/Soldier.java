@@ -102,8 +102,6 @@ public final class Soldier extends Robot {
         break;
       default: break;
     }
-
-    return;
   }
 
   protected void doMacro() throws GameActionException {

@@ -1,6 +1,7 @@
 package jottesen_test;
 
 import battlecode.common.*;
+import battlecode.server.*;
 import jottesen_test.util.*;
 
 public final class Mopper extends Robot {
@@ -81,7 +82,7 @@ public final class Mopper extends Robot {
       if (rc.isMovementReady()) {
         for (MapInfo info : rc.senseNearbyMapInfos(GameConstants.VISION_RADIUS_SQUARED)) {
           if (info.getPaint().isEnemy() && !rc.getLocation().isWithinDistanceSquared(info.getMapLocation(), rc.getType().actionRadiusSquared)) {
-            Direction dir = pathfinding.getGreedyMove(rc.getLocation(), info.getMapLocation(), true, true);
+            Direction dir = pathfinding.getGreedyMove(rc.getLocation(), info.getMapLocation(), true, Pathfinding.Mode.NO_ENEMY);
             if (dir != null) {
               mapData.move(dir);
               if (rc.canAttack(info.getMapLocation())) {
@@ -98,7 +99,7 @@ public final class Mopper extends Robot {
         for (RobotInfo info : rc.senseNearbyRobots(-1, TEAM)) {
           if (info.type == UnitType.MOPPER || info.getType().isTowerType() || info.getPaintAmount() > GameConstants.INCREASED_COOLDOWN_THRESHOLD) { continue; }
           if (rc.getLocation().distanceSquaredTo(info.getLocation()) > GameConstants.PAINT_TRANSFER_RADIUS_SQUARED) {
-            Direction dir = pathfinding.getGreedyMove(rc.getLocation(), info.getLocation(), true, true);
+            Direction dir = pathfinding.getGreedyMove(rc.getLocation(), info.getLocation(), true, Pathfinding.Mode.NO_ENEMY);
             if (dir != null) {
               mapData.move(dir);
               // Transfer the max possible
@@ -116,7 +117,7 @@ public final class Mopper extends Robot {
 
   protected void doMacro() throws GameActionException {
     if (rc.isMovementReady()) {
-      Direction dir = pathfinding.getMove();
+      Direction dir = pathfinding.getMove(Pathfinding.Mode.NO_ENEMY);
       if (dir == null) {
         System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {

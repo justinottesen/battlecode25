@@ -14,8 +14,8 @@ public class Pathfinding {
   private final int MAX_PATH_LENGTH = 10; // Number of steps to current target
 
   public Pathfinding(RobotController rc_, MapData mapData_) {
-    mapData = mapData_;
     rc = rc_;
+    mapData = mapData_;
     targets = new Stack<MapLocation>(MAX_TARGETS);
     stepCache = new Queue<MapLocation>(MAX_PATH_LENGTH);
   }
@@ -60,7 +60,7 @@ public class Pathfinding {
    * @param target The new target for pathfinding
    * @return The move that should be made to reach the target
    */
-  public Direction getMove(MapLocation target) { setTarget(target); return getMove(); }
+  public Direction getMove(MapLocation target) throws GameActionException { setTarget(target); return getMove(); }
   
   /**
    * Gets the next move that should be made to reach the target
@@ -69,7 +69,7 @@ public class Pathfinding {
    * 
    * @return The direction the robot should take to reach the target
    */
-  public Direction getMove() {
+  public Direction getMove() throws GameActionException {
     final MapLocation current = rc.getLocation();
 
     // Can't move to a nonexistant target (or if we don't exist somehow)
@@ -184,18 +184,73 @@ public class Pathfinding {
    * @param loc The current position to move from
    * @return The direction to take to move towards the target 
    */
-  public Direction getGreedyMove(MapLocation loc) {
+  public Direction getGreedyMove(MapLocation loc) throws GameActionException { return getGreedyMove(loc, targets.top()); }
+
+  /**
+   * Finds the best move towards the `goal` location.
+   * 
+   * @param loc The current position to move from
+   * @param goal The goal position to move towards
+   * @return The direction to take to move towards the target 
+   */
+  public Direction getGreedyMove(MapLocation loc, MapLocation goal) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), false); }
+
+  /**
+   * Finds the closest legal move to the specified direction
+   * @param loc The current position to move from
+   * @param dir The goal direction to ty to match
+   * @param checkCanMove Whether to check if the robot can move to a location
+   * @return The direction to take to move towards the target 
+   */
+  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), checkCanMove); }
+
+  /**
+   * Finds the closest legal move to the specified direction
+   * @param loc The current position to move from
+   * @param dir The goal direction to ty to match
+   * @param checkCanMove Whether to check if the robot can move to a location
+   * @return The direction to take to move towards the target 
+   */
+  public Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove) throws GameActionException { return getGreedyMove(loc, dir, checkCanMove, false); }
+
+  /**
+   * Finds the closest legal move to the specified direction
+   * @param loc The current position to move from
+   * @param dir The goal direction to ty to match
+   * @param checkCanMove Whether to check if the robot can move to a location
+   * @param onlyAllyPaint Whether to only allow moves onto ally paint
+   * @return The direction to take to move towards the target 
+   */
+  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove, boolean onlyAllyPaint) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), checkCanMove, onlyAllyPaint); }
+
+  /**
+   * Finds the closest legal move to the specified direction
+   * @param loc The current position to move from
+   * @param dir The goal direction to ty to match
+   * @param checkCanMove Whether to check if the robot can move to a location
+   * @param onlyAllyPaint Whether to only allow moves onto ally paint
+   * @return The direction to take to move towards the target 
+   */
+  public Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove, boolean onlyAllyPaint) throws GameActionException {
     // Try going towards it
-    MapLocation next = loc.add(loc.directionTo(targets.top()));
-    if (mapData.passable(next)) { return loc.directionTo(next); }
+    MapLocation next = loc.add(dir);
+    if (mapData.passable(next) && 
+        (!checkCanMove || rc.canMove(dir)) &&
+        (!onlyAllyPaint || rc.senseMapInfo(next).getPaint().isAlly())) { return dir; }
     
     // Try turning left
-    next = loc.add(loc.directionTo(targets.top()).rotateLeft());
-    if (rc.onTheMap(loc) && mapData.passable(next)) { return loc.directionTo(next); }
+    Direction leftDir = dir.rotateLeft();
+    next = loc.add(leftDir);
+    if (rc.onTheMap(next) && mapData.passable(next) &&
+        (!checkCanMove || rc.canMove(leftDir)) &&
+        (!onlyAllyPaint || rc.senseMapInfo(next).getPaint().isAlly())) { return leftDir; }
 
     // Try turning right
-    next = loc.add(loc.directionTo(targets.top()).rotateRight());
-    if (rc.onTheMap(loc) && mapData.passable(next)) { return loc.directionTo(next); }
+    dir = dir.rotateRight();
+    next = loc.add(dir);
+    if (rc.onTheMap(next) && mapData.passable(next) &&
+    (!checkCanMove || rc.canMove(dir)) &&
+    (!onlyAllyPaint || rc.senseMapInfo(next).getPaint().isAlly())) { return dir; }
 
     // Give up if none work
     return null;

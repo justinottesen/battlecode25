@@ -1,7 +1,5 @@
 package jottesen_test.util;
 
-import javax.management.monitor.GaugeMonitor;
-
 import battlecode.common.*;
 
 /**
@@ -17,6 +15,11 @@ public class MapData {
   public final int MAP_HEIGHT;
 
   public final int MAX_DISTANCE_SQ;
+
+  private final boolean[][] SRP_ARRAY;
+  private final boolean[][] PAINT_ARRAY;
+  private final boolean[][] MONEY_ARRAY;
+  private final boolean[][] DEFENSE_ARRAY;
 
   private final int[] mapData;
   private final int UNKNOWN = 0b0;
@@ -42,10 +45,20 @@ public class MapData {
   private final int LAST_UPDATED_BITSHIFT = 6;
 
   // Bits 17-18: Paint status of tiles (Only applicable for empty)
+  // TODO: UPDATE THESE VALUES AND USE THEM?
   private final int ENEMY_PAINT        = 0b01_00000000000_0_000_00;
   private final int FRIENDLY_PRIMARY   = 0b10_00000000000_0_000_00;
   private final int FRIENDLY_SECONDARY = 0b11_00000000000_0_000_00;
   private final int PAINT_BITMASK      = 0b11_00000000000_0_000_00;
+
+  // Bits 19-20: Goal Tower Type
+  private final int GOAL_MONEY_TOWER   = 0b01_00_00000000000_0_000_00;
+  private final int GOAL_PAINT_TOWER   = 0b10_00_00000000000_0_000_00;
+  private final int GOAL_DEFENSE_TOWER = 0b11_00_00000000000_0_000_00;
+  private final int GOAL_TOWER_BITMASK = 0b11_00_00000000000_0_000_00;
+
+  // Bit 21: Goal Paint Color
+  private final int GOAL_SECONDARY_PAINT = 0b1_00_00_00000000000_0_000_00;
 
   private int symmetryType     = 0b111;
   private final int ROTATIONAL = 0b001;
@@ -55,12 +68,17 @@ public class MapData {
   private final int[] knownRuins;
   private int ruinIndex;
 
-  public MapData(RobotController rc_) {
+  public MapData(RobotController rc_) throws GameActionException {
     rc = rc_;
     TEAM = rc.getTeam();
     MAP_WIDTH = rc.getMapWidth();
     MAP_HEIGHT = rc.getMapHeight();
     MAX_DISTANCE_SQ = MAP_WIDTH * MAP_WIDTH + MAP_HEIGHT * MAP_HEIGHT;
+
+    SRP_ARRAY = rc.getResourcePattern();
+    PAINT_ARRAY = rc.getTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER);
+    MONEY_ARRAY = rc.getTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER);
+    DEFENSE_ARRAY = rc.getTowerPattern(UnitType.LEVEL_ONE_DEFENSE_TOWER);
 
     mapData = new int[MAP_WIDTH * MAP_HEIGHT];
     knownRuins = new int[MAP_WIDTH / GameConstants.PATTERN_SIZE * MAP_HEIGHT / GameConstants.PATTERN_SIZE];
@@ -212,6 +230,9 @@ public class MapData {
         }
       } else {
         mapData[index] |= UNCLAIMED_RUIN;
+        // If unclaimed, we want to make it a money tower
+        // TODO: Put this elsewhere and add logic for different tower types
+        setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
     } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
       PaintType paint = info.getPaint();
@@ -249,7 +270,15 @@ public class MapData {
    * @param loc The `MapLocation` to find the index of
    * @return The index in the `mapData` array of `loc`
    */
-  private int getIndex(MapLocation loc) { return loc.x * MAP_HEIGHT + loc.y; }
+  private int getIndex(MapLocation loc) { return getIndex(loc.x, loc.y); }
+
+  /**
+   * Gets the index of the value in the `mapData` array corresponding to the location
+   * @param x The x coordinate to find the index for
+   * @param y The y coordinate to find the index for
+   * @return The index in the `mapData` array of `loc`
+   */
+  private int getIndex(int x, int y) { return x * MAP_HEIGHT + y; }
 
   /**
    * Gets the `MapLocation` corresponding to the index in `mapData`
@@ -394,4 +423,63 @@ public class MapData {
     }
     return closestTower;
   }
+
+  /**
+   * Returns the goal paint color of the given tile
+   * @param loc The location to paint
+   * @return True if should use secondary color
+   */
+  public boolean useSecondaryPaint(MapLocation loc) {
+    return (readData(loc) & GOAL_SECONDARY_PAINT) > 0;
+  }
+
+  /**
+   * Sets the goal tower type for a ruin. Returns whether this was successful
+   * @param loc The location of the ruin
+   * @param towerType The goal type of the tower to be painted
+   * @return Whether this was successfully set
+   */
+  public boolean setGoalTowerType(MapLocation loc, UnitType towerType) {
+    UnitType baseType = towerType.getBaseType();
+    boolean[][] pattern = switch (baseType) {
+      case UnitType.LEVEL_ONE_PAINT_TOWER -> PAINT_ARRAY;
+      case UnitType.LEVEL_ONE_MONEY_TOWER -> MONEY_ARRAY;
+      case UnitType.LEVEL_ONE_DEFENSE_TOWER -> DEFENSE_ARRAY;
+      default -> null;
+    };
+    int x = loc.x - (GameConstants.PATTERN_SIZE / 2);
+    int y = loc.y - (GameConstants.PATTERN_SIZE / 2);
+    // Check for valid arguments
+    if (pattern == null || x < 0 || y < 0) { return false; }
+    // Set the goal tower type
+    int towerIndex = getIndex(loc);
+    mapData[towerIndex] &= ~GOAL_TOWER_BITMASK;
+    mapData[towerIndex] |= switch (baseType) {
+      case UnitType.LEVEL_ONE_PAINT_TOWER -> GOAL_PAINT_TOWER;
+      case UnitType.LEVEL_ONE_MONEY_TOWER -> GOAL_MONEY_TOWER;
+      case UnitType.LEVEL_ONE_DEFENSE_TOWER -> GOAL_DEFENSE_TOWER;
+      default -> 0;
+    };
+    // Set the goal paint types
+    // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
+    for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
+      for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
+        int index = getIndex(x + x_offset, y + y_offset);
+        if (pattern[x_offset][y_offset]) {
+          mapData[index] |= GOAL_SECONDARY_PAINT;
+        } else {
+          mapData[index] &= ~GOAL_SECONDARY_PAINT;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Sets the goal tower type for a ruin. Returns whether this was successful
+   * @param index The index of the location in mapData
+   * @param towerType The goal type of the tower to be painted
+   * @return Whether this was successfully set
+   */
+  private boolean setGoalTowerType(int index, UnitType towerType) { return setGoalTowerType(getLoc(index), towerType); }
 }

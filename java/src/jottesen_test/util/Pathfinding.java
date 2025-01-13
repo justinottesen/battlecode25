@@ -90,7 +90,7 @@ public class Pathfinding {
       stepCache.dequeue();
 
       // If we can't move in that direction anymore (body blocker), clear the cache and recalculate
-      if (rc.isMovementReady() && rc.senseRobotAtLocation(stepCache.front()) != null) {
+      if (!stepCache.empty() && rc.isMovementReady() && rc.senseRobotAtLocation(stepCache.front()) != null) {
         loc = current;
         stepCache.clear();
       }

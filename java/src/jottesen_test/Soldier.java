@@ -112,8 +112,7 @@ public final class Soldier extends Robot {
       if (dir == null) {
         System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
-        rc.move(dir);
-        mapData.updateNewlyVisible(dir); // TODO: Make a `move` method which groups this with the rc.move call
+        mapData.move(dir);
       }
     }
     painter.paint();

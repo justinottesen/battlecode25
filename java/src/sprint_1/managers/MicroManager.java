@@ -1,5 +1,6 @@
 package sprint_1.managers;
 
+import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -44,7 +45,7 @@ public class MicroManager {
     if (interesting_count == 0) {
       return false;
     }
-    
+
     // Allocate info for 3x3 grid
     microInfos = new MicroInfo[9];
     microInfos[0] = new MicroInfo(Direction.NORTH);
@@ -71,7 +72,7 @@ public class MicroManager {
     }
 
     // Check nearby map info
-    MapInfo[] mapInfos = rc.senseNearbyMapInfos();
+    MapInfo[] mapInfos = rc.senseNearbyMapInfos(2);
     for (MapInfo mapInfo : mapInfos) {
       microInfos[0].updateMapInfo(mapInfo);
       microInfos[1].updateMapInfo(mapInfo);
@@ -83,7 +84,7 @@ public class MicroManager {
       microInfos[7].updateMapInfo(mapInfo);
       microInfos[8].updateMapInfo(mapInfo);
     }
-    
+
     // Pick best direction
     MicroInfo bestMicro = microInfos[8]; // Start with 8 (center, guaranteed can move
     if (microInfos[0].isBetterThan(bestMicro)) { bestMicro = microInfos[8]; }
@@ -94,7 +95,7 @@ public class MicroManager {
     if (microInfos[5].isBetterThan(bestMicro)) { bestMicro = microInfos[5]; }
     if (microInfos[6].isBetterThan(bestMicro)) { bestMicro = microInfos[6]; }
     if (microInfos[7].isBetterThan(bestMicro)) { bestMicro = microInfos[7]; }
-
+    
     if (bestMicro.dir == Direction.CENTER) { return true; }
     
     if (rc.canMove(bestMicro.dir)) {  

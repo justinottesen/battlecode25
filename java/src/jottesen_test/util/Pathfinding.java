@@ -71,12 +71,6 @@ public class Pathfinding {
    */
   public Direction getMove() {
     final MapLocation current = rc.getLocation();
-    try {
-      rc.setIndicatorDot(targets.top(), 255, 0, 0);
-      rc.setIndicatorDot(targets.bottom(), 0, 0, 255);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
 
     // Can't move to a nonexistant target (or if we don't exist somehow)
     if (targets.empty() || current == null) { return null; }
@@ -90,20 +84,10 @@ public class Pathfinding {
     // Check the cache to see if we have calculated this before
     MapLocation loc = current;
     MapLocation prev = null;
-    while (!stepCache.empty() && !current.equals(stepCache.front())) { try {
-      rc.setIndicatorDot(stepCache.front(), 255, 0, 255);
-    } catch (Exception e) { e.printStackTrace(); }
-    stepCache.dequeue(); }
+    while (!stepCache.empty() && !current.equals(stepCache.front())) { stepCache.dequeue(); }
     if (current.equals(stepCache.front())) {
       loc = stepCache.back();
       stepCache.dequeue();
-      try {
-        rc.setIndicatorDot(current, 255, 255, 0);
-      } catch (Exception e) { e.printStackTrace(); }
-    } else {
-      try {
-        rc.setIndicatorDot(current, 0, 255, 255);
-      } catch (Exception e) { e.printStackTrace(); }
     }
 
     // Try greedily moving towards target
@@ -123,11 +107,6 @@ public class Pathfinding {
           }
           stepCache.enqueue(loc);
         }
-        try {
-          rc.setIndicatorLine(prev, loc, 255, 0, 0);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
       }
       prevMove = move;
     }
@@ -135,32 +114,17 @@ public class Pathfinding {
     // If we got to the target or an unknown square, return the move
     if (loc != null && (targets.top().equals(loc) || !mapData.known(loc) || stepCache.used() == stepCache.capacity())) {
       Direction move = current.directionTo(stepCache.front());
-      try {
-        rc.setIndicatorLine(current, current.add(move), 0, 0, 0);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
       return move;
     }
     loc = prev;
-    try {
-      rc.setIndicatorDot(loc, 0, 0, 0);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
+  
     // If we hit an obstacle, bugnav around it
-    
+    // Bugnav Left  
     Direction leftBugDir = closestAvailableLeftDirection(loc, loc.directionTo(targets.top()));
     MapLocation newLeftTarget = null;
     if (leftBugDir != null) {
       int turnIndex = 0; // If +2, we have rounded a corner
       newLeftTarget = loc.add(leftBugDir);
-      try {
-        rc.setIndicatorLine(loc, newLeftTarget, 0, 255, 0);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
       while (rc.onTheMap(newLeftTarget) && mapData.known(newLeftTarget) && turnIndex < 2) {
         // Try to turn towards target
         leftBugDir = leftBugDir.rotateRight().rotateRight();
@@ -173,11 +137,6 @@ public class Pathfinding {
           candidate = newLeftTarget.add(leftBugDir);
         }
         // Suitable candidate has been found
-        try {
-          rc.setIndicatorLine(candidate, newLeftTarget, 0, 255, 0);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
         newLeftTarget = candidate;
       }
       if (!rc.onTheMap(newLeftTarget)) { newLeftTarget = null; }
@@ -189,11 +148,6 @@ public class Pathfinding {
     if (rightBugDir != null && !rightBugDir.equals(leftBugDir)) {
       int turnIndex = 0; // If +2, we have rounded a corner
       newRightTarget = loc.add(rightBugDir);
-      try {
-        rc.setIndicatorLine(loc, newRightTarget, 0, 0, 255);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
       while (rc.onTheMap(newRightTarget) && mapData.known(newRightTarget) && turnIndex < 2) {
         // Try to turn towards target
         rightBugDir = rightBugDir.rotateLeft().rotateLeft();
@@ -206,11 +160,6 @@ public class Pathfinding {
           candidate = newRightTarget.add(rightBugDir);
         }
         // Suitable candidate has been found
-        try {
-          rc.setIndicatorLine(candidate, newRightTarget, 0, 0, 255);
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
         newRightTarget = candidate;
       }
       if (!rc.onTheMap(newRightTarget)) { newRightTarget = null; }
@@ -238,11 +187,6 @@ public class Pathfinding {
   public Direction getGreedyMove(MapLocation loc) {
     // Try going towards it
     MapLocation next = loc.add(loc.directionTo(targets.top()));
-    try {
-      rc.setIndicatorLine(loc, next, 255, 255, 255);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
     if (mapData.passable(next)) { return loc.directionTo(next); }
     
     // Try turning left

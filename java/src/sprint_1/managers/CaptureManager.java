@@ -84,7 +84,9 @@ public class CaptureManager {
                         Robot.rc.attack(patternTile,useSecondaryColor);
                     }else{
                         patternComplete = false;    //since we know that a tile is wrong and we can't paint it
+
                         break;
+
                     }
                 }
             }

@@ -179,6 +179,7 @@ public class MapData {
                     return false;
                 }
                 if ((mapData[index + j + (i * MAX_MAP_SIZE)] & 12) != 0){    //ruin (need to check a larger radius in the future)
+
                     return false;
                 }
             }

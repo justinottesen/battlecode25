@@ -47,10 +47,10 @@ public class MapData {
 
   // Bits 17-18: Paint status of tiles (Only applicable for empty)
   // TODO: UPDATE THESE VALUES AND USE THEM?
-  private final int ENEMY_PAINT        = 0b01_00000000000_0_000_00;
-  private final int FRIENDLY_PRIMARY   = 0b10_00000000000_0_000_00;
-  private final int FRIENDLY_SECONDARY = 0b11_00000000000_0_000_00;
-  private final int PAINT_BITMASK      = 0b11_00000000000_0_000_00;
+  // private final int ENEMY_PAINT        = 0b01_00000000000_0_000_00;
+  // private final int FRIENDLY_PRIMARY   = 0b10_00000000000_0_000_00;
+  // private final int FRIENDLY_SECONDARY = 0b11_00000000000_0_000_00;
+  // private final int PAINT_BITMASK      = 0b11_00000000000_0_000_00;
 
   // Bits 19-20: Goal Tower Type
   private final int GOAL_MONEY_TOWER   = 0b01_00_00000000000_0_000_00;
@@ -105,7 +105,15 @@ public class MapData {
     if (lastDir == Direction.CENTER) { return; }
     // This needs to be updated if the vision radius changes
     assert GameConstants.VISION_RADIUS_SQUARED == 20;
+
+    // Update any close ruins sites (skip the first few rounds to save bytecode)
+    if (rc.getRoundNum() > 10) {
+      for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
+        updateData(rc.senseMapInfo(ruin));
+      }
+    }
     
+    // Manually update the other newly visible squares
     MapLocation current = rc.getLocation();
     Direction leftDir = lastDir.rotateLeft().rotateLeft();
     Direction rightDir = lastDir.rotateRight().rotateRight();
@@ -131,7 +139,7 @@ public class MapData {
       rightLoc = rightLoc.add(rightDir);
       if (rc.onTheMap(leftLoc)) { updateData(rc.senseMapInfo(leftLoc)); }
       if (rc.onTheMap(rightLoc)) { updateData(rc.senseMapInfo(rightLoc)); }
-    } else {
+    } else { // Diagonal direction
       MapLocation center = current.translate(3 * lastDir.dx, 3 * lastDir.dy);
       MapLocation leftLoc = center.add(leftDir);
       MapLocation rightLoc = center.add(rightDir);
@@ -183,21 +191,18 @@ public class MapData {
         if ((symmetryType & HORIZONTAL) > 0) {
           int h_index = symmetryIndex(index, HORIZONTAL);
           if (mapData[h_index] != UNKNOWN && mapData[h_index] != mapData[index]) {
-            System.out.println("Ruled out HORIZONTAL");
             symmetryType ^= HORIZONTAL;
           }
         }
         if ((symmetryType & VERTICAL) > 0) {
           int v_index = symmetryIndex(index, VERTICAL);
           if (mapData[v_index] != UNKNOWN && mapData[v_index] != mapData[index]) {
-            System.out.println("Ruled out VERTICAL");
             symmetryType ^= VERTICAL;
           }
         }
         if ((symmetryType & ROTATIONAL) > 0) {
           int r_index = symmetryIndex(index, ROTATIONAL);
           if (mapData[r_index] != UNKNOWN && mapData[r_index] != mapData[index]) {
-            System.out.println("Ruled out ROTATIONAL");
             symmetryType ^= ROTATIONAL;
           }
         }
@@ -241,12 +246,12 @@ public class MapData {
       int roundNum = rc.getRoundNum();
       mapData[index] &= ~LAST_UPDATED_BITMASK;
       mapData[index] |= roundNum << LAST_UPDATED_BITSHIFT;
-      mapData[index] &= ~PAINT_BITMASK;
-      if (paint.isEnemy()) {
-        mapData[index] |= ENEMY_PAINT;
-      } else if (paint.isAlly()) {
-        mapData[index] |= paint.isSecondary() ? FRIENDLY_SECONDARY : FRIENDLY_PRIMARY;
-      }
+      // mapData[index] &= ~PAINT_BITMASK;
+      // if (paint.isEnemy()) {
+      //   mapData[index] |= ENEMY_PAINT;
+      // } else if (paint.isAlly()) {
+      //   mapData[index] |= paint.isSecondary() ? FRIENDLY_SECONDARY : FRIENDLY_PRIMARY;
+      // }
     }
   }
 
@@ -310,7 +315,7 @@ public class MapData {
    * @param symmetryType The type of symmetry
    * @return The position of the symmetric value
    */
-  private MapLocation symmetryLoc(MapLocation loc, int symmetryType) {
+  public MapLocation symmetryLoc(MapLocation loc, int symmetryType) {
     return switch (symmetryType) {
       case HORIZONTAL -> new MapLocation(loc.x, MAP_HEIGHT - (loc.y + 1));
       case VERTICAL -> new MapLocation(MAP_WIDTH - (loc.x + 1), loc.y);
@@ -392,9 +397,6 @@ public class MapData {
       if ((mapData[knownRuins[i]] & FRIENDLY_TOWER) == 0) { continue; }
       MapLocation towerLoc = getLoc(knownRuins[i]);
       int ruinDist = current.distanceSquaredTo(towerLoc);
-      if (closestTower != null) {
-        System.out.println(towerLoc.toString() + " " + ruinDist + " | " + closestTower.toString() + " " + closestDist);
-      }
       if (closestTower == null || ruinDist < closestDist) {
         closestTower = towerLoc;
         closestDist = ruinDist;

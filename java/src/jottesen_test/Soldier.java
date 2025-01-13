@@ -30,6 +30,14 @@ public final class Soldier extends Robot {
   }
 
   protected void doMicro() throws GameActionException {
+    rc.setIndicatorString("GOAL - " + switch (goal) {
+      case IDLE -> "IDLE"; 
+      case CAPTURE_RUIN -> "CAPTURE_RUIN"; 
+      case FIGHT_TOWER -> "FIGHT_TOWER"; 
+      case REFILL_PAINT -> "REFILL_PAINT";
+      default -> "UNKNOWN";
+    });
+
     // Can't do anything, no point
     if (!rc.isMovementReady() && !rc.isActionReady()) { return; }
 
@@ -90,7 +98,7 @@ public final class Soldier extends Robot {
         painter.fight(goalTower, pathfinding);
         break;
       case CAPTURE_RUIN:
-        painter.capture(pathfinding);
+        if (painter.capture(pathfinding)) { goal = REFILL_PAINT; pathfinding.setTarget(mapData.closestFriendlyTower()); }
         break;
       default: break;
     }

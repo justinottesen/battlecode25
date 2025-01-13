@@ -156,6 +156,8 @@ public class Painter {
     // Try to complete the ruin
     if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc)) {
       rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc);
+      mapData.updateData(rc.senseMapInfo(cacheLoc));
+      cacheLoc = null;
       return true;
     }
       

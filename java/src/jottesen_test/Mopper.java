@@ -9,8 +9,10 @@ public final class Mopper extends Robot {
   }
 
   protected void doMicro() {
-    
+
   }
 
-  protected void doMacro() {}
+  protected void doMacro() {
+    
+  }
 }

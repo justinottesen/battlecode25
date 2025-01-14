@@ -90,10 +90,9 @@ public final class Tower extends Robot {
 
     // Spawn more if we got hella chips
     if (rc.getChips() > rc.getType().moneyCost * 2) {
-      if (rc.getRoundNum() % 4 > 0) {
-        trySpawn(UnitType.SOLDIER, mapData.MAP_CENTER);
-      } else if (rc.getRoundNum() % 4 == 0) {
-        trySpawn(UnitType.MOPPER, mapData.MAP_CENTER);
+      switch (rc.getRoundNum() % 5) {
+        case 0: trySpawn(UnitType.MOPPER, mapData.MAP_CENTER); break;
+        default: trySpawn(UnitType.SOLDIER, mapData.MAP_CENTER); break;
       }
     }
   }

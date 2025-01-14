@@ -19,7 +19,7 @@ public class MapData {
 
   private final int EXPLORE_CHUNK_SIZE = 5;
 
-  private final boolean[][] SRP_ARRAY;
+  private final boolean[][] SRP_ARRAY; // TODO: Implement special resource patterns
   private final boolean[][] PAINT_ARRAY;
   private final boolean[][] MONEY_ARRAY;
   private final boolean[][] DEFENSE_ARRAY;
@@ -246,7 +246,8 @@ public class MapData {
         // TODO: Put this elsewhere and add logic for different tower types
         setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
-    } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
+    } // else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
+      // TODO: Decide if it is worth it to do this
       // PaintType paint = info.getPaint();
       // mapData[index] &= ~PAINT_BITMASK;
       // if (paint.isEnemy()) {
@@ -254,7 +255,6 @@ public class MapData {
       // } else if (paint.isAlly()) {
       //   mapData[index] |= paint.isSecondary() ? FRIENDLY_SECONDARY : FRIENDLY_PRIMARY;
       // }
-    }
   }
 
   /**

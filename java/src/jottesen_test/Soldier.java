@@ -150,7 +150,7 @@ public final class Soldier extends Robot {
           }
         }
         break;
-      case EXPLORE:
+      case EXPLORE: // TODO: Address clumping of units
         if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
           mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
           pathfinding.setTarget(mapData.getExploreTarget());

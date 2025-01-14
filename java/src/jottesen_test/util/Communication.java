@@ -14,11 +14,13 @@ public class Communication {
   public final int Y_COORDINATE_MASK = 0b111111_000000_0000;
   public final int Y_COORDINATE_BITSHIFT = 10;
 
+  // TODO: IMPLEMENT THIS COMMUNICATION
   public final int SYMMETRY_KNOWLEDGE = 0b0001; // ----------------------------
 
       // Bits 4-6: Symmetry Value
       public final int SYMMETRY_VALUE_MASK = 0b111_0000;
 
+  // TODO: IMPLEMENT THIS COMMUNICATION
   public final int REQUEST_MOPPER = 0b0010; // --------------------------------
 
       // Bits 4-15: Coordinates (specified above)
@@ -68,8 +70,6 @@ public class Communication {
     message |= (x << X_COORDINATE_BITSHIFT) | (y << Y_COORDINATE_BITSHIFT);
     return message;
   }
-
-
 
   /**
    * Tries to send the given message to the given target

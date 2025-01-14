@@ -150,6 +150,7 @@ public class Painter {
    * @throws GameActionException
    */
   public void paintFight(RobotInfo enemy, Pathfinding pathfinding) throws GameActionException {
+    if (enemy == null) { return; } // We are far away, let macro take care of pathfinding
     MapLocation enemyLoc = enemy.getLocation();
     int distance_sq = rc.getLocation().distanceSquaredTo(enemyLoc);
     int enemy_range_sq = enemy.getType().actionRadiusSquared;

@@ -75,52 +75,53 @@ public final class Tower extends Robot {
   }
 
   /**
+   * Finds the closest available spawn location to the provided target
+   * @param type The type of robot to be build (idk if this is even necessary)
+   * @param target The location to get close to
+   * @return The closest available location
+   */
+  private MapLocation getSpawnLoc(UnitType type, MapLocation target) throws GameActionException {
+    if (rc.canBuildRobot(UnitType.SOLDIER, target)) { return target; }
+
+    MapLocation closest = null;
+    int closest_dist = mapData.MAX_DISTANCE_SQ;
+    for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(LOCATION, GameConstants.BUILD_ROBOT_RADIUS_SQUARED)) {
+      rc.setIndicatorDot(loc, 255, 255, 255);
+      int dist = loc.distanceSquaredTo(target);
+      if (rc.canBuildRobot(UnitType.SOLDIER, loc) && dist < closest_dist) {
+        closest = loc;
+        closest_dist = dist;
+        if (closest_dist < 3) { break; }
+      }
+    }
+
+    return closest;
+  }
+
+  /**
+   * Tries to spawn a robot at the closest available location to the target
+   * @param type The type of the robot to spawn
+   * @param target The location to get close to
+   * @param skipTimer Whether or not to skip the spawn cooldown
+   * @return Whether the robot was spawned or not
+   * @throws GameActionException
+   */
+  private boolean trySpawn(UnitType type, MapLocation target) throws GameActionException {
+    MapLocation loc = getSpawnLoc(type, target);
+    if (loc != null) {
+      rc.buildRobot(type, loc);
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Handles robot spawning for round 1
    * 
    * @throws GameActionException
    */
   private void spawnRound1() throws GameActionException {
-    Direction r_dir = LOCATION.directionTo(mapData.MAP_CENTER);
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-      return;
-    }
-    Direction l_dir = r_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-      return;
-    }
-    r_dir = r_dir.rotateRight();
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-      return;
-    }
-    l_dir = l_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-      return;
-    }
-    r_dir = r_dir.rotateRight();
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-      return;
-    }
-    l_dir = l_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-      return;
-    }
-    r_dir = r_dir.rotateRight();
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(r_dir));
-      return;
-    }
-    l_dir = l_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.SOLDIER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.SOLDIER, LOCATION.add(l_dir));
-      return;
-    }
-    return;
+    trySpawn(UnitType.SOLDIER, mapData.MAP_CENTER);
   }
 
   /**
@@ -129,46 +130,6 @@ public final class Tower extends Robot {
    * @throws GameActionException
    */
   private void spawnRound2() throws GameActionException {
-    Direction r_dir = LOCATION.directionTo(mapData.MAP_CENTER);
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
-      return;
-    }
-    Direction l_dir = r_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
-      return;
-    }
-    r_dir = r_dir.rotateRight();
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
-      return;
-    }
-    l_dir = l_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
-      return;
-    }
-    r_dir = r_dir.rotateRight();
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
-      return;
-    }
-    l_dir = l_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
-      return;
-    }
-    r_dir = r_dir.rotateRight();
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(r_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(r_dir));
-      return;
-    }
-    l_dir = l_dir.rotateLeft();
-    if (rc.canBuildRobot(UnitType.MOPPER, LOCATION.add(l_dir))) {
-      rc.buildRobot(UnitType.MOPPER, LOCATION.add(l_dir));
-      return;
-    }
-    return;
+    trySpawn(UnitType.MOPPER, mapData.MAP_CENTER);
   }
 }

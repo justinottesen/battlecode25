@@ -61,7 +61,8 @@ public class MapData {
   private final int GOAL_TOWER_BITMASK = 0b11_00_00000000000_0_000_00;
 
   // Bit 21: Goal Paint Color
-  private final int GOAL_SECONDARY_PAINT = 0b1_00_00_00000000000_0_000_00;
+  private final int GOAL_SECONDARY_PAINT   = 0b01_00_00_00000000000_0_000_00;
+  private final int GOAL_PAINT_COLOR_KNOWN = 0b10_00_00_00000000000_0_000_00;
 
   private int symmetryType     = 0b111;
   private final int ROTATIONAL = 0b001;
@@ -452,7 +453,8 @@ public class MapData {
    * @return True if should use secondary color
    */
   public boolean useSecondaryPaint(MapLocation loc) {
-    return (readData(loc) & GOAL_SECONDARY_PAINT) > 0;
+    return (readData(loc) & (GOAL_PAINT_COLOR_KNOWN | GOAL_SECONDARY_PAINT)) 
+            == (GOAL_PAINT_COLOR_KNOWN | GOAL_SECONDARY_PAINT);
   }
 
   /**
@@ -487,6 +489,7 @@ public class MapData {
     for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
       for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
         int index = getIndex(x + x_offset, y + y_offset);
+        mapData[index] |= GOAL_PAINT_COLOR_KNOWN;
         if (pattern[x_offset][y_offset]) {
           mapData[index] |= GOAL_SECONDARY_PAINT;
         } else {

@@ -17,7 +17,7 @@ public class MapData {
 
   public final int MAX_DISTANCE_SQ;
 
-  private final int EXPLORE_CHUNK_SIZE = 10;
+  private final int EXPLORE_CHUNK_SIZE = 5;
 
   private final boolean[][] SRP_ARRAY;
   private final boolean[][] PAINT_ARRAY;
@@ -527,6 +527,6 @@ public class MapData {
         }
       }
     }
-    return closest;
+    return closest != null ? closest : MAP_CENTER; //. TODO: Make this better and such. This avoids null pointer stuff once we explore the whole map
   }
 }

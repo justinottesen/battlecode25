@@ -8,12 +8,16 @@ public final class Tower extends Robot {
 
   private final MapLocation LOCATION;
 
+  private final int CREATED_ROUND;
+
   public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
 
     TOWER_ATTACK_RADIUS = rc.getType().actionRadiusSquared; // NOTE: This will have to change if upgrades modify radius
 
     LOCATION = rc.getLocation();
+
+    CREATED_ROUND = rc.getRoundNum();
   }
 
   protected void doMicro() throws GameActionException {
@@ -78,10 +82,19 @@ public final class Tower extends Robot {
    * @throws GameActionException
    */
   private void spawnRobots() throws GameActionException {
-    switch (rc.getRoundNum()) {
-      case 1: spawnRound1(); break;
-      case 2: spawnRound2(); break;
+    switch (rc.getRoundNum() - CREATED_ROUND + 1) {
+      case 1: spawnRound1(); return;
+      case 2: spawnRound2(); return;
       default: break;
+    }
+
+    // Spawn more if we got hella chips
+    if (rc.getChips() > rc.getType().moneyCost * 2) {
+      if (rc.getRoundNum() % 4 > 0) {
+        trySpawn(UnitType.SOLDIER, mapData.MAP_CENTER);
+      } else if (rc.getRoundNum() % 4 == 0) {
+        trySpawn(UnitType.MOPPER, mapData.MAP_CENTER);
+      }
     }
   }
 

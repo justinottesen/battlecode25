@@ -8,6 +8,8 @@ public final class Splasher extends Robot {
     super(rc_);
   }
 
+  // TODO: Incorporate splasher into our bot
+
   public void doMicro() {}
   
   public void doMacro() {}

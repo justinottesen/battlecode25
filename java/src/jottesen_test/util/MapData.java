@@ -17,6 +17,8 @@ public class MapData {
 
   public final int MAX_DISTANCE_SQ;
 
+  private final int EXPLORE_CHUNK_SIZE = 5;
+
   private final boolean[][] SRP_ARRAY;
   private final boolean[][] PAINT_ARRAY;
   private final boolean[][] MONEY_ARRAY;
@@ -494,4 +496,25 @@ public class MapData {
    * @return Whether this was successfully set
    */
   private boolean setGoalTowerType(int index, UnitType towerType) { return setGoalTowerType(getLoc(index), towerType); }
+
+  /**
+   * Returns the closest unknown center of a NxN chunk of the map
+   * @return The closest unexplored center of a chunk
+   */
+  public MapLocation getExploreTarget() {
+    MapLocation closest = null;
+    int closest_dist = MAX_DISTANCE_SQ;
+    for (int x = EXPLORE_CHUNK_SIZE / 2; x < MAP_WIDTH; x += EXPLORE_CHUNK_SIZE) {
+      for (int y = 0; y < EXPLORE_CHUNK_SIZE / 2; y += EXPLORE_CHUNK_SIZE) {
+        if ((x & LAST_UPDATED_BITMASK) != 0) { continue; }
+        MapLocation newLoc = new MapLocation(x, y);
+        int dist = rc.getLocation().distanceSquaredTo(newLoc);
+        if (dist < closest_dist) {
+          closest = newLoc;
+          closest_dist = dist;
+        }
+      }
+    }
+    return closest;
+  }
 }

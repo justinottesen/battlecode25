@@ -12,30 +12,34 @@ public final class Mopper extends Robot {
   // Constants
   private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD / 2;
 
-  // Member data
-  private int goal;
-
   // Possible goal values, ordered by priority number (higher is more important)
-  private final int IDLE = 0;
-  private final int CAPTURE_RUIN = 1;
-  private final int REFILL_PAINT = 2;
-  private RobotInfo goalTower;
+  private enum Goal {
+    EXPLORE(0),
+    CAPTURE_RUIN(1),
+    REFILL_PAINT(2);
 
+    public final int val;
+
+    Goal(int val_) {
+      val = val_;
+    }
+  }
+  private Goal goal;
+  
   public Mopper(RobotController rc_) throws GameActionException {
     super(rc_);
 
     pathfinding = new Pathfinding(rc, mapData);
     painter = new Painter(rc, mapData);
-    goal = IDLE;
+    goal = Goal.EXPLORE;
     pathfinding.setTarget(mapData.MAP_CENTER);
   }
 
   protected void doMicro() throws GameActionException {
     rc.setIndicatorString("GOAL - " + switch (goal) {
-      case IDLE -> "IDLE"; 
+      case EXPLORE -> "EXPLORE"; 
       case CAPTURE_RUIN -> "CAPTURE_RUIN";
       case REFILL_PAINT -> "REFILL_PAINT";
-      default -> "UNKNOWN";
     });
     if (pathfinding.getTarget() != null) {
       rc.setIndicatorLine(rc.getLocation(), pathfinding.getTarget(), 255, 0, 255);
@@ -44,27 +48,27 @@ public final class Mopper extends Robot {
     // UPDATE GOAL ------------------------------------------------------------
 
     // Check if someone else finished the current ruin
-    if (goal == CAPTURE_RUIN) {
+    if (goal == Goal.CAPTURE_RUIN) {
       if (rc.canSenseRobotAtLocation(pathfinding.getTarget())) {
-        goal = REFILL_PAINT;
+        goal = Goal.REFILL_PAINT;
         pathfinding.setTarget(mapData.closestFriendlyTower());
       }
     }
 
     // If low on paint, set goal to refill
-    if (goal != REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      goal = REFILL_PAINT;
+    if (goal != Goal.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      goal = Goal.REFILL_PAINT;
       pathfinding.setTarget(mapData.closestFriendlyTower());
     }
 
     // Look for nearby ruins if we aren't already refilling paint
-    if (goal < REFILL_PAINT) {
+    if (goal.val < Goal.REFILL_PAINT.val) {
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
         RobotInfo info = rc.senseRobotAtLocation(ruin);
         if (info == null) { // Unclaimed Ruin
-          if (goal >= CAPTURE_RUIN) { continue; }
-          goal = CAPTURE_RUIN;
+          if (goal.val >= Goal.CAPTURE_RUIN.val) { continue; }
+          goal = Goal.CAPTURE_RUIN;
           pathfinding.setTarget(ruin);
           break;
         }
@@ -97,7 +101,7 @@ public final class Mopper extends Robot {
     switch (goal) {
       case CAPTURE_RUIN:
         if (painter.mopCapture(pathfinding)) { 
-          goal = REFILL_PAINT;
+          goal = Goal.REFILL_PAINT;
           pathfinding.setTarget(mapData.closestFriendlyTower());
         }
         break;
@@ -112,7 +116,7 @@ public final class Mopper extends Robot {
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
           if (rc.canTransferPaint(pathfinding.getTarget(), -paintAmount)) {
             rc.transferPaint(pathfinding.getTarget(), -paintAmount);
-            goal = IDLE;
+            goal = Goal.EXPLORE;
             pathfinding.setTarget(mapData.MAP_CENTER);
           }
         }

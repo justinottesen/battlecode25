@@ -12,32 +12,40 @@ public final class Soldier extends Robot {
   // Constants
   private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD / 2;
 
-  // Member Data
-  private int goal;
-
   // Possible goal values, ordered by priority number (higher is more important)
-  private final int IDLE = 0;
-  private final int CAPTURE_RUIN = 1;
-  private final int FIGHT_TOWER = 2;
-  private final int REFILL_PAINT = 3;
-  private RobotInfo goalTower;
+  public enum Goal {
+    EXPLORE(0),
+    CAPTURE_RUIN(1),
+    FIGHT_TOWER(2),
+    REFILL_PAINT(3);
+    
+    public final int val;
+    
+    Goal(int val_) {
+      val = val_;
+    }
+    
+  }
+  private Goal goal;
+
+  // Other goal helpers
+  RobotInfo goalTower;
 
   public Soldier(RobotController rc_) throws GameActionException {
     super(rc_);
     
     painter = new Painter(rc, mapData);
     pathfinding = new Pathfinding(rc, mapData);
-    goal = IDLE;
-    pathfinding.setTarget(mapData.MAP_CENTER);
+    goal = Goal.EXPLORE;
+    pathfinding.setTarget(mapData.getExploreTarget());
   }
 
   protected void doMicro() throws GameActionException {
     rc.setIndicatorString("GOAL - " + switch (goal) {
-      case IDLE -> "IDLE"; 
-      case CAPTURE_RUIN -> "CAPTURE_RUIN"; 
-      case FIGHT_TOWER -> "FIGHT_TOWER"; 
-      case REFILL_PAINT -> "REFILL_PAINT";
-      default -> "UNKNOWN";
+      case Goal.EXPLORE -> "EXPLORE"; 
+      case Goal.CAPTURE_RUIN -> "CAPTURE_RUIN"; 
+      case Goal.FIGHT_TOWER -> "FIGHT_TOWER"; 
+      case Goal.REFILL_PAINT -> "REFILL_PAINT";
     });
     if (pathfinding.getTarget() != null) {
       rc.setIndicatorLine(rc.getLocation(), pathfinding.getTarget(), 255, 0, 255);
@@ -46,30 +54,30 @@ public final class Soldier extends Robot {
     // UPDATE GOAL ------------------------------------------------------------
 
     // If received paint transfer from mopper, update goal
-    if (goal == REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      goal = IDLE;
-      pathfinding.setTarget(mapData.MAP_CENTER);
+    if (goal == Goal.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      goal = goal.EXPLORE;
+      pathfinding.setTarget(mapData.getExploreTarget());
     }
     
     // If low on paint, set goal to refill
-    if (goal != REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      goal = REFILL_PAINT;
+    if (goal != Goal.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      goal = Goal.REFILL_PAINT;
       pathfinding.setTarget(mapData.closestFriendlyTower());
     }
 
     // Look for nearby ruins if we aren't already fighting a tower
-    if (goal < FIGHT_TOWER) {
+    if (goal.val < Goal.FIGHT_TOWER.val) {
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
         RobotInfo info = rc.senseRobotAtLocation(ruin);
         if (info == null) { // Unclaimed Ruin
-          if (goal >= CAPTURE_RUIN) { continue; }
-          goal = CAPTURE_RUIN;
+          if (goal.val >= Goal.CAPTURE_RUIN.val) { continue; }
+          goal = Goal.CAPTURE_RUIN;
           pathfinding.setTarget(ruin);
           continue;
         }
         if (info.getTeam() == OPPONENT) { // Enemy Tower
-          goal = FIGHT_TOWER;
+          goal = Goal.FIGHT_TOWER;
           goalTower = info;
           pathfinding.setTarget(ruin);
           break;
@@ -91,7 +99,7 @@ public final class Soldier extends Robot {
         break;
       case CAPTURE_RUIN:
         if (painter.paintCapture(pathfinding)) {
-          goal = REFILL_PAINT;
+          goal = Goal.REFILL_PAINT;
           pathfinding.setTarget(mapData.closestFriendlyTower());
         }
         break;
@@ -106,8 +114,8 @@ public final class Soldier extends Robot {
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
           if (rc.canTransferPaint(pathfinding.getTarget(), -paintAmount)) {
             rc.transferPaint(pathfinding.getTarget(), -paintAmount);
-            goal = IDLE;
-            pathfinding.setTarget(mapData.MAP_CENTER);
+            goal = Goal.EXPLORE;
+            pathfinding.setTarget(mapData.getExploreTarget());
           }
         }
         break;

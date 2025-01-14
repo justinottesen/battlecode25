@@ -17,7 +17,7 @@ public class MapData {
 
   public final int MAX_DISTANCE_SQ;
 
-  private final int EXPLORE_CHUNK_SIZE = 5;
+  private final int EXPLORE_CHUNK_SIZE = 10;
 
   private final boolean[][] SRP_ARRAY;
   private final boolean[][] PAINT_ARRAY;
@@ -218,6 +218,12 @@ public class MapData {
         }
       }
     }
+
+    // Update the last seen info
+    mapData[index] &= ~LAST_UPDATED_BITMASK;
+    mapData[index] |= rc.getRoundNum() << LAST_UPDATED_BITSHIFT;
+
+    rc.setIndicatorDot(loc, 255, 0, 0);
       
     // Copy data over symmetrically
     if (symmetryKnown()) {
@@ -232,9 +238,6 @@ public class MapData {
     if ((mapData[index] & TILE_TYPE_BITMASK) == RUIN) {
       RobotInfo towerInfo = rc.senseRobotAtLocation(loc);
       if (towerInfo != null) {
-        int roundNum = rc.getRoundNum();
-        mapData[index] &= ~LAST_UPDATED_BITMASK;
-        mapData[index] |= roundNum << LAST_UPDATED_BITSHIFT;
         mapData[index] &= ~TILE_TYPE_BITMASK;
         mapData[index] |= switch (towerInfo.getType().getBaseType()) {
           case UnitType.LEVEL_ONE_DEFENSE_TOWER -> DEFENSE_TOWER;
@@ -252,10 +255,7 @@ public class MapData {
         setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
     } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
-      PaintType paint = info.getPaint();
-      int roundNum = rc.getRoundNum();
-      mapData[index] &= ~LAST_UPDATED_BITMASK;
-      mapData[index] |= roundNum << LAST_UPDATED_BITSHIFT;
+      // PaintType paint = info.getPaint();
       // mapData[index] &= ~PAINT_BITMASK;
       // if (paint.isEnemy()) {
       //   mapData[index] |= ENEMY_PAINT;
@@ -311,6 +311,14 @@ public class MapData {
    * @return The value representing the known information about that square
    */
   private int readData(MapLocation loc) { return mapData[getIndex(loc)]; }
+
+  /**
+   * Gets the `mapData` value associated with the given coordinates
+   * @param x The x coordinate
+   * @param y The y coordinate
+   * @return The value representing the known information about that square
+   */
+  private int readData(int x, int y) { return mapData[getIndex(x, y)]; }
 
   /**
    * Checks whether the symmetry of the map is known
@@ -501,13 +509,14 @@ public class MapData {
    * Returns the closest unknown center of a NxN chunk of the map
    * @return The closest unexplored center of a chunk
    */
-  public MapLocation getExploreTarget() {
+  public MapLocation getExploreTarget() throws GameActionException {
     MapLocation closest = null;
     int closest_dist = MAX_DISTANCE_SQ;
     for (int x = EXPLORE_CHUNK_SIZE / 2; x < MAP_WIDTH; x += EXPLORE_CHUNK_SIZE) {
-      for (int y = 0; y < EXPLORE_CHUNK_SIZE / 2; y += EXPLORE_CHUNK_SIZE) {
-        if ((x & LAST_UPDATED_BITMASK) != 0) { continue; }
+      for (int y = EXPLORE_CHUNK_SIZE / 2; y < MAP_HEIGHT; y += EXPLORE_CHUNK_SIZE) {
+        if ((readData(x, y) & LAST_UPDATED_BITMASK) != 0) { continue; }
         MapLocation newLoc = new MapLocation(x, y);
+        rc.setIndicatorDot(newLoc, 0, 255, 0);
         int dist = rc.getLocation().distanceSquaredTo(newLoc);
         if (dist < closest_dist) {
           closest = newLoc;

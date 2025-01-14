@@ -119,6 +119,15 @@ public final class Soldier extends Robot {
           }
         }
         break;
+      case EXPLORE:
+        System.out.println("I AM EXPLORING! Target: " + pathfinding.getTarget() + " - " + rc.getLocation());
+        if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
+          System.out.println("Updating mapdata with the mapinfo of the target...");
+          mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
+          System.out.println("Setting new explore target...");
+          pathfinding.setTarget(mapData.getExploreTarget());
+        }
+        break;
       default: break;
     }
   }

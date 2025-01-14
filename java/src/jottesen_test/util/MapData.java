@@ -458,6 +458,15 @@ public class MapData {
   }
 
   /**
+   * Returns whether the goal color of the paint is known
+   * @param loc The location of the given tile
+   * @return True if it is known which color to use
+   */
+  public boolean knownPaintColor(MapLocation loc) {
+    return (readData(loc) & GOAL_PAINT_COLOR_KNOWN) != 0;
+  }
+
+  /**
    * Sets the goal tower type for a ruin. Returns whether this was successful
    * @param loc The location of the ruin
    * @param towerType The goal type of the tower to be painted

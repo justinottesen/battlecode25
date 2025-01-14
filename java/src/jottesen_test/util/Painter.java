@@ -330,14 +330,6 @@ public class Painter {
       cacheLoc = null;
       return true;
     }
-
-    // // Back off of ruin to leave space for painters
-    // if (current.isAdjacentTo(pathfinding.getTarget())) {
-    //   Direction dir = pathfinding.getGreedyMove(current, pathfinding.getTarget().directionTo(current), true, Pathfinding.Mode.ALLY_ONLY);
-    //   if (dir != null && rc.canMove(dir)) {
-    //     mapData.move(dir);
-    //   }
-    // }
       
     return false;
   }

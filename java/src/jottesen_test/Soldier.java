@@ -9,6 +9,9 @@ public final class Soldier extends Robot {
   private final Pathfinding pathfinding;
   private final Painter painter;
 
+  // Constants
+  private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD / 2;
+
   // Member Data
   private int goal;
 
@@ -26,7 +29,6 @@ public final class Soldier extends Robot {
     pathfinding = new Pathfinding(rc, mapData);
     goal = IDLE;
     pathfinding.setTarget(mapData.MAP_CENTER);
-    rc.setIndicatorString("GOAL - IDLE");
   }
 
   protected void doMicro() throws GameActionException {
@@ -37,37 +39,22 @@ public final class Soldier extends Robot {
       case REFILL_PAINT -> "REFILL_PAINT";
       default -> "UNKNOWN";
     });
-
-    // Can't do anything, no point
-    if (!rc.isMovementReady() && !rc.isActionReady()) { return; }
-
-    // Can't move, might as well try and paint
-    if (!rc.isMovementReady() && rc.isActionReady()) { painter.paint(); return; }
-
-    // UPDATE GOAL ------------------------------------------------------------
-    
-    // If low on paint, set goal to refill
-    if (rc.getPaint() < GameConstants.INCREASED_COOLDOWN_THRESHOLD * rc.getType().paintCapacity / 100) {
-      goal = REFILL_PAINT;
-      pathfinding.setTarget(mapData.closestFriendlyTower());
+    if (pathfinding.getTarget() != null) {
+      rc.setIndicatorLine(rc.getLocation(), pathfinding.getTarget(), 255, 0, 255);
     }
 
-    // If we find a tower while refilling paint, refill and set back idle
-    if (goal == REFILL_PAINT) {
-      if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
-        RobotInfo tower = rc.senseRobotAtLocation(pathfinding.getTarget());
-        if (tower == null) {
-          pathfinding.setTarget(mapData.closestFriendlyTower());
-          return;
-        }
-        int paintAmount = rc.getType().paintCapacity - rc.getPaint();
-        if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
-        if (rc.canTransferPaint(pathfinding.getTarget(), -paintAmount)) {
-          rc.transferPaint(pathfinding.getTarget(), -paintAmount);
-          goal = IDLE;
-          pathfinding.setTarget(mapData.MAP_CENTER);
-        }
-      }
+    // UPDATE GOAL ------------------------------------------------------------
+
+    // If received paint transfer from mopper, update goal
+    if (goal == REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      goal = IDLE;
+      pathfinding.setTarget(mapData.MAP_CENTER);
+    }
+    
+    // If low on paint, set goal to refill
+    if (goal != REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      goal = REFILL_PAINT;
+      pathfinding.setTarget(mapData.closestFriendlyTower());
     }
 
     // Look for nearby ruins if we aren't already fighting a tower
@@ -77,13 +64,11 @@ public final class Soldier extends Robot {
         RobotInfo info = rc.senseRobotAtLocation(ruin);
         if (info == null) { // Unclaimed Ruin
           if (goal >= CAPTURE_RUIN) { continue; }
-          rc.setIndicatorString("GOAL - CAPTURE_RUIN: " + ruin.toString());
           goal = CAPTURE_RUIN;
           pathfinding.setTarget(ruin);
           continue;
         }
         if (info.getTeam() == OPPONENT) { // Enemy Tower
-          rc.setIndicatorString("GOAL - FIGHT_TOWER " + ruin.toString());
           goal = FIGHT_TOWER;
           goalTower = info;
           pathfinding.setTarget(ruin);
@@ -92,13 +77,39 @@ public final class Soldier extends Robot {
       }
     }
 
-    // Do micro things
+    // DO THINGS --------------------------------------------------------------
+
+    // Can't do anything, no point
+    if (!rc.isMovementReady() && !rc.isActionReady()) { return; }
+
+    // Can't move, might as well try and paint
+    if (!rc.isMovementReady() && rc.isActionReady()) { painter.paint(); return; }
+
     switch (goal) {
       case FIGHT_TOWER:
-        painter.fight(goalTower, pathfinding);
+        painter.paintFight(goalTower, pathfinding);
         break;
       case CAPTURE_RUIN:
-        if (painter.capture(pathfinding)) { goal = REFILL_PAINT; pathfinding.setTarget(mapData.closestFriendlyTower()); }
+        if (painter.paintCapture(pathfinding)) {
+          goal = REFILL_PAINT;
+          pathfinding.setTarget(mapData.closestFriendlyTower());
+        }
+        break;
+      case REFILL_PAINT:
+        if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
+          RobotInfo tower = rc.senseRobotAtLocation(pathfinding.getTarget());
+          if (tower == null) {
+            pathfinding.setTarget(mapData.closestFriendlyTower());
+            return;
+          }
+          int paintAmount = rc.getType().paintCapacity - rc.getPaint();
+          if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
+          if (rc.canTransferPaint(pathfinding.getTarget(), -paintAmount)) {
+            rc.transferPaint(pathfinding.getTarget(), -paintAmount);
+            goal = IDLE;
+            pathfinding.setTarget(mapData.MAP_CENTER);
+          }
+        }
         break;
       default: break;
     }

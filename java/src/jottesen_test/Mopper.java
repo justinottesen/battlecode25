@@ -45,6 +45,13 @@ public final class Mopper extends Robot {
       rc.setIndicatorLine(rc.getLocation(), pathfinding.getTarget(), 255, 0, 255);
     }
 
+    // TODO: TAKE THIS OUT AND DEAL WITH CROWDING lol
+    // If surrounded, kill yourself
+    if (rc.senseNearbyRobots(9, TEAM).length > 24 /* Out of 28 */) {
+      rc.disintegrate();
+      return;
+    }
+
     // UPDATE GOAL ------------------------------------------------------------
 
     // Update any close ruins sites (skip the first few rounds to save bytecode)

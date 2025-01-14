@@ -53,6 +53,14 @@ public final class Soldier extends Robot {
 
     // UPDATE GOAL ------------------------------------------------------------
 
+    // Check if someone else finished the current ruin
+    if (goal == Goal.CAPTURE_RUIN) {
+      if (rc.canSenseRobotAtLocation(pathfinding.getTarget())) {
+        goal = Goal.REFILL_PAINT;
+        pathfinding.setTarget(mapData.closestFriendlyTower());
+      }
+    }
+
     // If received paint transfer from mopper, update goal
     if (goal == Goal.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       goal = goal.EXPLORE;

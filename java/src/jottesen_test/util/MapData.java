@@ -116,13 +116,6 @@ public class MapData {
     if (lastDir == Direction.CENTER) { return; }
     // This needs to be updated if the vision radius changes
     assert GameConstants.VISION_RADIUS_SQUARED == 20;
-
-    // Update any close ruins sites (skip the first few rounds to save bytecode)
-    if (rc.getRoundNum() > 10) {
-      for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-        updateData(rc.senseMapInfo(ruin));
-      }
-    }
     
     // Manually update the other newly visible squares
     MapLocation current = rc.getLocation();
@@ -223,8 +216,6 @@ public class MapData {
     // Update the last seen info
     mapData[index] &= ~LAST_UPDATED_BITMASK;
     mapData[index] |= rc.getRoundNum() << LAST_UPDATED_BITSHIFT;
-
-    rc.setIndicatorDot(loc, 255, 0, 0);
       
     // Copy data over symmetrically
     if (symmetryKnown()) {

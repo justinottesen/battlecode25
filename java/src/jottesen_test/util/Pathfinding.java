@@ -102,8 +102,8 @@ public class Pathfinding {
     // If at target or intermediate target is found to be impassable, get rid of it
     while (current.equals(targets.top()) || (targets.used() > 1 && !mapData.passable(targets.top()))) { targets.pop(); }
 
-    // No need to move if at the target
-    if (targets.empty()) { return Direction.CENTER; }
+    // No need to move if at the target (or adjacent to it)
+    if (targets.empty() || rc.getLocation().isAdjacentTo(targets.bottom())) { return Direction.CENTER; }
 
     // Check the cache to see if we have calculated this before
     MapLocation loc = current;
@@ -230,7 +230,7 @@ public class Pathfinding {
    * @param goal The goal position to move towards
    * @return The direction to take to move towards the target 
    */
-  public Direction getGreedyMove(MapLocation loc, MapLocation goal) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), false); }
+  public Direction getGreedyMove(MapLocation loc, MapLocation goal) throws GameActionException { return getGreedyMove(loc, goal, false); }
 
   /**
    * Finds the closest legal move to the specified direction
@@ -239,7 +239,7 @@ public class Pathfinding {
    * @param checkCanMove Whether to check if the robot can move to a location
    * @return The direction to take to move towards the target 
    */
-  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), checkCanMove); }
+  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove) throws GameActionException { return getGreedyMove(loc, goal, checkCanMove, Mode.ANY); }
 
   /**
    * Finds the closest legal move to the specified direction
@@ -258,7 +258,63 @@ public class Pathfinding {
    * @param onlyAllyPaint Whether to only allow moves onto ally paint
    * @return The direction to take to move towards the target 
    */
-  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove, Mode mode) throws GameActionException { return getGreedyMove(loc, loc.directionTo(goal), checkCanMove, mode); }
+  public Direction getGreedyMove(MapLocation loc, MapLocation goal, boolean checkCanMove, Mode mode) throws GameActionException {
+    // Try going towards it
+    Direction l_dir = loc.directionTo(goal);
+    MapLocation l_next = loc.add(l_dir);
+    if (mapData.passable(l_next) && 
+        (!checkCanMove || rc.canMove(l_dir)) &&
+        (switch (mode) { 
+          case Mode.ANY -> true;
+          case Mode.ALLY_ONLY -> rc.senseMapInfo(l_next).getPaint().isAlly(); 
+          case Mode.NO_ENEMY -> !rc.senseMapInfo(l_next).getPaint().isEnemy(); 
+        })) { return l_dir; }
+    
+    // Figure out which direction is better
+    Direction r_dir = l_dir.rotateRight();
+    MapLocation r_next = loc.add(r_dir);
+    l_dir = l_dir.rotateLeft();
+    l_next = loc.add(l_dir);
+    if (l_next.distanceSquaredTo(goal) < r_next.distanceSquaredTo(goal)) {
+      // Try turning left
+      if (rc.onTheMap(l_next) && mapData.passable(l_next) &&
+          (!checkCanMove || rc.canMove(l_dir)) &&
+          (switch (mode) { 
+            case Mode.ANY -> true;
+            case Mode.ALLY_ONLY -> rc.senseMapInfo(l_next).getPaint().isAlly(); 
+            case Mode.NO_ENEMY -> !rc.senseMapInfo(l_next).getPaint().isEnemy(); 
+          })) { return l_dir; }
+
+      // Try turning right
+      if (rc.onTheMap(r_next) && mapData.passable(r_next) &&
+          (!checkCanMove || rc.canMove(r_dir)) &&
+          (switch (mode) { 
+            case Mode.ANY -> true;
+            case Mode.ALLY_ONLY -> rc.senseMapInfo(r_next).getPaint().isAlly(); 
+            case Mode.NO_ENEMY -> !rc.senseMapInfo(r_next).getPaint().isEnemy(); 
+          })) { return r_dir; }
+      
+    } else {
+      // Try turning right
+      if (rc.onTheMap(r_next) && mapData.passable(r_next) &&
+          (!checkCanMove || rc.canMove(r_dir)) &&
+          (switch (mode) { 
+            case Mode.ANY -> true;
+            case Mode.ALLY_ONLY -> rc.senseMapInfo(r_next).getPaint().isAlly(); 
+            case Mode.NO_ENEMY -> !rc.senseMapInfo(r_next).getPaint().isEnemy(); 
+          })) { return r_dir; }
+
+      // Try turning left
+      if (rc.onTheMap(l_next) && mapData.passable(l_next) &&
+          (!checkCanMove || rc.canMove(l_dir)) &&
+          (switch (mode) { 
+            case Mode.ANY -> true;
+            case Mode.ALLY_ONLY -> rc.senseMapInfo(l_next).getPaint().isAlly(); 
+            case Mode.NO_ENEMY -> !rc.senseMapInfo(l_next).getPaint().isEnemy(); 
+          })) { return l_dir; }
+    }
+    return null;
+  }
 
   /**
    * Finds the closest legal move to the specified direction

@@ -18,6 +18,17 @@ public final class Tower extends Robot {
 
   protected void doMicro() throws GameActionException {
     attackEnemies();
+
+    // Suicide for paint if worth it
+    if (rc.getPaint() == 0 && // No more paint
+        rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
+        rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
+        comms.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
+          comms.addCoordinates(comms.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
+      System.out.println("Sent suicide message");
+      rc.disintegrate();
+      return;
+    }
   }
 
   protected void doMacro() throws GameActionException {

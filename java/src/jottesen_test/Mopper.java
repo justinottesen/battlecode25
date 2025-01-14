@@ -32,7 +32,7 @@ public final class Mopper extends Robot {
     pathfinding = new Pathfinding(rc, mapData);
     painter = new Painter(rc, mapData);
     goal = Goal.EXPLORE;
-    pathfinding.setTarget(mapData.MAP_CENTER);
+    pathfinding.setTarget(mapData.getExploreTarget());
   }
 
   protected void doMicro() throws GameActionException {
@@ -46,6 +46,24 @@ public final class Mopper extends Robot {
     }
 
     // UPDATE GOAL ------------------------------------------------------------
+
+    // Update any close ruins sites (skip the first few rounds to save bytecode)
+    if (rc.getRoundNum() > 10) {
+      for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
+        mapData.updateData(rc.senseMapInfo(ruin));
+      }
+    }
+
+    // Check for a suicide message, if received this is priority number 1
+    Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
+    for (Message m : messages) {
+      if (comms.getMessageType(m.getBytes()) == comms.SUICIDE) {
+        System.out.println("Received suicide message");
+        goal = Goal.CAPTURE_RUIN;
+        pathfinding.setTarget(comms.getCoordinates(m.getBytes()));
+        painter.paintCapture(pathfinding);
+      }
+    }
 
     // Check if someone else finished the current ruin
     if (goal == Goal.CAPTURE_RUIN) {
@@ -109,17 +127,29 @@ public final class Mopper extends Robot {
         if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
           RobotInfo tower = rc.senseRobotAtLocation(pathfinding.getTarget());
           if (tower == null) {
-            pathfinding.setTarget(mapData.closestFriendlyTower());
-            return;
+            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, pathfinding.getTarget())) {
+              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, pathfinding.getTarget());
+              tower = rc.senseRobotAtLocation(pathfinding.getTarget());
+            } else {
+              pathfinding.setTarget(mapData.closestFriendlyTower());
+              return;
+            }
           }
           int paintAmount = rc.getType().paintCapacity - rc.getPaint();
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
           if (rc.canTransferPaint(pathfinding.getTarget(), -paintAmount)) {
             rc.transferPaint(pathfinding.getTarget(), -paintAmount);
             goal = Goal.EXPLORE;
-            pathfinding.setTarget(mapData.MAP_CENTER);
+            pathfinding.setTarget(mapData.getExploreTarget());
           }
         }
+        break;
+      case EXPLORE:
+        if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
+          mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
+          pathfinding.setTarget(mapData.getExploreTarget());
+        }
+        break;
       default: break;
     }
   }

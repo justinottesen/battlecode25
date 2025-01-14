@@ -41,7 +41,7 @@ public class Painter {
   public boolean shouldPaint(MapLocation loc, boolean useSecondary) throws GameActionException {
     if (!rc.canPaint(loc) || !rc.canAttack(loc)) { return false; }
     PaintType current = rc.senseMapInfo(loc).getPaint();
-    return !current.isAlly() || current.isSecondary() != useSecondary;
+    return !current.isAlly() || (mapData.knownPaintColor(loc) && current.isSecondary() != useSecondary);
   }
 
   /**

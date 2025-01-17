@@ -35,9 +35,9 @@ public class MapData {
   
   // Bits 2-4: Tower Type Data (Only applicable for ruins)
   private final int UNCLAIMED_RUIN     = 0b001_00;
-  private final int MONEY_TOWER        = 0b010_00;
-  private final int PAINT_TOWER        = 0b011_00;
-  private final int DEFENSE_TOWER      = 0b100_00;
+  public static final int MONEY_TOWER  = 0b010_00;
+  public static final int PAINT_TOWER  = 0b011_00;
+  public static final int DEFENSE_TOWER= 0b100_00;
   private final int TOWER_TYPE_BITMASK = 0b111_00;
 
   // Bit 5: Friendly = 1, foe = 0 (Only applicable for claimed ruins)
@@ -528,5 +528,41 @@ public class MapData {
       }
     }
     return closest != null ? closest : MAP_CENTER; //. TODO: Make this better and such. This avoids null pointer stuff once we explore the whole map
+  }
+
+  /**
+   * Sets all ruins/towers on mapdata to ruins except for self
+   * Should only be called by towers
+   * Intended to be called right before adding all broadcasted tower locations to map data
+   * so we can see which towers we no longer have
+   * @throws GameActionException
+   */
+  public void resetTowersAndRuins() throws GameActionException{
+    MapLocation current = rc.getLocation();
+    MapLocation closestTower = null;
+    int closestDist = 0;
+    for (int i = 0; i < ruinIndex; ++i) {
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == 0) { continue; }
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == UNCLAIMED_RUIN) { continue; }
+      if ((mapData[knownRuins[i]] & FRIENDLY_TOWER) == 0) { continue; }
+      MapLocation towerLoc = getLoc(knownRuins[i]);
+      if(towerLoc.equals(current)) { continue; }
+      mapData[knownRuins[i]] &= ~TILE_TYPE_BITMASK;
+      mapData[knownRuins[i]] |= UNCLAIMED_RUIN;
+    }
+  }
+
+  /**
+   * Sets a single tower manually (usually from comms)
+   * Can be called by any robot type
+   * @param type bitmask of the tower (this function should be called from a switch-case statement)
+   * @param location location of the tower
+   * @throws GameActionException
+   */
+  public void setTowerManually(int type, MapLocation location) throws GameActionException{
+    int index = getIndex(location);
+    mapData[index] &= ~TILE_TYPE_BITMASK;
+    mapData[index] |= type;
+    mapData[index] |= FRIENDLY_TOWER;
   }
 }

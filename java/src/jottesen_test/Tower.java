@@ -1,6 +1,8 @@
 package jottesen_test;
 
 import battlecode.common.*;
+import jottesen_test.util.MapData;
+import jottesen_test.util.Communication;
 
 public final class Tower extends Robot {
 
@@ -27,12 +29,14 @@ public final class Tower extends Robot {
     if (rc.getPaint() == 0 && // No more paint
         rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
+        CREATED_ROUND > 5 && //not one of the original towers
         comms.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
           comms.addCoordinates(comms.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
       System.out.println("Sent suicide message");
       rc.disintegrate();
       return;
     }
+    communicateTowerTypes();
   }
 
   protected void doMacro() throws GameActionException {
@@ -71,6 +75,84 @@ public final class Tower extends Robot {
       rc.attack(target.getLocation());
     }
   }
+
+  /**
+   * Broadcasts own tower type, then reads incoming broadcasts to count other tower types
+   * 
+   * @throws GameActionException
+   */
+   private void communicateTowerTypes() throws GameActionException{
+    //First, get the appropriate comm message type based on what tower we are
+    int commType = -1;
+    switch(rc.getType().getBaseType()){ //note that getBaseType should return the level-one type of the tower regardless of tower upgrades (I'm not sure about this since it's very badly documented)
+      case(UnitType.LEVEL_ONE_MONEY_TOWER):
+        commType=Communication.SELF_TOWER_TYPE_IS_MONEY;
+        break;
+      case(UnitType.LEVEL_ONE_PAINT_TOWER):
+        commType=Communication.SELF_TOWER_TYPE_IS_PAINT;
+        break;
+      case(UnitType.LEVEL_ONE_DEFENSE_TOWER):
+        commType=Communication.SELF_TOWER_TYPE_IS_DEFENSE;
+        break;
+      default:
+        return;
+    }
+
+    //broadcast our type and location
+    comms.tryBroadcastMessage(comms.addCoordinates(commType, LOCATION));
+    //this method in theory returns a success boolean, but idk what to do with it
+
+    
+    if(rc.getRoundNum()==1) return; //no messages to read
+
+    //we clear the entire mapdata of towers so we can re-add them all
+    //that way, any towers that aren't re-added we know are dead
+    mapData.resetTowersAndRuins();
+    paintTowers = 0;
+    moneyTowers = 0;
+    defenseTowers = 0;
+    //add self to the count:
+    switch(rc.getType().getBaseType()){ //note that getBaseType should return the level-one type of the tower regardless of tower upgrades (I'm not sure about this since it's very badly documented)
+      case(UnitType.LEVEL_ONE_MONEY_TOWER):
+        ++moneyTowers;
+        break;
+      case(UnitType.LEVEL_ONE_PAINT_TOWER):
+        ++paintTowers;
+        break;
+      case(UnitType.LEVEL_ONE_DEFENSE_TOWER):
+        ++defenseTowers;
+        break;
+      default:
+        return;
+    }
+    //now read broadcast messages from last round only
+    int lastRound = rc.getRoundNum()-1;
+    Message[] lastRoundMessages = rc.readMessages(lastRound);
+    for(Message m:lastRoundMessages){
+      MapLocation towerLocation = comms.getCoordinates(m.getBytes());
+      switch(comms.getMessageType(m.getBytes())){
+        case(Communication.SELF_TOWER_TYPE_IS_PAINT):
+          //increment the number of paint towers in count
+          ++paintTowers;
+          //add the paint tower to mapdata
+          mapData.setTowerManually(MapData.PAINT_TOWER, towerLocation);
+          break;
+        case(Communication.SELF_TOWER_TYPE_IS_MONEY):
+          //increment the number of money towers in count
+          ++moneyTowers;
+          //add the money tower to mapdata
+          mapData.setTowerManually(MapData.MONEY_TOWER, towerLocation);
+          break;
+        case(Communication.SELF_TOWER_TYPE_IS_DEFENSE):
+          //increment the number of defense towers in count
+          ++defenseTowers;
+          //add the defense tower to mapdata
+          mapData.setTowerManually(MapData.DEFENSE_TOWER, towerLocation);
+          break;
+      }
+    }
+    rc.setIndicatorString("paintTowers: "+paintTowers+", moneyTowers: "+moneyTowers+", defenseTowers: "+defenseTowers);
+   }
 
   /**
    * Handles the logic of spawning robots.

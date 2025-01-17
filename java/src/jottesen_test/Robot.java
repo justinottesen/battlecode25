@@ -14,6 +14,11 @@ public abstract class Robot {
   // Common utility classes
   protected final MapData mapData;
   protected final Communication comms;
+
+  // Tower counts
+  protected int paintTowers;
+  protected int moneyTowers;
+  protected int defenseTowers;
   
   public Robot(RobotController rc_) throws GameActionException {
     rc = rc_;
@@ -25,6 +30,11 @@ public abstract class Robot {
     mapData.updateAllVisible();
 
     comms = new Communication(rc);
+
+    //set all tower counts to -1 that way we know that they haven't been set yet
+    paintTowers = -1;
+    moneyTowers = -1;
+    defenseTowers = -1;
   };
 
   final public void run() throws GameActionException {

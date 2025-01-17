@@ -29,6 +29,13 @@ public class Communication {
 
       // Bits 4-15: Coordinates (specified above)
 
+  
+  public static final int SELF_TOWER_TYPE_IS_PAINT = 0b0100;
+  public static final int SELF_TOWER_TYPE_IS_MONEY = 0b0101;
+  public static final int SELF_TOWER_TYPE_IS_DEFENSE = 0b0110; // --------------------
+      // Bits 4-15: Coordinates (specified above)
+
+
   public Communication(RobotController rc_) {
     rc = rc_;
   }
@@ -97,5 +104,19 @@ public class Communication {
       success = trySendMessage(message, robot.getLocation()) || success;
     }
     return success;
+  }
+
+  /**
+   * Tries to send the given message to all towers in range (for tower use only)
+   * @param message The message to be sent to the targets
+   * @return Whether anyone was successfully sent the message
+   * @throws GameActionException
+   */
+  public boolean tryBroadcastMessage(int message) throws GameActionException {
+    if(rc.canBroadcastMessage()){
+      rc.broadcastMessage(message);
+      return true;
+    }
+    return false;
   }
 }

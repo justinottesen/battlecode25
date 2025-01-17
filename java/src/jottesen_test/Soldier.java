@@ -27,6 +27,7 @@ public final class Soldier extends Robot {
     
   }
   private Goal goal;
+  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
 
   // Other goal helpers
   RobotInfo goalTower;

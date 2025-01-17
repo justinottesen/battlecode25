@@ -278,6 +278,7 @@ public class Painter {
 
   /**
    * Handles the logic for defending a ruin by cleaning enemy paint
+   * @returns true if our job is complete, false otherwise
    */
   public boolean mopCapture(Pathfinding pathfinding) throws GameActionException {
     MapLocation current = rc.getLocation();
@@ -303,25 +304,31 @@ public class Painter {
         my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
       mop(current);
     }
-  
+    
+    boolean jobComplete = true;
     // Try cleaning the rest of the ruin
-    if (rc.isActionReady()) {
-      for (MapLocation loc : paintCache) {
-        // Only interested in enemy (or unknown) paint
-        if (loc.equals(cacheLoc) || rc.canSenseLocation(loc) && !rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
-
-        // If we can't reach it, move towards it
-        if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
-          Direction dir = pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
-          if (dir == null || !rc.canMove(dir)) { continue; }
-          mapData.move(dir);
-          current = rc.getLocation();
-          // Check if there is enemy paint under our feet
-          if (mop(current)) { break; }
+    for (MapLocation loc : paintCache) {
+      if(!rc.canSenseLocation(loc)) jobComplete = false;
+      // Only interested in enemy (or unknown) paint
+      if (loc.equals(cacheLoc) || rc.canSenseLocation(loc) && !rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
+      jobComplete = false;
+      // If we can't reach it, move towards it
+      if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
+        Direction dir = null;
+        //we only care about staying on ally paint if we are already on ally paint
+        if(rc.senseMapInfo(current).getPaint().isAlly()){
+          dir = pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
+        }else{
+          dir = pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.NO_ENEMY);
         }
-        if (!shouldMop(loc)) { continue; }
-        if (mop(loc)) { break; }
+        if (dir == null || !rc.canMove(dir)) { continue; }
+        mapData.move(dir);
+        current = rc.getLocation();
+        // Check if there is enemy paint under our feet
+        if (mop(current)) { break; }
       }
+      if (!shouldMop(loc)) { continue; }
+      if (mop(loc)) { break; }
     }
 
     // Try to complete the ruin
@@ -329,6 +336,11 @@ public class Painter {
       rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, pathfinding.getTarget());
       mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
       cacheLoc = null;
+      return true;
+    }
+
+    //this only runs if there's no enemy paint in the tower pattern
+    if(jobComplete){
       return true;
     }
       

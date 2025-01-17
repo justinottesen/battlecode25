@@ -27,6 +27,7 @@ public final class Tower extends Robot {
     if (rc.getPaint() == 0 && // No more paint
         rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
+        CREATED_ROUND > 2 &&
         comms.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
           comms.addCoordinates(comms.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
       System.out.println("Sent suicide message");
@@ -82,9 +83,9 @@ public final class Tower extends Robot {
    * @throws GameActionException
    */
   private void spawnRobots() throws GameActionException {
-    switch (rc.getRoundNum() - CREATED_ROUND + 1) {
+    switch (rc.getRoundNum()) {
       case 1: spawnRound1(); return;
-      case 2: spawnRound2(); return;
+      case 2: spawnRound1(); return;
       default: break;
     }
 

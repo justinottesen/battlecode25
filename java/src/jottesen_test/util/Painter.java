@@ -39,7 +39,11 @@ public class Painter {
    * @return Whether the square should be painted or not
    */
   public boolean shouldPaint(MapLocation loc, boolean useSecondary) throws GameActionException {
-    if (!rc.canPaint(loc) || !rc.canAttack(loc)) { return false; }
+    if (!rc.canAttack(loc) || // If I can't attack OR
+       (!rc.canPaint(loc) && // (I can't paint AND
+        !(rc.canSenseRobotAtLocation(loc) && // There isn't an enemy robot)
+          rc.senseRobotAtLocation(loc).getTeam() == rc.getTeam().opponent())))
+            { return false; }
     PaintType current = rc.senseMapInfo(loc).getPaint();
     return !current.isAlly() || (mapData.knownPaintColor(loc) && current.isSecondary() != useSecondary);
   }
@@ -165,7 +169,10 @@ public class Painter {
     }
 
     // Attack enemy
-    if (rc.canAttack(enemyLoc)) { paint(enemyLoc); }
+    if (rc.canAttack(enemyLoc)) { 
+      rc.setIndicatorString("I AM ATTACKING THE ENEMY AT " + enemyLoc);
+      paint(enemyLoc);
+    }
 
     // If enemy can see us, back up
     if (distance_sq <= enemy_range_sq && rc.isMovementReady()) {

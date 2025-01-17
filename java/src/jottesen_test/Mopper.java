@@ -25,6 +25,7 @@ public final class Mopper extends Robot {
     }
   }
   private Goal goal;
+  private MapLocation completedRuinJob;
   
   public Mopper(RobotController rc_) throws GameActionException {
     super(rc_);
@@ -33,6 +34,7 @@ public final class Mopper extends Robot {
     painter = new Painter(rc, mapData);
     goal = Goal.EXPLORE;
     pathfinding.setTarget(mapData.getExploreTarget());
+    completedRuinJob = null;
   }
 
   protected void doMicro() throws GameActionException {
@@ -90,6 +92,7 @@ public final class Mopper extends Robot {
     if (goal.val < Goal.REFILL_PAINT.val) {
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
+        if(ruin.equals(completedRuinJob)) continue; //completedRuinJob is the last ruin that we know we don't need a mopper for 
         RobotInfo info = rc.senseRobotAtLocation(ruin);
         if (info == null) { // Unclaimed Ruin
           if (goal.val >= Goal.CAPTURE_RUIN.val) { continue; }
@@ -126,8 +129,16 @@ public final class Mopper extends Robot {
     switch (goal) {
       case CAPTURE_RUIN:
         if (painter.mopCapture(pathfinding)) { 
-          goal = Goal.REFILL_PAINT;
-          pathfinding.setTarget(mapData.closestFriendlyTower());
+          if(rc.senseRobotAtLocation(pathfinding.getTarget())==null){
+            //ruin has no more enemy paint around it, start exploring
+            completedRuinJob = pathfinding.getTarget();
+            goal = Goal.EXPLORE;
+            pathfinding.setTarget(mapData.getExploreTarget());
+          }else{
+            //mopper built the tower, refill from the tower
+            goal = Goal.REFILL_PAINT;
+            pathfinding.setTarget(mapData.closestFriendlyTower());
+          }
         }
         break;
       case REFILL_PAINT:
@@ -159,6 +170,12 @@ public final class Mopper extends Robot {
         break;
       default: break;
     }
+
+    //mop swing
+    if (rc.isActionReady()){
+      Direction mopSwingDirection = pickMopSwingDirection();
+      if(mopSwingDirection!=Direction.CENTER && rc.canMopSwing(mopSwingDirection)) rc.mopSwing(mopSwingDirection);
+    }
   }
 
   protected void doMacro() throws GameActionException {
@@ -170,5 +187,26 @@ public final class Mopper extends Robot {
         mapData.move(dir);
       }
     }
+  }
+
+  private Direction pickMopSwingDirection() throws GameActionException{
+    RobotInfo[] enemyRobotsWithinMopSwingRange = rc.senseNearbyRobots(8,rc.getTeam().opponent());
+    if(enemyRobotsWithinMopSwingRange.length==0)  return Direction.CENTER;
+    Direction[] cardinaDirections = Direction.cardinalDirections();
+
+    int mostEnemiesHit = 0;
+    Direction chosenDirection = Direction.CENTER;
+    for(Direction d : cardinaDirections){
+      int directionEnemiesHit = 0;
+      for(RobotInfo enemy : enemyRobotsWithinMopSwingRange){
+        Direction dirToEnemy = rc.getLocation().directionTo(enemy.getLocation());
+        if(dirToEnemy.dx==d.dx || dirToEnemy.dy==d.dy) ++directionEnemiesHit;
+      }
+      if(directionEnemiesHit>mostEnemiesHit){
+        mostEnemiesHit=directionEnemiesHit;
+        chosenDirection=d;
+      }
+    }
+    return chosenDirection;
   }
 }

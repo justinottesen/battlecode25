@@ -371,28 +371,36 @@ public class Pathfinding {
    * @return The closest available move to take
    */
   public Direction closestAvailableDirection(MapLocation loc, Direction dir) {
-    if (mapData.passable(loc.add(dir))) { return dir; } // 0
+    MapLocation resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 0
 
     Direction leftDir = dir.rotateLeft();
-    if (mapData.passable(loc.add(leftDir))) { return leftDir; } // 45
+    resultLoc = loc.add(leftDir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return leftDir; } // 45
 
     dir = dir.rotateRight();
-    if (mapData.passable(loc.add(dir))) { return dir; } // -45
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // -45
 
     leftDir = dir.rotateLeft();
-    if (mapData.passable(loc.add(leftDir))) { return leftDir; } // 90
+    resultLoc = loc.add(leftDir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return leftDir; } // 90
 
     dir = dir.rotateRight();
-    if (mapData.passable(loc.add(dir))) { return dir; } // -90
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // -90
     
     leftDir = dir.rotateLeft();
-    if (mapData.passable(loc.add(leftDir))) { return leftDir; } // 135
+    resultLoc = loc.add(leftDir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return leftDir; } // 135
 
     dir = dir.rotateRight();
-    if (mapData.passable(loc.add(dir))) { return dir; } // -135
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // -135
 
     leftDir = dir.rotateLeft();
-    if (mapData.passable(loc.add(leftDir))) { return leftDir; } // 180
+    resultLoc = loc.add(leftDir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return leftDir; } // 180
 
     return null;
   }
@@ -406,19 +414,24 @@ public class Pathfinding {
    * @return The closest available move to take
    */
   public Direction closestAvailableLeftDirection(MapLocation loc, Direction dir) {
-    if (mapData.passable(loc.add(dir))) { return dir; } // 0
+    MapLocation resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 0
 
     dir = dir.rotateLeft();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 45
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 45
 
     dir = dir.rotateLeft();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 90
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 90
 
     dir = dir.rotateLeft();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 135
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 135
 
     dir = dir.rotateLeft();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 180
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 180
 
     return null;
   }
@@ -432,19 +445,24 @@ public class Pathfinding {
    * @return The closest available move to take
    */
   public Direction closestAvailableRightDirection(MapLocation loc, Direction dir) {
-    if (mapData.passable(loc.add(dir))) { return dir; } // 0
+    MapLocation resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 0
 
     dir = dir.rotateRight();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 45
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 45
 
     dir = dir.rotateRight();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 90
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 90
 
     dir = dir.rotateRight();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 135
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 135
 
     dir = dir.rotateRight();
-    if (mapData.passable(loc.add(dir))) { return dir; } // 180
+    resultLoc = loc.add(dir);
+    if (rc.onTheMap(resultLoc) && mapData.passable(resultLoc)) { return dir; } // 180
 
     return null;
   }

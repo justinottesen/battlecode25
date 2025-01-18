@@ -25,7 +25,7 @@ public final class Tower extends Robot {
     if (rc.getPaint() == 0 && // No more paint
         rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
-        CREATED_ROUND > 2 &&
+        towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
         comms.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
           comms.addCoordinates(comms.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
       System.out.println("Sent suicide message");
@@ -152,5 +152,21 @@ public final class Tower extends Robot {
    */
   private void spawnRound2() throws GameActionException {
     trySpawn(UnitType.MOPPER, mapData.MAP_CENTER);
+  }
+
+  private boolean towerPatternComplete(UnitType type) throws GameActionException {
+    if (!type.isTowerType()) { return false; }
+    boolean[][] pattern = rc.getTowerPattern(type);
+
+    int x = LOCATION.x - (GameConstants.PATTERN_SIZE / 2);
+    int y = LOCATION.y - (GameConstants.PATTERN_SIZE / 2);
+
+    for (MapInfo tile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){
+      MapLocation loc = tile.getMapLocation();
+      PaintType paint = tile.getPaint();
+      if (!paint.isAlly() || pattern[loc.x - x][loc.y - y] != paint.isSecondary()) { return false; }
+    }
+
+    return true;
   }
 }

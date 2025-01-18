@@ -690,8 +690,6 @@ public class MapData {
    * @throws GameActionException
    */
   private boolean canMarkSRP(MapLocation loc) throws GameActionException {
-    // Need to be at the center, otherwise we won't see conflicts
-    if (!rc.getLocation().equals(loc)) { return false; }
 
     // Check if it can be marked
     if (!rc.canMarkResourcePattern(loc)) { return false; }
@@ -703,6 +701,24 @@ public class MapData {
     if (mark == PaintType.ALLY_PRIMARY) {
       return true;
     }
+
+    // Check if there are possible ruin conflicts we can't see
+    MapLocation checkLoc = loc.translate(-3, -4);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
+    checkLoc = loc.translate(-4, -3);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
+    checkLoc = loc.translate(3, -4);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
+    checkLoc = loc.translate(4, -3);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
+    checkLoc = loc.translate(3, 4);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
+    checkLoc = loc.translate(4, 3);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
+    checkLoc = loc.translate(-3, 4);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
+    checkLoc = loc.translate(-4, 3);
+    if (rc.onTheMap(checkLoc) && (readData(checkLoc) & TILE_TYPE_BITMASK) == UNKNOWN) { return false; }
 
     // Check if there are any nearby marks we don't know about
     for (MapInfo nearby_info : rc.senseNearbyMapInfos()) {

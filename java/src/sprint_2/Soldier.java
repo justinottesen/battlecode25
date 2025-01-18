@@ -135,10 +135,15 @@ public final class Soldier extends Robot {
     }
 
     // Look for SRP if we are a lower priority
-    if (goal.val < Goal.CAPTURE_SRP.val && 
-        mapData.tryMarkSRP(rc.getLocation())) {
-      goal = Goal.CAPTURE_SRP;
-      pathfinding.setTarget(rc.getLocation());
+    // TODO: Make this process more intelligent. Pack better with other SRPs, etc
+    if (goal.val < Goal.CAPTURE_SRP.val) {
+      for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), GameConstants.MARK_RADIUS_SQUARED)) {
+        if (mapData.tryMarkSRP(loc)) {
+          goal = Goal.CAPTURE_SRP;
+          pathfinding.setTarget(rc.getLocation());
+          break;
+        }
+      }
     }
 
     // DO THINGS --------------------------------------------------------------

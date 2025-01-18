@@ -27,7 +27,6 @@ public final class Soldier extends Robot {
     
   }
   private Goal goal;
-  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
 
   //variables for hard coding the first 2 soldiers from each starting tower
   private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers

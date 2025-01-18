@@ -170,7 +170,6 @@ public class Painter {
 
     // Attack enemy
     if (rc.canAttack(enemyLoc)) { 
-      rc.setIndicatorString("I AM ATTACKING THE ENEMY AT " + enemyLoc);
       paint(enemyLoc);
     }
 
@@ -223,7 +222,7 @@ public class Painter {
    * @return Whether the ruin was successfully captured
    * @throws GameActionException
    */
-  public boolean paintCapture(Pathfinding pathfinding) throws GameActionException {
+  public boolean paintCaptureRuin(Pathfinding pathfinding) throws GameActionException {
     MapLocation current = rc.getLocation();
 
     // TODO: Don't just stand here if you can't make progress
@@ -243,6 +242,14 @@ public class Painter {
       }
     }
 
+    // Check if someone has already captured the ruin
+    if (rc.canSenseRobotAtLocation(cacheLoc)) {
+      mapData.updateData(rc.senseMapInfo(cacheLoc));
+      cacheLoc = null;
+      return true;
+    }
+
+
     // If we are standing in the ruin, prioritize paint under our feet
     int my_x_offset = current.x - low_x;
     int my_y_offset = current.y - low_y;
@@ -254,17 +261,13 @@ public class Painter {
     // Try painting the rest of the ruin
     if (rc.isActionReady()) {
       for (MapLocation loc : paintCache) {
-        rc.setIndicatorDot(loc, 0, 0, 255);
         // Only interested in ally, empty, or unknown paint
-        if (loc.equals(cacheLoc) || rc.canSenseLocation(loc) && (rc.senseMapInfo(loc).getPaint().isEnemy() || rc.senseMapInfo(loc).getPaint().isAlly() && rc.senseMapInfo(loc).getPaint().isSecondary() == mapData.useSecondaryPaint(loc))) { continue; }
+        if (rc.canSenseLocation(loc) && (rc.senseMapInfo(loc).getPaint().isEnemy() || rc.senseMapInfo(loc).getPaint().isAlly() && rc.senseMapInfo(loc).getPaint().isSecondary() == mapData.useSecondaryPaint(loc))) { continue; }
 
         // If we can't reach it, move towards it
-        rc.setIndicatorDot(loc, 0, 255, 0);
         if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
-          rc.setIndicatorDot(loc, 255, 0, 0);
           Direction dir = pathfinding.getGreedyMove(current, loc, true, rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
           if (dir == null || !rc.canMove(dir)) { continue; }
-          rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(dir), 255, 255, 255);
           mapData.move(dir);
           current = rc.getLocation();
           // Check if there is paint under our feet
@@ -287,10 +290,84 @@ public class Painter {
   }
 
   /**
+   * Handles the logic for capturing a Special Resource Pattern
+   * @param pathfinding The class to help with movement, with the center set as the target
+   * @return Whether the SRP was successfully captured
+   * @throws GameActionException
+   */
+  public boolean paintCaptureSRP(Pathfinding pathfinding) throws GameActionException {
+    MapLocation current = rc.getLocation();
+
+    // TODO: Don't just stand here if you can't make progress
+
+    int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    
+    // Check the cache to see if we are capturing same ruin
+    if (!pathfinding.getTarget().equals(cacheLoc)) {
+      // If not, build the cache
+      cacheLoc = pathfinding.getTarget();
+      // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
+      for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
+        for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
+          paintCache[x_offset * GameConstants.PATTERN_SIZE + y_offset] = new MapLocation(low_x + x_offset, low_y + y_offset);
+        }
+      }
+    }
+
+    // Check if someone already captured SRP
+    if (rc.canSenseLocation(cacheLoc) && rc.senseMapInfo(cacheLoc).getMark() == PaintType.ALLY_SECONDARY) {
+      mapData.updateData(rc.senseMapInfo(cacheLoc));
+      cacheLoc = null;
+      return true;
+    }
+
+    // If we are standing in the ruin, prioritize paint under our feet
+    int my_x_offset = current.x - low_x;
+    int my_y_offset = current.y - low_y;
+    if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+        my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+      paint(current);
+    }
+  
+    // Try painting the rest of the ruin
+    if (rc.isActionReady()) {
+      for (MapLocation loc : paintCache) {
+        // Only interested in ally, empty, or unknown paint
+        if (rc.canSenseLocation(loc) && (rc.senseMapInfo(loc).getPaint().isEnemy() || rc.senseMapInfo(loc).getPaint().isAlly() && rc.senseMapInfo(loc).getPaint().isSecondary() == mapData.useSecondaryPaint(loc))) { continue; }
+
+        // If we can't reach it, move towards it
+        if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
+          Direction dir = pathfinding.getGreedyMove(current, loc, true, rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
+          if (dir == null || !rc.canMove(dir)) { continue; }
+          mapData.move(dir);
+          current = rc.getLocation();
+          // Check if there is paint under our feet
+          if (paint(current)) { break; }
+        }
+        if (!shouldPaint(loc)) { continue; }
+        if (paint(loc)) { break; }
+      }
+    }
+
+    // Try to complete the SRP
+    // Technically, the completion radius > mark radius, but we have problems if we finish and don't mark
+    if (rc.canCompleteResourcePattern(cacheLoc) && rc.canMark(cacheLoc)) {
+      rc.completeResourcePattern(cacheLoc);
+      rc.mark(cacheLoc, true);
+      mapData.updateData(rc.senseMapInfo(cacheLoc));
+      cacheLoc = null;
+      return true;
+    }
+      
+    return false;
+  }
+
+  /**
    * Handles the logic for defending a ruin by cleaning enemy paint
    * @returns true if our job is complete, false otherwise
    */
-  public boolean mopCapture(Pathfinding pathfinding) throws GameActionException {
+  public boolean mopCaptureRuin(Pathfinding pathfinding) throws GameActionException {
     MapLocation current = rc.getLocation();
     int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
     int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
@@ -307,6 +384,13 @@ public class Painter {
           paintCache[x_offset * GameConstants.PATTERN_SIZE + y_offset] = new MapLocation(low_x + x_offset, low_y + y_offset);
         }
       }
+    }
+
+    // Check if someone has already captured the ruin
+    if (rc.canSenseRobotAtLocation(cacheLoc)) {
+      mapData.updateData(rc.senseMapInfo(cacheLoc));
+      cacheLoc = null;
+      return true;
     }
 
     // If we are standing in the ruin, prioritize paint under our feet

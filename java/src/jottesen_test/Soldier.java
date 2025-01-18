@@ -15,9 +15,10 @@ public final class Soldier extends Robot {
   // Possible goal values, ordered by priority number (higher is more important)
   public enum Goal {
     EXPLORE(0),
-    CAPTURE_RUIN(1),
-    FIGHT_TOWER(2),
-    REFILL_PAINT(3);
+    CAPTURE_SRP(1),
+    CAPTURE_RUIN(2),
+    FIGHT_TOWER(3),
+    REFILL_PAINT(4);
     
     public final int val;
     
@@ -43,7 +44,8 @@ public final class Soldier extends Robot {
 
   protected void doMicro() throws GameActionException {
     rc.setIndicatorString("GOAL - " + switch (goal) {
-      case Goal.EXPLORE -> "EXPLORE"; 
+      case Goal.EXPLORE -> "EXPLORE";
+      case Goal.CAPTURE_SRP -> "CAPTURE_SRP";
       case Goal.CAPTURE_RUIN -> "CAPTURE_RUIN"; 
       case Goal.FIGHT_TOWER -> "FIGHT_TOWER"; 
       case Goal.REFILL_PAINT -> "REFILL_PAINT";
@@ -75,15 +77,28 @@ public final class Soldier extends Robot {
         System.out.println("Received suicide message");
         goal = Goal.CAPTURE_RUIN;
         pathfinding.setTarget(comms.getCoordinates(m.getBytes()));
-        painter.paintCapture(pathfinding);
+        painter.paintCaptureRuin(pathfinding);
       }
     }
 
     // Check if someone else finished the current ruin
+    // TODO: Should this check stay here? Duplicated in painter
     if (goal == Goal.CAPTURE_RUIN) {
       if (rc.canSenseRobotAtLocation(pathfinding.getTarget())) {
+        mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
         goal = Goal.REFILL_PAINT;
         pathfinding.setTarget(mapData.closestFriendlyTower());
+      }
+    }
+
+    // Check if someone else finished the current SRP
+    // TODO: Should this check stay here? Duplicated in painter
+    if (goal == Goal.CAPTURE_SRP) {
+      MapLocation target = pathfinding.getTarget();
+      if (rc.canSenseLocation(target) && rc.senseMapInfo(target).getMark() == PaintType.ALLY_SECONDARY) {
+        mapData.updateData(rc.senseMapInfo(target));
+        goal = Goal.EXPLORE;
+        pathfinding.setTarget(mapData.getExploreTarget());
       }
     }
 
@@ -119,6 +134,14 @@ public final class Soldier extends Robot {
       }
     }
 
+    // Look for SRP if we are a lower priority
+    if (goal.val < Goal.CAPTURE_SRP.val && 
+        rc.canMarkResourcePattern(rc.getLocation()) && 
+        mapData.tryMarkSRP(rc.getLocation())) {
+      goal = Goal.CAPTURE_SRP;
+      pathfinding.setTarget(rc.getLocation());
+    }
+
     // DO THINGS --------------------------------------------------------------
 
     // Can't do anything, no point
@@ -131,10 +154,14 @@ public final class Soldier extends Robot {
       case FIGHT_TOWER:
         painter.paintFight(goalTower, pathfinding);
         break;
-      case CAPTURE_RUIN:
-        if (painter.paintCapture(pathfinding)) {
+      case CAPTURE_SRP:
+        if (painter.paintCaptureSRP(pathfinding)) {
           goal = Goal.REFILL_PAINT;
           pathfinding.setTarget(mapData.closestFriendlyTower());
+        }
+      case CAPTURE_RUIN:
+        if (painter.paintCaptureRuin(pathfinding)) {
+          goal = Goal.REFILL_PAINT;
         }
         break;
       case REFILL_PAINT:
@@ -175,6 +202,10 @@ public final class Soldier extends Robot {
         System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
         mapData.move(dir);
+        if (mapData.foundSRP != null && goal.val < Goal.CAPTURE_SRP.val) {
+          goal = Goal.CAPTURE_SRP;
+          pathfinding.setTarget(mapData.foundSRP);
+        }
       }
     }
     painter.paint();

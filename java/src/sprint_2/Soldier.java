@@ -28,10 +28,15 @@ public final class Soldier extends Robot {
     
   }
   private Goal goal;
-  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
 
   // Other goal helpers
   RobotInfo goalTower;
+
+  //variables for hard coding the first 2 soldiers from each starting tower
+  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
+  private int followID; //2nd soldier spawned from the starting paint/money towers stores the 1st soldier's id (1st soldier store -1 here)
+  private RobotInfo spawnTower; //true if this soldier is spawned from the starting paint tower
+
 
   public Soldier(RobotController rc_) throws GameActionException {
     super(rc_);
@@ -40,9 +45,29 @@ public final class Soldier extends Robot {
     pathfinding = new Pathfinding(rc, mapData);
     goal = Goal.EXPLORE;
     pathfinding.setTarget(mapData.getExploreTarget());
+
+    //set variables for hard coding the first 2 soldiers (initializeSoldiers, followID, spawnedFromPaintTower)
+    initialSoldiers = (rc.getRoundNum()<10);
+    followID=-1;
+    if(initialSoldiers){
+      RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+      for(RobotInfo robot : nearbyRobots){
+        if(robot.getType().isTowerType() && robot.getLocation().distanceSquaredTo(rc.getLocation())< GameConstants.BUILD_ROBOT_RADIUS_SQUARED){
+          spawnTower = robot;
+        }else if(rc.getRoundNum()>2&&robot.getType()==UnitType.SOLDIER){  //TODO: change the roundNum threshold once we don't overflow on bytecode turn 1
+          followID = robot.getID();
+        }
+      }
+    }
   }
 
   protected void doMicro() throws GameActionException {
+    //hard code the opening (ignores the rest of the function for now)
+    if(initialSoldiers){
+      rc.setIndicatorString("INITIAL SOLDIERS");
+      opening();
+      return;
+    }
     rc.setIndicatorString("GOAL - " + switch (goal) {
       case Goal.EXPLORE -> "EXPLORE";
       case Goal.CAPTURE_SRP -> "CAPTURE_SRP";
@@ -220,10 +245,16 @@ public final class Soldier extends Robot {
   }
 
   private void opening() throws GameActionException {
+<<<<<<< HEAD
+=======
+    //combat takes first priority
+
+>>>>>>> 371ecebfa88c8294e3f16264cb83dcd29bbb4d0f
     MapLocation closestRuin = null;
     // Update any close ruins sites
     for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
       mapData.updateData(rc.senseMapInfo(ruin));
+<<<<<<< HEAD
       RobotInfo tower = rc.senseRobotAtLocation(ruin);
       if(tower!=null){
         if(tower.getTeam()==rc.getTeam().opponent()){
@@ -237,6 +268,9 @@ public final class Soldier extends Robot {
         }
       }
       if(mapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
+=======
+      if(mapData.isContested(ruin)||rc.senseRobotAtLocation(ruin)!=null) continue;  //ignore any ruins with enemy paint that we've already seen (also ignores our starting tower)
+>>>>>>> 371ecebfa88c8294e3f16264cb83dcd29bbb4d0f
       if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
         closestRuin = ruin;
       }

@@ -1,4 +1,4 @@
-package jottesen_test;
+package sprint_2;
 
 import battlecode.common.*;
 

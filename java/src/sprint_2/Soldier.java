@@ -1,7 +1,7 @@
-package jottesen_test;
+package sprint_2;
 
 import battlecode.common.*;
-import jottesen_test.util.*;
+import sprint_2.util.*;
 
 public final class Soldier extends Robot {
 

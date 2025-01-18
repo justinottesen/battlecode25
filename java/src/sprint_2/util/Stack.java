@@ -1,4 +1,4 @@
-package jottesen_test.util;
+package sprint_2.util;
 
 /**
  * Simple fixed size stack helper class

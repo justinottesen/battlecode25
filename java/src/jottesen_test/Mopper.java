@@ -15,8 +15,9 @@ public final class Mopper extends Robot {
   // Possible goal values, ordered by priority number (higher is more important)
   private enum Goal {
     EXPLORE(0),
-    CAPTURE_RUIN(1),
-    REFILL_PAINT(2);
+    CAPTURE_SRP(1),
+    CAPTURE_RUIN(2),
+    REFILL_PAINT(3);
 
     public final int val;
 
@@ -39,7 +40,8 @@ public final class Mopper extends Robot {
 
   protected void doMicro() throws GameActionException {
     rc.setIndicatorString("GOAL - " + switch (goal) {
-      case EXPLORE -> "EXPLORE"; 
+      case EXPLORE -> "EXPLORE";
+      case CAPTURE_SRP -> "CAPTURE_SRP";
       case CAPTURE_RUIN -> "CAPTURE_RUIN";
       case REFILL_PAINT -> "REFILL_PAINT";
     });
@@ -104,6 +106,12 @@ public final class Mopper extends Robot {
       }
     }
 
+    // Look for SRP if we are a lower priority
+    if (goal.val < Goal.CAPTURE_SRP.val && mapData.foundSRP != null && !mapData.foundSRP.equals(completedRuinJob)) {
+      goal = Goal.CAPTURE_SRP;
+      pathfinding.setTarget(mapData.foundSRP);
+    }
+
     // DO THINGS --------------------------------------------------------------
 
     // Can't do anything, no point
@@ -140,6 +148,13 @@ public final class Mopper extends Robot {
             goal = Goal.REFILL_PAINT;
             pathfinding.setTarget(mapData.closestFriendlyTower());
           }
+        }
+        break;
+      case CAPTURE_SRP:
+        if (painter.mopCaptureSRP(pathfinding)) {
+          completedRuinJob = pathfinding.getTarget();
+          goal = Goal.EXPLORE;
+          pathfinding.setTarget(mapData.getExploreTarget());
         }
         break;
       case REFILL_PAINT:

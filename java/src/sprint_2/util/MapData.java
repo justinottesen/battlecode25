@@ -19,10 +19,20 @@ public class MapData {
 
   private final int EXPLORE_CHUNK_SIZE = 5;
 
-  private final boolean[][] SRP_ARRAY; // TODO: Implement special resource patterns
+  private final boolean[][] SRP_ARRAY;
   private final boolean[][] PAINT_ARRAY;
   private final boolean[][] MONEY_ARRAY;
   private final boolean[][] DEFENSE_ARRAY;
+
+  public MapLocation foundSRP = null; // TODO: REMOVE THIS TEMPORARY WORKAROUND
+
+  private int symmetryType     = 0b111;
+  private final int ROTATIONAL = 0b001;
+  private final int HORIZONTAL = 0b010;
+  private final int VERTICAL   = 0b100;
+
+  private final int[] knownRuins;
+  private int ruinIndex;
 
   private final int[] mapData;
   private final int UNKNOWN = 0b0;
@@ -65,15 +75,8 @@ public class MapData {
   private final int GOAL_COLOR_KNOWN     = 0b010_00_00_00000000000_0_000_00;
   private final int GOAL_COLOR_CANDIDATE = 0b100_00_00_00000000000_0_000_00;
 
-  public MapLocation foundSRP = null; // TODO: REMOVE THIS TEMPORARY WORKAROUND
-
-  private int symmetryType     = 0b111;
-  private final int ROTATIONAL = 0b001;
-  private final int HORIZONTAL = 0b010;
-  private final int VERTICAL   = 0b100;
-
-  private final int[] knownRuins;
-  private int ruinIndex;
+  // Bit 22: Contested
+  private final int CONTESTED_TARGET = 0b1_000_00_00_00000000000_0_000_00;
 
   public MapData(RobotController rc_) throws GameActionException {
     rc = rc_;
@@ -424,12 +427,82 @@ public class MapData {
     }
     return closestTower;
   }
+
+  /**
+   * Sets the location of a ruin to be contested, and returns whether this made a change or not
+   * 
+   * CURRENTLY THIS WILL ONLY DO ANYTHING IF THE GIVEN LOCATION IS THE LOCATION OF A RUIN
+   * 
+   * @param loc The location of the ruin to mark as contested
+   * @return Whether this is different from the previous value or not
+   */
+  public boolean setContested(MapLocation loc) {
+    int index = getIndex(loc);
+    if (isContested(index)) { return false; }
+    mapData[index] |= CONTESTED_TARGET;
+    return true;
+  }
+
+  /**
+   * Sets the location of a ruin to be uncontested, and returns whether this made a change or not
+   * 
+   * CURRENTLY THIS WILL ONLY DO ANYTHING IF THE GIVEN LOCATION IS THE LOCATION OF A RUIN
+   * 
+   * @param loc The location of the ruin to mark as contested
+   * @return Whether this is different from the previous value or not
+   */
+  public boolean setUncontested(MapLocation loc) {
+    int index = getIndex(loc);
+    if (!isContested(index)) { return false; }
+    mapData[index] &= ~CONTESTED_TARGET;
+    return true;
+  }
+
+  /**
+   * Checks whether the given location is contested
+   * 
+   * CURRENTLY THIS WILL ONLY DO ANYTHING IF THE GIVEN LOCATION IS THE LOCATION OF A RUIN
+   * @param loc The location of the ruin to check
+   * @return Whether it is contested or not
+   */
+  public boolean isContested(MapLocation loc) { return isContested(getIndex(loc)); }
+
+  /**
+   * Checks whether the given location is contested
+   * 
+   * CURRENTLY THIS WILL ONLY DO ANYTHING IF THE GIVEN LOCATION IS THE LOCATION OF A RUIN
+   * @param index The index in `mapData` of the ruin to check
+   * @return Whether it is contested or not
+   */
+  private boolean isContested(int index) { return (mapData[index] & CONTESTED_TARGET) > 0; }
+
+  /**
+   * Returns the closest known contested / uncontested unclaimed ruin to the robot
+   * @return The location of the closest known uncontested ruin
+   */
+  public MapLocation closestUnclaimedRuin(boolean contested) {
+    if (ruinIndex == 0) { return null; }
+    MapLocation current = rc.getLocation();
+    MapLocation closestRuin = null;
+    int closestDist = 0;
+    for (int i = 0; i < ruinIndex; ++i) {
+      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) > UNCLAIMED_RUIN ||
+          ((mapData[knownRuins[i]] & CONTESTED_TARGET) > 0) != contested) { continue; }
+      MapLocation ruinLoc = getLoc(knownRuins[i]);
+      int ruinDist = current.distanceSquaredTo(ruinLoc);
+      if (closestRuin == null || ruinDist < closestDist) {
+        closestRuin = ruinLoc;
+        closestDist = ruinDist;
+      }
+    }
+    return closestRuin;
+  }
   
   /**
    * Returns the closest known friendly tower to the robot
    * @return The location of the closest known friendly tower
    */
-  public MapLocation closestFriendlyTower() throws GameActionException {
+  public MapLocation closestFriendlyTower() {
     if (ruinIndex == 0) { return null; }
     MapLocation current = rc.getLocation();
     MapLocation closestTower = null;

@@ -33,11 +33,6 @@ public final class Soldier extends Robot {
   private int followID; //2nd soldier spawned from the starting paint/money towers stores the 1st soldier's id (1st soldier store -1 here)
   private RobotInfo spawnTower; //true if this soldier is spawned from the starting paint tower
 
-  //variables for hard coding the first 2 soldiers from each starting tower
-  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
-  private int followID; //2nd soldier spawned from the starting paint/money towers stores the 1st soldier's id (1st soldier store -1 here)
-  private RobotInfo spawnTower; //true if this soldier is spawned from the starting paint tower
-
   // Other goal helpers
   RobotInfo goalTower;
 

@@ -52,7 +52,7 @@ public final class Soldier extends Robot {
     if(initialSoldiers){
       RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
       for(RobotInfo robot : nearbyRobots){
-        if(robot.getType().isTowerType() && robot.getLocation().distanceSquaredTo(rc.getLocation())<5){
+        if(robot.getType().isTowerType() && robot.getLocation().distanceSquaredTo(rc.getLocation())< GameConstants.BUILD_ROBOT_RADIUS_SQUARED){
           spawnTower = robot;
         }else if(rc.getRoundNum()>2&&robot.getType()==UnitType.SOLDIER){  //TODO: change the roundNum threshold once we don't overflow on bytecode turn 1
           followID = robot.getID();
@@ -244,8 +244,6 @@ public final class Soldier extends Robot {
     }
   }
 
-  String ruinsWithEnemyPaint = "";
-
   private void opening() throws GameActionException {
     //combat takes first priority
 
@@ -253,8 +251,7 @@ public final class Soldier extends Robot {
     // Update any close ruins sites
     for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
       mapData.updateData(rc.senseMapInfo(ruin));
-      String ruinString = mapLocationToString(ruin);
-      if(ruinsWithEnemyPaint.contains(ruinString)||rc.senseRobotAtLocation(ruin)!=null) continue;  //ignore any ruins with enemy paint that we've already seen (also ignores our starting tower)
+      if(mapData.isContested(ruin)||rc.senseRobotAtLocation(ruin)!=null) continue;  //ignore any ruins with enemy paint that we've already seen (also ignores our starting tower)
       if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
         closestRuin = ruin;
       }
@@ -266,8 +263,7 @@ public final class Soldier extends Robot {
       MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(closestRuin,8);
       for(MapInfo m : towerPatternTiles){
         if(m.getPaint().isEnemy()){
-          ruinsWithEnemyPaint += mapLocationToString(m.getMapLocation());
-          ruinsWithEnemyPaint += 'd'; //ascii for 100 (ie: unless the map is 100x100, 'd' will never show up)
+          mapData.setContested(closestRuin);
           ruinGood = false;
           break;
         }
@@ -330,14 +326,5 @@ public final class Soldier extends Robot {
       }
       
     }
-  }
-
-  private String mapLocationToString(MapLocation m){
-    char x = (char)m.x;
-    char y = (char)m.y;
-    String s = "";
-    s+=x;
-    s+=y;
-    return s;
   }
 }

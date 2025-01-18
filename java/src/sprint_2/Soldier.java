@@ -214,6 +214,102 @@ public final class Soldier extends Robot {
         }
       }
     }
-    painter.paint();
+    if(!initialSoldiers){  //initial soldier shouldn't waste paint
+      painter.paint();
+    }
+  }
+
+  private void opening() throws GameActionException {
+    MapLocation closestRuin = null;
+    // Update any close ruins sites
+    for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
+      mapData.updateData(rc.senseMapInfo(ruin));
+      RobotInfo tower = rc.senseRobotAtLocation(ruin);
+      if(tower!=null){
+        if(tower.getTeam()==rc.getTeam().opponent()){
+          //enemy tower, attack!
+          painter.paintFight(tower, pathfinding);
+          rc.setIndicatorDot(ruin,255,0,0);
+          return;
+        }else{
+          //ally tower (probably the spawn tower), we don't care
+          continue;
+        }
+      }
+      if(mapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
+      if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
+        closestRuin = ruin;
+      }
+    }
+
+    boolean ruinGood = (closestRuin != null);
+    // if we have a ruin in sight, look for enemy paint around it
+    if(closestRuin != null){
+      MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(closestRuin,8);
+      for(MapInfo m : towerPatternTiles){
+        if(m.getPaint().isEnemy()){
+          mapData.setContested(closestRuin);
+          ruinGood = false;
+          break;
+        }
+      }
+    }
+
+    //ruinGood is only true if there exists a closest ruin and the closest ruin doesn't have any enemy paint visible
+    if(ruinGood){
+      pathfinding.setTarget(closestRuin);
+      if (painter.paintCaptureRuin(pathfinding)) {
+        initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
+        goal = Goal.REFILL_PAINT;
+        pathfinding.setTarget(mapData.closestFriendlyTower());
+      }
+    }else{
+      //roam if there's no ruin in sight
+      if(followID!=-1 && rc.canSenseRobot(followID)){ //second soldier
+        RobotInfo firstSoldier = rc.senseRobot(followID);
+        pathfinding.setTarget(firstSoldier.getLocation());
+        rc.setIndicatorString("second soldier, followid: "+followID);
+      }else{
+        MapLocation closestEnemyTower = mapData.closestEnemyTower();
+        if(closestEnemyTower!=null){
+          pathfinding.setTarget(closestEnemyTower);
+        }else{
+          int[] symmetryPriority = new int[3];
+          //we want the soldiers from each tower to assume different symmetries
+          if(spawnTower.getType().getBaseType() == UnitType.LEVEL_ONE_PAINT_TOWER){
+            symmetryPriority[0] = 0b010;  //horizontal
+            symmetryPriority[1] = 0b001;  //rotational
+            symmetryPriority[2] = 0b100;  //vertical
+          }else{
+            symmetryPriority[0] = 0b100;  //vertical
+            symmetryPriority[1] = 0b001;  //rotational
+            symmetryPriority[2] = 0b010;  //horizontal
+          }
+
+          //Guess the location of the enemy tower and choose it as our target
+          MapLocation guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[0]);
+
+          if(mapData.known(guessEnemyTower)){
+            guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[1]);
+            if(mapData.known(guessEnemyTower)){
+              guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[2]);
+              if(mapData.known(guessEnemyTower)){
+                guessEnemyTower = null;
+                
+              }
+            }
+          }
+
+          if(guessEnemyTower!=null){
+            pathfinding.setTarget(guessEnemyTower);
+          }else{
+            //this should never run, since it rules out all 3 symmetries, but if it does, default to normal exploration
+            System.out.println("Initial soldiers ruled out all 3 symmetries???");
+            pathfinding.setTarget(mapData.getExploreTarget());
+          }
+        }
+      }
+      
+    }
   }
 }

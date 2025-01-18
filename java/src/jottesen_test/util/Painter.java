@@ -225,6 +225,9 @@ public class Painter {
    */
   public boolean paintCapture(Pathfinding pathfinding) throws GameActionException {
     MapLocation current = rc.getLocation();
+
+    // TODO: Don't just stand here if you can't make progress
+
     int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
     int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
     
@@ -291,6 +294,8 @@ public class Painter {
     MapLocation current = rc.getLocation();
     int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
     int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+
+    // TODO: Don't just stand here if you can't make progress
 
     // Check the cache to see if we are capturing same ruin
     if (!pathfinding.getTarget().equals(cacheLoc)) {

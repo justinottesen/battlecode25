@@ -11,6 +11,8 @@ public abstract class Robot {
   protected final Team TEAM;
   protected final Team OPPONENT;
 
+  protected final int CREATED_ROUND;
+
   // Common utility classes
   protected final MapData mapData;
   protected final Communication comms;
@@ -20,6 +22,8 @@ public abstract class Robot {
     
     TEAM = rc.getTeam();
     OPPONENT = TEAM.opponent();
+
+    CREATED_ROUND = rc.getRoundNum();
     
     mapData = new MapData(rc);
     mapData.updateAllVisible();

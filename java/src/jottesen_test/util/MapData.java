@@ -287,14 +287,28 @@ public class MapData {
    * @param y The y coordinate to find the index for
    * @return The index in the `mapData` array of `loc`
    */
-  private int getIndex(int x, int y) { return x * MAP_HEIGHT + y; }
+  private int getIndex(int x, int y) { return x + y * MAP_WIDTH; }
+
+  /**
+   * Gets the x coordinate associated with the given index
+   * @param index The index in the `mapData` array
+   * @return The x coordinate of the corresponding location
+   */
+  private int getX(int index) { return index % MAP_WIDTH; }
+
+  /**
+   * Gets the y coordinate associated with the given index
+   * @param index The index in the `mapData` array
+   * @return The y coordinate of the corresponding location
+   */
+  private int getY(int index) { return index / MAP_WIDTH; }
 
   /**
    * Gets the `MapLocation` corresponding to the index in `mapData`
    * @param index The position in the `mapData` array
    * @return The corresponding `MapLocation`
    */
-  private MapLocation getLoc(int index) { return new MapLocation(index / MAP_HEIGHT, index % MAP_HEIGHT); }
+  private MapLocation getLoc(int index) { return new MapLocation(getX(index), getY(index)); }
 
   /**
    * Gets the `mapData` value associated with the given `MapLocation`
@@ -341,12 +355,12 @@ public class MapData {
    * @return The position of the symmetric value
    */
   private int symmetryIndex(int index, int symmetryType) {
-    int x = index / MAP_HEIGHT;
-    int y = index % MAP_HEIGHT;
+    int x = getX(index);
+    int y = getY(index);
     return switch (symmetryType) {
-      case HORIZONTAL -> x * MAP_HEIGHT + MAP_HEIGHT - (y + 1);
-      case VERTICAL -> (MAP_WIDTH - (x + 1)) * MAP_HEIGHT + y;
-      case ROTATIONAL -> (MAP_WIDTH - (x + 1)) * MAP_HEIGHT + MAP_HEIGHT - (y + 1);
+      case HORIZONTAL -> x + (MAP_HEIGHT - (y + 1)) * MAP_WIDTH;
+      case VERTICAL -> MAP_WIDTH - (x + 1) + y * MAP_WIDTH;
+      case ROTATIONAL -> MAP_WIDTH - (x + 1) + (MAP_HEIGHT - (y + 1)) * MAP_WIDTH;
       default -> -1;
     };
   }
@@ -471,10 +485,8 @@ public class MapData {
       case UnitType.LEVEL_ONE_DEFENSE_TOWER -> DEFENSE_ARRAY;
       default -> null;
     };
-    int x = loc.x - (GameConstants.PATTERN_SIZE / 2);
-    int y = loc.y - (GameConstants.PATTERN_SIZE / 2);
     // Check for valid arguments
-    if (pattern == null || x < 0 || y < 0) { return false; }
+    if (pattern == null) { return false; }
     // Set the goal tower type
     int towerIndex = getIndex(loc);
     mapData[towerIndex] &= ~GOAL_TOWER_BITMASK;
@@ -484,19 +496,127 @@ public class MapData {
       case UnitType.LEVEL_ONE_DEFENSE_TOWER -> GOAL_DEFENSE_TOWER;
       default -> 0;
     };
-    // Set the goal paint types
-    // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
-    for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
-      for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
-        int index = getIndex(x + x_offset, y + y_offset);
-        mapData[index] |= GOAL_PAINT_COLOR_KNOWN;
-        if (pattern[x_offset][y_offset]) {
-          mapData[index] |= GOAL_SECONDARY_PAINT;
-        } else {
-          mapData[index] &= ~GOAL_SECONDARY_PAINT;
-        }
-      }
-    }
+    // Set the goal paint types - Unroll loop for bytecode
+    int index = getIndex(loc.x - (GameConstants.PATTERN_SIZE / 2), loc.y - (GameConstants.PATTERN_SIZE / 2));
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[0][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[1][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[2][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[3][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[4][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[0][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[1][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[2][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[3][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[4][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[0][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[1][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    index += 2;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[3][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[4][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[0][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[1][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[2][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[3][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[4][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[0][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[1][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[2][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[3][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
+    ++index;
+    mapData[index] |= GOAL_COLOR_KNOWN;
+    if (pattern[4][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
+    else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
+
     return true;
   }
 

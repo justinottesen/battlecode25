@@ -83,6 +83,7 @@ public final class Mopper extends Robot {
     }
 
     // If low on paint, set goal to refill
+    // TODO: refill paint has bug, robots sometimes sit near tower with refill paint goal
     if (goal != Goal.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       goal = Goal.REFILL_PAINT;
       pathfinding.setTarget(mapData.closestFriendlyTower());

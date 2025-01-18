@@ -23,6 +23,8 @@ public final class Tower extends Robot {
   protected void doMicro() throws GameActionException {
     attackEnemies();
 
+    // TODO: Suicide conditions shouldn't wait for no visible enemies, shrink radius
+
     // Suicide for paint if worth it
     if (rc.getPaint() == 0 && // No more paint
         rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies

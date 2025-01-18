@@ -95,7 +95,7 @@ public final class Soldier extends Robot {
     // TODO: Should this check stay here? Duplicated in painter
     if (goal == Goal.CAPTURE_SRP) {
       MapLocation target = pathfinding.getTarget();
-      if (rc.canSenseLocation(target) && rc.senseMapInfo(target).getMark() == PaintType.ALLY_SECONDARY) {
+      if (rc.canSenseLocation(target) && rc.senseMapInfo(target).isResourcePatternCenter()) {
         mapData.updateData(rc.senseMapInfo(target));
         goal = Goal.EXPLORE;
         pathfinding.setTarget(mapData.getExploreTarget());
@@ -136,7 +136,6 @@ public final class Soldier extends Robot {
 
     // Look for SRP if we are a lower priority
     if (goal.val < Goal.CAPTURE_SRP.val && 
-        rc.canMarkResourcePattern(rc.getLocation()) && 
         mapData.tryMarkSRP(rc.getLocation())) {
       goal = Goal.CAPTURE_SRP;
       pathfinding.setTarget(rc.getLocation());

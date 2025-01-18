@@ -10,7 +10,7 @@ public final class Soldier extends Robot {
   private final Painter painter;
 
   // Constants
-  private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD / 2;
+  private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD;
 
   // Possible goal values, ordered by priority number (higher is more important)
   public enum Goal {
@@ -155,13 +155,15 @@ public final class Soldier extends Robot {
         break;
       case CAPTURE_SRP:
         if (painter.paintCaptureSRP(pathfinding)) {
-          goal = Goal.REFILL_PAINT;
-          pathfinding.setTarget(mapData.closestFriendlyTower());
+          goal = Goal.EXPLORE;
+          pathfinding.setTarget(mapData.getExploreTarget());
         }
+        break;
       case CAPTURE_RUIN:
         if (painter.paintCaptureRuin(pathfinding)) {
           goal = Goal.REFILL_PAINT;
         }
+        // Pathfinding target is the tower which was just built, should have paint
         break;
       case REFILL_PAINT:
         if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {

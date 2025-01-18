@@ -351,10 +351,8 @@ public class Painter {
     }
 
     // Try to complete the SRP
-    // Technically, the completion radius > mark radius, but we have problems if we finish and don't mark
-    if (rc.canCompleteResourcePattern(cacheLoc) && rc.canMark(cacheLoc)) {
+    if (rc.canCompleteResourcePattern(cacheLoc)) {
       rc.completeResourcePattern(cacheLoc);
-      rc.mark(cacheLoc, true);
       mapData.updateData(rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
@@ -507,11 +505,8 @@ public class Painter {
     }
 
     // Try to complete the SRP
-    // Technically, the completion radius > mark radius, but we have problems if we finish and don't mark
-    // TODO: Since devs added `MapInfo.isResourcePatternCenter()`, the secondary mark is redundant
-    if (rc.canCompleteResourcePattern(cacheLoc) && rc.canMark(cacheLoc)) {
+    if (rc.canCompleteResourcePattern(cacheLoc)) {
       rc.completeResourcePattern(cacheLoc);
-      rc.mark(cacheLoc, true);
       mapData.updateData(rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;

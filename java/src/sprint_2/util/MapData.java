@@ -253,14 +253,11 @@ public class MapData {
     } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
       if (info.isResourcePatternCenter()) {
         markSRP(loc, false);
-        rc.setIndicatorDot(loc, 255, 0, 0);
         foundSRP = loc;
       } else {
         switch (info.getMark()) {
           case ALLY_PRIMARY: // Candidate SRP
-          case ALLY_SECONDARY: // Completed SRP
             markSRP(loc, false);
-            rc.setIndicatorDot(loc, 255, 0, 0);
             foundSRP = loc;
             break;
           default: break;
@@ -703,7 +700,7 @@ public class MapData {
     MapInfo info = rc.senseMapInfo(loc);
     if (info.isResourcePatternCenter()) { return true; }
     PaintType mark = rc.senseMapInfo(loc).getMark();
-    if (mark == PaintType.ALLY_PRIMARY || mark == PaintType.ALLY_SECONDARY) {
+    if (mark == PaintType.ALLY_PRIMARY) {
       return true;
     }
 
@@ -904,7 +901,7 @@ public class MapData {
   private void markSRP(MapLocation loc, boolean first) throws GameActionException {
     if (first && rc.canSenseLocation(loc)) {
       PaintType mark = rc.senseMapInfo(loc).getMark();
-      if (mark != PaintType.ALLY_PRIMARY && mark != PaintType.ALLY_SECONDARY) {
+      if (mark != PaintType.ALLY_PRIMARY) {
         rc.mark(loc, false);
       }
     }

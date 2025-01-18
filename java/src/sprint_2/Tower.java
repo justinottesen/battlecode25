@@ -1,4 +1,4 @@
-package jottesen_test;
+package sprint_2;
 
 import battlecode.common.*;
 
@@ -8,26 +8,24 @@ public final class Tower extends Robot {
 
   private final MapLocation LOCATION;
 
-  private final int CREATED_ROUND;
-
   public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
 
     TOWER_ATTACK_RADIUS = rc.getType().actionRadiusSquared; // NOTE: This will have to change if upgrades modify radius
 
     LOCATION = rc.getLocation();
-
-    CREATED_ROUND = rc.getRoundNum();
   }
 
   protected void doMicro() throws GameActionException {
     attackEnemies();
 
+    // TODO: Suicide conditions shouldn't wait for no visible enemies, shrink radius
+
     // Suicide for paint if worth it
     if (rc.getPaint() == 0 && // No more paint
         rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
-        CREATED_ROUND > 2 &&
+        towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
         comms.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
           comms.addCoordinates(comms.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
       System.out.println("Sent suicide message");
@@ -110,7 +108,6 @@ public final class Tower extends Robot {
     MapLocation closest = null;
     int closest_dist = mapData.MAX_DISTANCE_SQ;
     for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(LOCATION, GameConstants.BUILD_ROBOT_RADIUS_SQUARED)) {
-      rc.setIndicatorDot(loc, 255, 255, 255);
       int dist = loc.distanceSquaredTo(target);
       if (rc.canBuildRobot(UnitType.SOLDIER, loc) && dist < closest_dist) {
         closest = loc;
@@ -155,5 +152,22 @@ public final class Tower extends Robot {
    */
   private void spawnRound2() throws GameActionException {
     trySpawn(UnitType.MOPPER, mapData.MAP_CENTER);
+  }
+
+  private boolean towerPatternComplete(UnitType type) throws GameActionException {
+    if (!type.isTowerType()) { return false; }
+    boolean[][] pattern = rc.getTowerPattern(type);
+
+    int x = LOCATION.x - (GameConstants.PATTERN_SIZE / 2);
+    int y = LOCATION.y - (GameConstants.PATTERN_SIZE / 2);
+
+    for (MapInfo tile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){
+      MapLocation loc = tile.getMapLocation();
+      if (loc.equals(LOCATION)) { continue; }
+      PaintType paint = tile.getPaint();
+      if (!paint.isAlly() || pattern[loc.x - x][loc.y - y] != paint.isSecondary()) { return false; }
+    }
+
+    return true;
   }
 }

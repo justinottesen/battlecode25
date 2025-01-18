@@ -1,47 +1,54 @@
-package jottesen_test;
+package sprint_2;
 
 import battlecode.common.*;
-import jottesen_test.util.*;
+import sprint_2.util.*;
 
-public final class Mopper extends Robot {
+public final class Soldier extends Robot {
 
   // Utility Classes
   private final Pathfinding pathfinding;
   private final Painter painter;
 
   // Constants
-  private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD / 2;
+  private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD;
 
   // Possible goal values, ordered by priority number (higher is more important)
-  private enum Goal {
+  public enum Goal {
     EXPLORE(0),
-    CAPTURE_RUIN(1),
-    REFILL_PAINT(2);
-
+    CAPTURE_SRP(1),
+    CAPTURE_RUIN(2),
+    FIGHT_TOWER(3),
+    REFILL_PAINT(4);
+    
     public final int val;
-
+    
     Goal(int val_) {
       val = val_;
     }
+    
   }
   private Goal goal;
-  private MapLocation completedRuinJob;
-  
-  public Mopper(RobotController rc_) throws GameActionException {
-    super(rc_);
+  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
 
-    pathfinding = new Pathfinding(rc, mapData);
+  // Other goal helpers
+  RobotInfo goalTower;
+
+  public Soldier(RobotController rc_) throws GameActionException {
+    super(rc_);
+    
     painter = new Painter(rc, mapData);
+    pathfinding = new Pathfinding(rc, mapData);
     goal = Goal.EXPLORE;
     pathfinding.setTarget(mapData.getExploreTarget());
-    completedRuinJob = null;
   }
 
   protected void doMicro() throws GameActionException {
     rc.setIndicatorString("GOAL - " + switch (goal) {
-      case EXPLORE -> "EXPLORE"; 
-      case CAPTURE_RUIN -> "CAPTURE_RUIN";
-      case REFILL_PAINT -> "REFILL_PAINT";
+      case Goal.EXPLORE -> "EXPLORE";
+      case Goal.CAPTURE_SRP -> "CAPTURE_SRP";
+      case Goal.CAPTURE_RUIN -> "CAPTURE_RUIN"; 
+      case Goal.FIGHT_TOWER -> "FIGHT_TOWER"; 
+      case Goal.REFILL_PAINT -> "REFILL_PAINT";
     });
     if (pathfinding.getTarget() != null) {
       rc.setIndicatorLine(rc.getLocation(), pathfinding.getTarget(), 255, 0, 255);
@@ -70,34 +77,70 @@ public final class Mopper extends Robot {
         System.out.println("Received suicide message");
         goal = Goal.CAPTURE_RUIN;
         pathfinding.setTarget(comms.getCoordinates(m.getBytes()));
-        painter.paintCapture(pathfinding);
+        painter.paintCaptureRuin(pathfinding);
       }
     }
 
     // Check if someone else finished the current ruin
+    // TODO: Should this check stay here? Duplicated in painter
     if (goal == Goal.CAPTURE_RUIN) {
       if (rc.canSenseRobotAtLocation(pathfinding.getTarget())) {
+        mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
         goal = Goal.REFILL_PAINT;
         pathfinding.setTarget(mapData.closestFriendlyTower());
       }
     }
 
+    // Check if someone else finished the current SRP
+    // TODO: Should this check stay here? Duplicated in painter
+    if (goal == Goal.CAPTURE_SRP) {
+      MapLocation target = pathfinding.getTarget();
+      if (rc.canSenseLocation(target) && rc.senseMapInfo(target).isResourcePatternCenter()) {
+        mapData.updateData(rc.senseMapInfo(target));
+        goal = Goal.EXPLORE;
+        pathfinding.setTarget(mapData.getExploreTarget());
+      }
+    }
+
+    // If received paint transfer from mopper, update goal
+    if (goal == Goal.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      goal = Goal.EXPLORE;
+      pathfinding.setTarget(mapData.getExploreTarget());
+    }
+    
     // If low on paint, set goal to refill
     if (goal != Goal.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       goal = Goal.REFILL_PAINT;
       pathfinding.setTarget(mapData.closestFriendlyTower());
     }
 
-    // Look for nearby ruins if we aren't already refilling paint
-    if (goal.val < Goal.REFILL_PAINT.val) {
+    // Look for nearby ruins if we aren't already fighting a tower
+    if (goal.val < Goal.FIGHT_TOWER.val) {
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
-        if(ruin.equals(completedRuinJob)) continue; //completedRuinJob is the last ruin that we know we don't need a mopper for 
         RobotInfo info = rc.senseRobotAtLocation(ruin);
         if (info == null) { // Unclaimed Ruin
           if (goal.val >= Goal.CAPTURE_RUIN.val) { continue; }
           goal = Goal.CAPTURE_RUIN;
           pathfinding.setTarget(ruin);
+          continue;
+        }
+        if (info.getTeam() == OPPONENT) { // Enemy Tower
+          goal = Goal.FIGHT_TOWER;
+          goalTower = info;
+          pathfinding.setTarget(ruin);
+          break;
+        }
+      }
+    }
+
+    // Look for SRP if we are a lower priority
+    // TODO: Make this process more intelligent. Pack better with other SRPs, etc
+    if (goal.val < Goal.CAPTURE_SRP.val) {
+      for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), GameConstants.MARK_RADIUS_SQUARED)) {
+        if (mapData.tryMarkSRP(loc)) {
+          goal = Goal.CAPTURE_SRP;
+          pathfinding.setTarget(rc.getLocation());
           break;
         }
       }
@@ -108,38 +151,24 @@ public final class Mopper extends Robot {
     // Can't do anything, no point
     if (!rc.isMovementReady() && !rc.isActionReady()) { return; }
 
-    // Can't move, might as well try and mop
-    if (!rc.isMovementReady() && rc.isActionReady()) { painter.mop(); return; }
-
-    // Transfer paint if possible
-    if (rc.isActionReady() && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      for (RobotInfo robot : rc.senseNearbyRobots(GameConstants.PAINT_TRANSFER_RADIUS_SQUARED, rc.getTeam())) {
-        // Don't transfer to other moppers or towers, or if they have enough paint
-        if (robot.type == UnitType.MOPPER || robot.getType().isTowerType() || robot.getPaintAmount() > REFILL_PAINT_THRESHOLD) { continue; }
-
-        // Transfer the max possible
-        int transfer_amt = Math.min(robot.getType().paintCapacity - robot.getPaintAmount(), rc.getPaint() - REFILL_PAINT_THRESHOLD);
-        if (rc.canTransferPaint(robot.getLocation(), transfer_amt)) {
-          rc.transferPaint(robot.getLocation(), transfer_amt);
-          break;
-        }
-      }
-    }
+    // Can't move, might as well try and paint
+    if (!rc.isMovementReady() && rc.isActionReady()) { painter.paint(); return; }
 
     switch (goal) {
-      case CAPTURE_RUIN:
-        if (painter.mopCapture(pathfinding)) { 
-          if(rc.senseRobotAtLocation(pathfinding.getTarget())==null){
-            //ruin has no more enemy paint around it, start exploring
-            completedRuinJob = pathfinding.getTarget();
-            goal = Goal.EXPLORE;
-            pathfinding.setTarget(mapData.getExploreTarget());
-          }else{
-            //mopper built the tower, refill from the tower
-            goal = Goal.REFILL_PAINT;
-            pathfinding.setTarget(mapData.closestFriendlyTower());
-          }
+      case FIGHT_TOWER:
+        painter.paintFight(goalTower, pathfinding);
+        break;
+      case CAPTURE_SRP:
+        if (painter.paintCaptureSRP(pathfinding)) {
+          goal = Goal.EXPLORE;
+          pathfinding.setTarget(mapData.getExploreTarget());
         }
+        break;
+      case CAPTURE_RUIN:
+        if (painter.paintCaptureRuin(pathfinding)) {
+          goal = Goal.REFILL_PAINT;
+        }
+        // Pathfinding target is the tower which was just built, should have paint
         break;
       case REFILL_PAINT:
         if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
@@ -162,7 +191,7 @@ public final class Mopper extends Robot {
           }
         }
         break;
-      case EXPLORE:
+      case EXPLORE: // TODO: Address clumping of units
         if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
           mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
           pathfinding.setTarget(mapData.getExploreTarget());
@@ -170,43 +199,21 @@ public final class Mopper extends Robot {
         break;
       default: break;
     }
-
-    //mop swing
-    if (rc.isActionReady()){
-      Direction mopSwingDirection = pickMopSwingDirection();
-      if(mopSwingDirection!=Direction.CENTER && rc.canMopSwing(mopSwingDirection)) rc.mopSwing(mopSwingDirection);
-    }
   }
 
   protected void doMacro() throws GameActionException {
     if (rc.isMovementReady()) {
-      Direction dir = pathfinding.getMove(Pathfinding.Mode.NO_ENEMY);
+      Direction dir = pathfinding.getMove();
       if (dir == null) {
         System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
         mapData.move(dir);
+        if (mapData.foundSRP != null && goal.val < Goal.CAPTURE_SRP.val) {
+          goal = Goal.CAPTURE_SRP;
+          pathfinding.setTarget(mapData.foundSRP);
+        }
       }
     }
-  }
-
-  private Direction pickMopSwingDirection() throws GameActionException{
-    RobotInfo[] enemyRobotsWithinMopSwingRange = rc.senseNearbyRobots(8,rc.getTeam().opponent());
-    if(enemyRobotsWithinMopSwingRange.length==0)  return Direction.CENTER;
-    Direction[] cardinaDirections = Direction.cardinalDirections();
-
-    int mostEnemiesHit = 0;
-    Direction chosenDirection = Direction.CENTER;
-    for(Direction d : cardinaDirections){
-      int directionEnemiesHit = 0;
-      for(RobotInfo enemy : enemyRobotsWithinMopSwingRange){
-        Direction dirToEnemy = rc.getLocation().directionTo(enemy.getLocation());
-        if(dirToEnemy.dx==d.dx || dirToEnemy.dy==d.dy) ++directionEnemiesHit;
-      }
-      if(directionEnemiesHit>mostEnemiesHit){
-        mostEnemiesHit=directionEnemiesHit;
-        chosenDirection=d;
-      }
-    }
-    return chosenDirection;
+    painter.paint();
   }
 }

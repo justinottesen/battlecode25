@@ -163,6 +163,7 @@ public final class Tower extends Robot {
 
     for (MapInfo tile : rc.senseNearbyMapInfos(rc.getLocation(), 8)){
       MapLocation loc = tile.getMapLocation();
+      if (loc.equals(LOCATION)) { continue; }
       PaintType paint = tile.getPaint();
       if (!paint.isAlly() || pattern[loc.x - x][loc.y - y] != paint.isSecondary()) { return false; }
     }

@@ -247,19 +247,24 @@ public class MapData {
         }
       } else {
         mapData[index] |= UNCLAIMED_RUIN;
-        // If unclaimed, we want to make it a money tower
-        // TODO: Put this elsewhere and add logic for different tower types
-        setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
+      // TODO: Put this elsewhere and add logic for different tower types
+      setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
     } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
-      switch (info.getMark()) {
-        case ALLY_PRIMARY: // Candidate SRP
-        case ALLY_SECONDARY: // Completed SRP
-          markSRP(loc, false);
-          rc.setIndicatorDot(loc, 255, 0, 0);
-          foundSRP = loc;
-          break;
-        default: break;
+      if (info.isResourcePatternCenter()) {
+        markSRP(loc, false);
+        rc.setIndicatorDot(loc, 255, 0, 0);
+        foundSRP = loc;
+      } else {
+        switch (info.getMark()) {
+          case ALLY_PRIMARY: // Candidate SRP
+          case ALLY_SECONDARY: // Completed SRP
+            markSRP(loc, false);
+            rc.setIndicatorDot(loc, 255, 0, 0);
+            foundSRP = loc;
+            break;
+          default: break;
+        }
       }
     } 
     
@@ -688,15 +693,29 @@ public class MapData {
    * @throws GameActionException
    */
   private boolean canMarkSRP(MapLocation loc) throws GameActionException {
+    // Need to be at the center, otherwise we won't see conflicts
+    if (!rc.getLocation().equals(loc)) { return false; }
+
+    // Check if it can be marked
+    if (!rc.canMarkResourcePattern(loc)) { return false; }
+
     // Check if someone already marked this
-    if (rc.canSenseLocation(loc)) {
-      PaintType mark = rc.senseMapInfo(loc).getMark();
-      if (mark == PaintType.ALLY_PRIMARY || mark == PaintType.ALLY_SECONDARY) {
-        return true;
-      }
+    MapInfo info = rc.senseMapInfo(loc);
+    if (info.isResourcePatternCenter()) { return true; }
+    PaintType mark = rc.senseMapInfo(loc).getMark();
+    if (mark == PaintType.ALLY_PRIMARY || mark == PaintType.ALLY_SECONDARY) {
+      return true;
     }
 
-    // Check the squares around it
+    // Check if there are any nearby marks we don't know about
+    for (MapInfo nearby_info : rc.senseNearbyMapInfos()) {
+      if (!nearby_info.getMark().isAlly()) { continue; }
+      markSRP(nearby_info.getMapLocation(), false);
+      // rc.setIndicatorDot(loc, 255, 0, 0);
+      // foundSRP = loc;
+    }
+
+    // Check the goal paint for squares around it
     int index = getIndex(loc.x - (GameConstants.PATTERN_SIZE / 2), loc.y - (GameConstants.PATTERN_SIZE / 2));
     int tileData = mapData[index];
     if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; } // Wall, ruin, or unknown

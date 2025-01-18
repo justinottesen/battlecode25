@@ -316,7 +316,7 @@ public class Painter {
     }
 
     // Check if someone already captured SRP
-    if (rc.canSenseLocation(cacheLoc) && rc.senseMapInfo(cacheLoc).getMark() == PaintType.ALLY_SECONDARY) {
+    if (rc.canSenseLocation(cacheLoc) && rc.senseMapInfo(cacheLoc).isResourcePatternCenter()) {
       mapData.updateData(rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;

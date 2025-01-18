@@ -140,7 +140,7 @@ public final class Soldier extends Robot {
       for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), GameConstants.MARK_RADIUS_SQUARED)) {
         if (mapData.tryMarkSRP(loc)) {
           goal = Goal.CAPTURE_SRP;
-          pathfinding.setTarget(rc.getLocation());
+          pathfinding.setTarget(loc);
           break;
         }
       }

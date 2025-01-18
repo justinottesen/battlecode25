@@ -28,10 +28,15 @@ public final class Soldier extends Robot {
     
   }
   private Goal goal;
-  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
 
   // Other goal helpers
   RobotInfo goalTower;
+
+  //variables for hard coding the first 2 soldiers from each starting tower
+  private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
+  private int followID; //2nd soldier spawned from the starting paint/money towers stores the 1st soldier's id (1st soldier store -1 here)
+  private RobotInfo spawnTower; //true if this soldier is spawned from the starting paint tower
+
 
   public Soldier(RobotController rc_) throws GameActionException {
     super(rc_);
@@ -40,9 +45,29 @@ public final class Soldier extends Robot {
     pathfinding = new Pathfinding(rc, mapData);
     goal = Goal.EXPLORE;
     pathfinding.setTarget(mapData.getExploreTarget());
+
+    //set variables for hard coding the first 2 soldiers (initializeSoldiers, followID, spawnedFromPaintTower)
+    initialSoldiers = (rc.getRoundNum()<10);
+    followID=-1;
+    if(initialSoldiers){
+      RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+      for(RobotInfo robot : nearbyRobots){
+        if(robot.getType().isTowerType() && robot.getLocation().distanceSquaredTo(rc.getLocation())<5){
+          spawnTower = robot;
+        }else if(rc.getRoundNum()>2&&robot.getType()==UnitType.SOLDIER){  //TODO: change the roundNum threshold once we don't overflow on bytecode turn 1
+          followID = robot.getID();
+        }
+      }
+    }
   }
 
   protected void doMicro() throws GameActionException {
+    //hard code the opening (ignores the rest of the function for now)
+    if(initialSoldiers){
+      rc.setIndicatorString("INITIAL SOLDIERS");
+      opening();
+      return;
+    }
     rc.setIndicatorString("GOAL - " + switch (goal) {
       case Goal.EXPLORE -> "EXPLORE";
       case Goal.CAPTURE_SRP -> "CAPTURE_SRP";
@@ -214,6 +239,105 @@ public final class Soldier extends Robot {
         }
       }
     }
-    painter.paint();
+    if(!initialSoldiers){  //initial soldier shouldn't waste paint
+      painter.paint();
+    }
+  }
+
+  String ruinsWithEnemyPaint = "";
+
+  private void opening() throws GameActionException {
+    //combat takes first priority
+
+    MapLocation closestRuin = null;
+    // Update any close ruins sites
+    for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
+      mapData.updateData(rc.senseMapInfo(ruin));
+      String ruinString = mapLocationToString(ruin);
+      if(ruinsWithEnemyPaint.contains(ruinString)||rc.senseRobotAtLocation(ruin)!=null) continue;  //ignore any ruins with enemy paint that we've already seen (also ignores our starting tower)
+      if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
+        closestRuin = ruin;
+      }
+    }
+
+    boolean ruinGood = (closestRuin != null);
+    // if we have a ruin in sight, look for enemy paint around it
+    if(closestRuin != null){
+      MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(closestRuin,8);
+      for(MapInfo m : towerPatternTiles){
+        if(m.getPaint().isEnemy()){
+          ruinsWithEnemyPaint += mapLocationToString(m.getMapLocation());
+          ruinsWithEnemyPaint += 'd'; //ascii for 100 (ie: unless the map is 100x100, 'd' will never show up)
+          ruinGood = false;
+          break;
+        }
+      }
+    }
+
+    //ruinGood is only true if there exists a closest ruin and the closest ruin doesn't have any enemy paint visible
+    if(ruinGood){
+      pathfinding.setTarget(closestRuin);
+      if (painter.paintCaptureRuin(pathfinding)) {
+        initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
+        goal = Goal.REFILL_PAINT;
+        pathfinding.setTarget(mapData.closestFriendlyTower());
+      }
+    }else{
+      //roam if there's no ruin in sight
+      if(followID!=-1 && rc.canSenseRobot(followID)){ //second soldier
+        RobotInfo firstSoldier = rc.senseRobot(followID);
+        pathfinding.setTarget(firstSoldier.getLocation());
+        rc.setIndicatorString("second soldier, followid: "+followID);
+      }else{
+        MapLocation closestEnemyTower = mapData.closestEnemyTower();
+        if(closestEnemyTower!=null){
+          pathfinding.setTarget(closestEnemyTower);
+        }else{
+          int[] symmetryPriority = new int[3];
+          //we want the soldiers from each tower to assume different symmetries
+          if(spawnTower.getType().getBaseType() == UnitType.LEVEL_ONE_PAINT_TOWER){
+            symmetryPriority[0] = 0b010;  //horizontal
+            symmetryPriority[1] = 0b001;  //rotational
+            symmetryPriority[2] = 0b100;  //vertical
+          }else{
+            symmetryPriority[0] = 0b100;  //vertical
+            symmetryPriority[1] = 0b001;  //rotational
+            symmetryPriority[2] = 0b010;  //horizontal
+          }
+
+          //Guess the location of the enemy tower and choose it as our target
+          MapLocation guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[0]);
+
+          if(mapData.known(guessEnemyTower)){
+            guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[1]);
+            if(mapData.known(guessEnemyTower)){
+              guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[2]);
+              if(mapData.known(guessEnemyTower)){
+                guessEnemyTower = null;
+                
+              }
+            }
+          }
+
+          if(guessEnemyTower!=null){
+            pathfinding.setTarget(guessEnemyTower);
+          }else{
+            //this should never run, since it rules out all 3 symmetries, but if it does, default to normal exploration
+            System.out.println("Initial soldiers ruled out all 3 symmetries???");
+            pathfinding.setTarget(mapData.getExploreTarget());
+          }
+        }
+      }
+      
+    }
+  }
+
+  private String mapLocationToString(MapLocation m){
+    char x = (char)m.x;
+    char y = (char)m.y;
+    String s = "";
+    s+=x;
+    s+=y;
+    return s;
   }
 }

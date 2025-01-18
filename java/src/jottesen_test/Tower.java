@@ -108,7 +108,6 @@ public final class Tower extends Robot {
     MapLocation closest = null;
     int closest_dist = mapData.MAX_DISTANCE_SQ;
     for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(LOCATION, GameConstants.BUILD_ROBOT_RADIUS_SQUARED)) {
-      rc.setIndicatorDot(loc, 255, 255, 255);
       int dist = loc.distanceSquaredTo(target);
       if (rc.canBuildRobot(UnitType.SOLDIER, loc) && dist < closest_dist) {
         closest = loc;

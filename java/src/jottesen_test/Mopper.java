@@ -70,7 +70,7 @@ public final class Mopper extends Robot {
         System.out.println("Received suicide message");
         goal = Goal.CAPTURE_RUIN;
         pathfinding.setTarget(comms.getCoordinates(m.getBytes()));
-        painter.paintCapture(pathfinding);
+        painter.mopCaptureRuin(pathfinding);
       }
     }
 
@@ -129,7 +129,7 @@ public final class Mopper extends Robot {
 
     switch (goal) {
       case CAPTURE_RUIN:
-        if (painter.mopCapture(pathfinding)) { 
+        if (painter.mopCaptureRuin(pathfinding)) { 
           if(rc.senseRobotAtLocation(pathfinding.getTarget())==null){
             //ruin has no more enemy paint around it, start exploring
             completedRuinJob = pathfinding.getTarget();

@@ -61,8 +61,11 @@ public class MapData {
   private final int GOAL_TOWER_BITMASK = 0b11_00_00000000000_0_000_00;
 
   // Bit 21: Goal Paint Color
-  private final int GOAL_SECONDARY_PAINT   = 0b01_00_00_00000000000_0_000_00;
-  private final int GOAL_PAINT_COLOR_KNOWN = 0b10_00_00_00000000000_0_000_00;
+  private final int GOAL_SECONDARY_PAINT = 0b001_00_00_00000000000_0_000_00;
+  private final int GOAL_COLOR_KNOWN     = 0b010_00_00_00000000000_0_000_00;
+  private final int GOAL_COLOR_CANDIDATE = 0b100_00_00_00000000000_0_000_00;
+
+  public MapLocation foundSRP = null; // TODO: REMOVE THIS TEMPORARY WORKAROUND
 
   private int symmetryType     = 0b111;
   private final int ROTATIONAL = 0b001;
@@ -103,6 +106,7 @@ public class MapData {
    * 
    */
   public void updateAllVisible() throws GameActionException {
+    foundSRP = null;
     for (MapInfo info : rc.senseNearbyMapInfos()) {
       updateData(info);
     }
@@ -113,6 +117,7 @@ public class MapData {
    * @param lastDir The Direction the robot just moved
    */
   public void updateNewlyVisible(Direction lastDir) throws GameActionException {
+    foundSRP = null;
     if (lastDir == Direction.CENTER) { return; }
     // This needs to be updated if the vision radius changes
     assert GameConstants.VISION_RADIUS_SQUARED == 20;
@@ -246,7 +251,19 @@ public class MapData {
         // TODO: Put this elsewhere and add logic for different tower types
         setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
-    } // else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
+    } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
+      switch (info.getMark()) {
+        case ALLY_PRIMARY: // Candidate SRP
+        case ALLY_SECONDARY: // Completed SRP
+          markSRP(loc, false);
+          rc.setIndicatorDot(loc, 255, 0, 0);
+          foundSRP = loc;
+          break;
+        default: break;
+      }
+    } 
+    
+    // else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
       // TODO: Decide if it is worth it to do this
       // PaintType paint = info.getPaint();
       // mapData[index] &= ~PAINT_BITMASK;
@@ -458,8 +475,8 @@ public class MapData {
    * @return True if should use secondary color
    */
   public boolean useSecondaryPaint(MapLocation loc) {
-    return (readData(loc) & (GOAL_PAINT_COLOR_KNOWN | GOAL_SECONDARY_PAINT)) 
-            == (GOAL_PAINT_COLOR_KNOWN | GOAL_SECONDARY_PAINT);
+    return knownPaintColor(loc) &&
+           (readData(loc) & (GOAL_SECONDARY_PAINT)) > 0;
   }
 
   /**
@@ -468,7 +485,7 @@ public class MapData {
    * @return True if it is known which color to use
    */
   public boolean knownPaintColor(MapLocation loc) {
-    return (readData(loc) & GOAL_PAINT_COLOR_KNOWN) != 0;
+    return (readData(loc) & (GOAL_COLOR_KNOWN | GOAL_COLOR_CANDIDATE)) != 0;
   }
 
   /**
@@ -639,7 +656,6 @@ public class MapData {
       for (int y = EXPLORE_CHUNK_SIZE / 2; y < MAP_HEIGHT; y += EXPLORE_CHUNK_SIZE) {
         if ((readData(x, y) & LAST_UPDATED_BITMASK) != 0) { continue; }
         MapLocation newLoc = new MapLocation(x, y);
-        rc.setIndicatorDot(newLoc, 0, 255, 0);
         int dist = rc.getLocation().distanceSquaredTo(newLoc);
         if (dist < closest_dist) {
           closest = newLoc;
@@ -648,5 +664,305 @@ public class MapData {
       }
     }
     return closest != null ? closest : MAP_CENTER; //. TODO: Make this better and such. This avoids null pointer stuff once we explore the whole map
+  }
+
+  /**
+   * Checks whether you can mark a Special Resource Pattern at the given
+   * location and does if so
+   * @param loc The location to mark
+   * @return Whether the location was successfully marked or not
+   * @throws GameActionException
+   */
+  public boolean tryMarkSRP(MapLocation loc) throws GameActionException {
+    if (canMarkSRP(loc)) {
+      markSRP(loc);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Checks whether you can mark a special resource pattern at the given location
+   * @param loc The location of interest
+   * @return Whether we can mark a special resource pattern there
+   * @throws GameActionException
+   */
+  private boolean canMarkSRP(MapLocation loc) throws GameActionException {
+    // Check if someone already marked this
+    if (rc.canSenseLocation(loc)) {
+      PaintType mark = rc.senseMapInfo(loc).getMark();
+      if (mark == PaintType.ALLY_PRIMARY || mark == PaintType.ALLY_SECONDARY) {
+        return true;
+      }
+    }
+
+    // Check the squares around it
+    int index = getIndex(loc.x - (GameConstants.PATTERN_SIZE / 2), loc.y - (GameConstants.PATTERN_SIZE / 2));
+    int tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; } // Wall, ruin, or unknown
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 && // Already chose another color
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[0][0])
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[1][0])
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[2][0]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[3][0]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[4][0]) 
+    { return false; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[0][1]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[1][1])
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[2][1]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[3][1]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[4][1]) 
+    { return false; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[0][2]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[1][2])
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[2][2]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[3][2]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[4][2]) 
+    { return false; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[0][3]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[1][3])
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[2][3]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[3][3]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[4][3]) 
+    { return false; }
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[0][4]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[1][4])
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[2][4]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[3][4]) 
+    { return false; }
+
+    ++index;
+    tileData = mapData[index];
+    if ((tileData & TILE_TYPE_BITMASK) != EMPTY) { return false; }
+    if ((tileData & (GOAL_COLOR_CANDIDATE | GOAL_COLOR_KNOWN)) > 0 &&
+        ((tileData & GOAL_SECONDARY_PAINT) > 0) != SRP_ARRAY[4][4]) 
+    { return false; }
+      
+    return true;
+  }
+
+  private void markSRP(MapLocation loc) throws GameActionException { markSRP(loc, true); }
+
+  /**
+   * Marks a special resource pattern at the given location
+   * @param loc The location to mark
+   * @param first Whether this is the first robot to mark the location
+   */
+  private void markSRP(MapLocation loc, boolean first) throws GameActionException {
+    if (first && rc.canSenseLocation(loc)) {
+      PaintType mark = rc.senseMapInfo(loc).getMark();
+      if (mark != PaintType.ALLY_PRIMARY && mark != PaintType.ALLY_SECONDARY) {
+        rc.mark(loc, false);
+      }
+    }
+
+    int index = getIndex(loc.x - (GameConstants.PATTERN_SIZE / 2), loc.y - (GameConstants.PATTERN_SIZE / 2));
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[0][0] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[1][0] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[2][0] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[3][0] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[4][0] ? GOAL_SECONDARY_PAINT : 0));
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[0][1] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[1][1] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[2][1] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[3][1] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[4][1] ? GOAL_SECONDARY_PAINT : 0));
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[0][2] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[1][2] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[2][2] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[3][2] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[4][2] ? GOAL_SECONDARY_PAINT : 0));
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[0][3] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[1][3] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[2][3] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[3][3] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[4][3] ? GOAL_SECONDARY_PAINT : 0));
+
+    index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[0][4] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[1][4] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[2][4] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[3][4] ? GOAL_SECONDARY_PAINT : 0));
+
+    ++index;
+    mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[4][4] ? GOAL_SECONDARY_PAINT : 0));
   }
 }

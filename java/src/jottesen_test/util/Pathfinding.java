@@ -100,10 +100,10 @@ public class Pathfinding {
     if (targets.empty() || current == null) { return null; }
 
     // If at target or intermediate target is found to be impassable, get rid of it
-    while (current.equals(targets.top()) || (targets.used() > 1 && !mapData.passable(targets.top()))) { targets.pop(); }
+    while (targets.used() > 1 && (current.equals(targets.top()) || (targets.used() > 1 && !mapData.passable(targets.top())))) { targets.pop(); }
 
     // No need to move if at the target (or adjacent to it)
-    if (targets.empty() || rc.getLocation().isAdjacentTo(targets.bottom())) { return Direction.CENTER; }
+    if (rc.getLocation().isAdjacentTo(targets.bottom())) { return Direction.CENTER; }
 
     // Check the cache to see if we have calculated this before
     MapLocation loc = current;

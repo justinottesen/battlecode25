@@ -8,16 +8,12 @@ public final class Tower extends Robot {
 
   private final MapLocation LOCATION;
 
-  private final int CREATED_ROUND;
-
   public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
 
     TOWER_ATTACK_RADIUS = rc.getType().actionRadiusSquared; // NOTE: This will have to change if upgrades modify radius
 
     LOCATION = rc.getLocation();
-
-    CREATED_ROUND = rc.getRoundNum();
   }
 
   protected void doMicro() throws GameActionException {

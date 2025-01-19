@@ -27,6 +27,25 @@ public class Pathfinding {
   }
 
   /**
+   * Sets the pathfinding target to a new explore target
+   * @return The new target
+   */
+  public MapLocation setExplore() { 
+    setTarget(mapData.getExploreTarget());
+    return getTarget();
+  }
+
+  /**
+   * Sets the target destination for pathfinding
+   * 
+   * @param goal The goal object containing the pathfinding target
+   * @return Whether this is changes the target location
+   */
+  public boolean setTarget(Goal goal) {
+    return setTarget(goal.target);
+  }
+
+  /**
    * Sets the target destination for pathfinding
    * 
    * @param target The target destination for the robot to reach

@@ -15,7 +15,11 @@ public abstract class Robot {
 
   // Common utility classes
   protected final MapData mapData;
+  protected final Pathfinding pathfinding;
+  protected final GoalManager goals;
   protected final Communication comms;
+
+  // Goal stack
   
   public Robot(RobotController rc_) throws GameActionException {
     rc = rc_;
@@ -27,6 +31,10 @@ public abstract class Robot {
     
     mapData = new MapData(rc);
     mapData.updateAllVisible();
+
+    pathfinding = new Pathfinding(rc, mapData);
+    pathfinding.setExplore();
+    goals = new GoalManager(rc, pathfinding, mapData);
 
     comms = new Communication(rc);
   };

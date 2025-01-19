@@ -724,7 +724,7 @@ public class MapData {
    * Returns the closest unknown center of a NxN chunk of the map
    * @return The closest unexplored center of a chunk
    */
-  public MapLocation getExploreTarget() throws GameActionException {
+  public MapLocation getExploreTarget() {
     MapLocation closest = null;
     int closest_dist = MAX_DISTANCE_SQ;
     for (int x = EXPLORE_CHUNK_SIZE / 2; x < MAP_WIDTH; x += EXPLORE_CHUNK_SIZE) {

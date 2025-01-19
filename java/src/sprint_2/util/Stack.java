@@ -40,6 +40,14 @@ public class Stack<T> {
   }
 
   /**
+   * Peeks at the second item on the stack without modifying it
+   * @return The second item on the stack
+   */
+  public T peekSecond() {
+    return (index <= 1 ? null : data[index - 2]);
+  }
+
+  /**
    * Returns the item at the bottom of the stack without modification.
    * This is not a conventional stack method.
    * @return The first element in the array (bottom of the stack)

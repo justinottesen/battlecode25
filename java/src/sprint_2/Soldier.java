@@ -245,16 +245,11 @@ public final class Soldier extends Robot {
   }
 
   private void opening() throws GameActionException {
-<<<<<<< HEAD
-=======
-    //combat takes first priority
-
->>>>>>> 371ecebfa88c8294e3f16264cb83dcd29bbb4d0f
+    // Combat takes first priority
     MapLocation closestRuin = null;
     // Update any close ruins sites
     for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
       mapData.updateData(rc.senseMapInfo(ruin));
-<<<<<<< HEAD
       RobotInfo tower = rc.senseRobotAtLocation(ruin);
       if(tower!=null){
         if(tower.getTeam()==rc.getTeam().opponent()){
@@ -268,9 +263,6 @@ public final class Soldier extends Robot {
         }
       }
       if(mapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
-=======
-      if(mapData.isContested(ruin)||rc.senseRobotAtLocation(ruin)!=null) continue;  //ignore any ruins with enemy paint that we've already seen (also ignores our starting tower)
->>>>>>> 371ecebfa88c8294e3f16264cb83dcd29bbb4d0f
       if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
         closestRuin = ruin;
       }

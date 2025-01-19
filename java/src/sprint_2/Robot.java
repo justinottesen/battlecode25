@@ -6,18 +6,12 @@ import battlecode.common.*;
 
 public abstract class Robot {
 
-  protected final RobotController rc;
+  public static RobotController rc;
   
-  protected final Team TEAM;
-  protected final Team OPPONENT;
-
-  protected final int CREATED_ROUND;
-
-  // Common utility classes
-  protected final MapData mapData;
-  protected final Pathfinding pathfinding;
-  protected final GoalManager goals;
-  protected final Communication comms;
+  public static Team TEAM;
+  public static Team OPPONENT;
+  
+  public static int CREATED_ROUND;
 
   // Goal stack
   
@@ -29,14 +23,10 @@ public abstract class Robot {
 
     CREATED_ROUND = rc.getRoundNum();
     
-    mapData = new MapData(rc);
-    mapData.updateAllVisible();
-
-    pathfinding = new Pathfinding(rc, mapData);
-    pathfinding.setExplore();
-    goals = new GoalManager(rc, pathfinding, mapData);
-
-    comms = new Communication(rc);
+    // THIS ORDER OF INITIALIZATION IS IMPORTANT
+    MapData.init();
+    MapData.updateAllVisible();
+    GoalManager.init();
   };
 
   final public void run() throws GameActionException {

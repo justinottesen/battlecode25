@@ -1,5 +1,7 @@
 package sprint_2;
 
+import sprint_2.util.*;
+
 import battlecode.common.*;
 
 public final class Tower extends Robot {
@@ -26,8 +28,8 @@ public final class Tower extends Robot {
         rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
-        comms.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
-          comms.addCoordinates(comms.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
+        Communication.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
+          Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
       System.out.println("Sent suicide message");
       rc.disintegrate();
       return;
@@ -90,8 +92,8 @@ public final class Tower extends Robot {
     // Spawn more if we got hella chips
     if (rc.getChips() > rc.getType().moneyCost * 2) {
       switch (rc.getRoundNum() % 5) {
-        case 0: trySpawn(UnitType.MOPPER, mapData.MAP_CENTER); break;
-        default: trySpawn(UnitType.SOLDIER, mapData.MAP_CENTER); break;
+        case 0: trySpawn(UnitType.MOPPER, MapData.MAP_CENTER); break;
+        default: trySpawn(UnitType.SOLDIER, MapData.MAP_CENTER); break;
       }
     }
   }
@@ -106,7 +108,7 @@ public final class Tower extends Robot {
     if (rc.canBuildRobot(UnitType.SOLDIER, target)) { return target; }
 
     MapLocation closest = null;
-    int closest_dist = mapData.MAX_DISTANCE_SQ;
+    int closest_dist = MapData.MAX_DISTANCE_SQ;
     for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(LOCATION, GameConstants.BUILD_ROBOT_RADIUS_SQUARED)) {
       int dist = loc.distanceSquaredTo(target);
       if (rc.canBuildRobot(UnitType.SOLDIER, loc) && dist < closest_dist) {
@@ -142,7 +144,7 @@ public final class Tower extends Robot {
    * @throws GameActionException
    */
   private void spawnRound1() throws GameActionException {
-    trySpawn(UnitType.SOLDIER, mapData.MAP_CENTER);
+    trySpawn(UnitType.SOLDIER, MapData.MAP_CENTER);
   }
 
   /**
@@ -151,7 +153,7 @@ public final class Tower extends Robot {
    * @throws GameActionException
    */
   private void spawnRound2() throws GameActionException {
-    trySpawn(UnitType.MOPPER, mapData.MAP_CENTER);
+    trySpawn(UnitType.MOPPER, MapData.MAP_CENTER);
   }
 
   private boolean towerPatternComplete(UnitType type) throws GameActionException {

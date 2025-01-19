@@ -1,34 +1,23 @@
 package sprint_2.util;
 
+import sprint_2.*;
+
 import battlecode.common.*;
 
 public class Painter {
 
-  private final MapData mapData;
-  private final RobotController rc;
-
-  final int ACTION_RADIUS_SQ;
-
-  private final MapLocation[] paintCache;
-  private MapLocation cacheLoc;
-
-  public Painter(RobotController rc_, MapData mapData_) {
-    rc = rc_;
-    mapData = mapData_;
-    paintCache = new MapLocation[GameConstants.PATTERN_SIZE * GameConstants.PATTERN_SIZE];
-
-    ACTION_RADIUS_SQ = rc.getType().actionRadiusSquared;
-  }
+  private static final MapLocation[] paintCache = new MapLocation[GameConstants.PATTERN_SIZE * GameConstants.PATTERN_SIZE];
+  private static MapLocation cacheLoc;
 
   /**
    * Handles the logic for painting (or attacking) a specific square
    * @param loc The location to paint
    * @return Whether we actually painted the space or not
    */
-  public boolean paint(MapLocation loc) throws GameActionException {
-    boolean useSecondary = mapData.useSecondaryPaint(loc);
+  public static boolean paint(MapLocation loc) throws GameActionException {
+    boolean useSecondary = MapData.useSecondaryPaint(loc);
     if (!shouldPaint(loc, useSecondary)) { return false; }
-    rc.attack(loc, useSecondary);
+    Robot.rc.attack(loc, useSecondary);
     return true;
   }
 
@@ -38,14 +27,14 @@ public class Painter {
    * @param useSecondary Whether to use secondary paint or not
    * @return Whether the square should be painted or not
    */
-  public boolean shouldPaint(MapLocation loc, boolean useSecondary) throws GameActionException {
-    if (!rc.canAttack(loc) || // If I can't attack OR
-       (!rc.canPaint(loc) && // (I can't paint AND
-        !(rc.canSenseRobotAtLocation(loc) && // There isn't an enemy robot)
-          rc.senseRobotAtLocation(loc).getTeam() == rc.getTeam().opponent())))
+  public static boolean shouldPaint(MapLocation loc, boolean useSecondary) throws GameActionException {
+    if (!Robot.rc.canAttack(loc) || // If I can't attack OR
+       (!Robot.rc.canPaint(loc) && // (I can't paint AND
+        !(Robot.rc.canSenseRobotAtLocation(loc) && // There isn't an enemy robot)
+          Robot.rc.senseRobotAtLocation(loc).getTeam() == Robot.rc.getTeam().opponent())))
             { return false; }
-    PaintType current = rc.senseMapInfo(loc).getPaint();
-    return !current.isAlly() || (mapData.knownPaintColor(loc) && current.isSecondary() != useSecondary);
+    PaintType current = Robot.rc.senseMapInfo(loc).getPaint();
+    return !current.isAlly() || (MapData.knownPaintColor(loc) && current.isSecondary() != useSecondary);
   }
 
   /**
@@ -53,8 +42,8 @@ public class Painter {
    * @param loc The location to paint
    * @return Whether the square should be painted or not
    */
-  public boolean shouldPaint(MapLocation loc) throws GameActionException {
-    boolean useSecondary = mapData.useSecondaryPaint(loc);
+  public static boolean shouldPaint(MapLocation loc) throws GameActionException {
+    boolean useSecondary = MapData.useSecondaryPaint(loc);
     return shouldPaint(loc, useSecondary);
   }
 
@@ -63,8 +52,8 @@ public class Painter {
    * @param loc The location to mop
    * @return Whether we actually mopped the space or not
    */
-  public boolean mop(MapLocation loc) throws GameActionException {
-    if (shouldMop(loc)) { rc.attack(loc); return true; }
+  public static boolean mop(MapLocation loc) throws GameActionException {
+    if (shouldMop(loc)) { Robot.rc.attack(loc); return true; }
     return false;
   }
 
@@ -73,10 +62,10 @@ public class Painter {
    * @param loc The location to mop
    * @return Whether the square should be mopped or not
    */
-  public boolean shouldMop(MapLocation loc) throws GameActionException {
-    return rc.canAttack(loc) &&  // Can attack AND (
-      (rc.canSenseRobotAtLocation(loc) && rc.senseRobotAtLocation(loc).getTeam() != rc.getTeam() || // Can sense enemy robot
-      rc.senseMapInfo(loc).getPaint().isEnemy()); // OR enemy paint )
+  public static boolean shouldMop(MapLocation loc) throws GameActionException {
+    return Robot.rc.canAttack(loc) &&  // Can attack AND (
+      (Robot.rc.canSenseRobotAtLocation(loc) && Robot.rc.senseRobotAtLocation(loc).getTeam() != Robot.rc.getTeam() || // Can sense enemy robot
+      Robot.rc.senseMapInfo(loc).getPaint().isEnemy()); // OR enemy paint )
   }
 
   /**
@@ -86,16 +75,16 @@ public class Painter {
    * 
    * @return Whether we actually painted or not
    */
-  public boolean paint() throws GameActionException {
-    if (!rc.isActionReady()) { return false; }
+  public static boolean paint() throws GameActionException {
+    if (!Robot.rc.isActionReady()) { return false; }
     
     // Paint under self
-    if (paint(rc.getLocation())) {
+    if (paint(Robot.rc.getLocation())) {
       return true;
     }
 
     // Try to attack someone
-    RobotInfo[] robots = rc.senseNearbyRobots(ACTION_RADIUS_SQ, rc.getTeam().opponent());
+    RobotInfo[] robots = Robot.rc.senseNearbyRobots(Robot.rc.getType().actionRadiusSquared, Robot.rc.getTeam().opponent());
     for (RobotInfo robot : robots) {
       if (paint(robot.getLocation())) {
         return true;
@@ -103,7 +92,7 @@ public class Painter {
     }
 
     // Paint elsewhere
-    MapLocation[] locs = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), ACTION_RADIUS_SQ);
+    MapLocation[] locs = Robot.rc.getAllLocationsWithinRadiusSquared(Robot.rc.getLocation(), Robot.rc.getType().actionRadiusSquared);
     for (MapLocation loc : locs) {
       if (paint(loc)) {
         return true;
@@ -120,16 +109,16 @@ public class Painter {
    * 
    * @return Whether we actually mopped or not
    */
-  public boolean mop() throws GameActionException {
-    if (!rc.isActionReady()) { return false; }
+  public static boolean mop() throws GameActionException {
+    if (!Robot.rc.isActionReady()) { return false; }
 
     // Mop under self (if enemy paint)
-    if (mop(rc.getLocation())) {
+    if (mop(Robot.rc.getLocation())) {
       return true;
     }
 
     // Try to attack someone
-    RobotInfo[] robots = rc.senseNearbyRobots(ACTION_RADIUS_SQ, rc.getTeam().opponent());
+    RobotInfo[] robots = Robot.rc.senseNearbyRobots(Robot.rc.getType().actionRadiusSquared, Robot.rc.getTeam().opponent());
     for (RobotInfo robot : robots) {
       if (mop(robot.getLocation())) {
         return true;
@@ -137,7 +126,7 @@ public class Painter {
     }
 
     // Mop elsewhere
-    MapLocation[] locs = rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), ACTION_RADIUS_SQ);
+    MapLocation[] locs = Robot.rc.getAllLocationsWithinRadiusSquared(Robot.rc.getLocation(), Robot.rc.getType().actionRadiusSquared);
     for (MapLocation loc : locs) {
       if (mop(loc)) {
         return true;
@@ -150,90 +139,89 @@ public class Painter {
   /**
    * Handles the logic for fighting (painting) an enemy
    * @param enemy The enemy to target
-   * @param pathfinding The class to help with movement
    * @throws GameActionException
    */
-  public void paintFight(RobotInfo enemy, Pathfinding pathfinding) throws GameActionException {
-    if (enemy == null) { return; } // We are far away, let macro take care of pathfinding
+  public static void paintFight(RobotInfo enemy) throws GameActionException {
+    if (enemy == null) { return; } // We are far away, let macro take care of Pathfinding
     MapLocation enemyLoc = enemy.getLocation();
-    int distance_sq = rc.getLocation().distanceSquaredTo(enemyLoc);
+    int distance_sq = Robot.rc.getLocation().distanceSquaredTo(enemyLoc);
     int enemy_range_sq = enemy.getType().actionRadiusSquared;
 
     // If we can't attack move in
-    if (distance_sq > ACTION_RADIUS_SQ && rc.isMovementReady()) {
-      Direction moveIn = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc, true, Pathfinding.Mode.NO_ENEMY);
+    if (distance_sq > Robot.rc.getType().actionRadiusSquared && Robot.rc.isMovementReady()) {
+      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, Pathfinding.Mode.NO_ENEMY);
       // But only move in range of enemy if we are ready to attack
-      if (moveIn != null && rc.canMove(moveIn) && (rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || rc.isActionReady())) {
-        mapData.move(moveIn);
+      if (moveIn != null && Robot.rc.canMove(moveIn) && (Robot.rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || Robot.rc.isActionReady())) {
+        MapData.move(moveIn);
       }
     }
 
     // Attack enemy
-    if (rc.canAttack(enemyLoc)) { 
+    if (Robot.rc.canAttack(enemyLoc)) { 
       paint(enemyLoc);
     }
 
     // If enemy can see us, back up
-    if (distance_sq <= enemy_range_sq && rc.isMovementReady()) {
-      Direction backup = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc.directionTo(rc.getLocation()), true, Pathfinding.Mode.ANY);
-      if (backup != null && rc.canMove(backup)) { mapData.move(backup); }
+    if (distance_sq <= enemy_range_sq && Robot.rc.isMovementReady()) {
+      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, Pathfinding.Mode.ANY);
+      if (backup != null && Robot.rc.canMove(backup)) { MapData.move(backup); }
     }
 
     // Whatever square we end on, try to paint it
-    if (rc.canPaint(rc.getLocation())) { paint(rc.getLocation()); }
+    if (Robot.rc.canPaint(Robot.rc.getLocation())) { paint(Robot.rc.getLocation()); }
   }
 
   /**
    * Handles the logic for fighting (mopping) an enemy
    * @param enemy The enemy to target
-   * @param pathfinding The class to help with movement
+   * @param Pathfinding The class to help with movement
    * @throws GameActionException
    */
-  public void mopFight(RobotInfo enemy, Pathfinding pathfinding) throws GameActionException {
+  public static void mopFight(RobotInfo enemy) throws GameActionException {
     MapLocation enemyLoc = enemy.getLocation();
-    int distance_sq = rc.getLocation().distanceSquaredTo(enemyLoc);
+    int distance_sq = Robot.rc.getLocation().distanceSquaredTo(enemyLoc);
     int enemy_range_sq = enemy.getType().actionRadiusSquared;
 
     // If we can't attack move in
-    if (distance_sq > ACTION_RADIUS_SQ && rc.isMovementReady()) {
-      Direction moveIn = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc, true, Pathfinding.Mode.ALLY_ONLY);
+    if (distance_sq > Robot.rc.getType().actionRadiusSquared && Robot.rc.isMovementReady()) {
+      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, Pathfinding.Mode.ALLY_ONLY);
       // But only move in range of enemy if we are ready to attack
-      if (moveIn != null && rc.canMove(moveIn) && (rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || rc.isActionReady())) {
-        mapData.move(moveIn);
+      if (moveIn != null && Robot.rc.canMove(moveIn) && (Robot.rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || Robot.rc.isActionReady())) {
+        MapData.move(moveIn);
       }
     }
 
     // Attack enemy
-    if (rc.canAttack(enemyLoc)) { mop(enemyLoc); }
+    if (Robot.rc.canAttack(enemyLoc)) { mop(enemyLoc); }
 
     // If enemy can see us, back up
-    if (distance_sq <= enemy_range_sq && rc.isMovementReady()) {
-      Direction backup = pathfinding.getGreedyMove(rc.getLocation(), enemyLoc.directionTo(rc.getLocation()), true, Pathfinding.Mode.ANY);
-      if (backup != null && rc.canMove(backup)) { mapData.move(backup); }
+    if (distance_sq <= enemy_range_sq && Robot.rc.isMovementReady()) {
+      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, Pathfinding.Mode.ANY);
+      if (backup != null && Robot.rc.canMove(backup)) { MapData.move(backup); }
     }
 
     // Whatever square we end on, try to paint it
-    if (rc.canAttack(rc.getLocation())) { mop(rc.getLocation()); }
+    if (Robot.rc.canAttack(Robot.rc.getLocation())) { mop(Robot.rc.getLocation()); }
   }
 
   /**
    * Handles the logic for capturing a ruin
-   * @param pathfinding The class to help with movement, with the ruin set as the target
+   * @param Pathfinding The class to help with movement, with the ruin set as the target
    * @return Whether the ruin was successfully captured
    * @throws GameActionException
    */
-  public boolean paintCaptureRuin(Pathfinding pathfinding) throws GameActionException {
-    MapLocation current = rc.getLocation();
+  public static boolean paintCaptureRuin() throws GameActionException {
+    MapLocation current = Robot.rc.getLocation();
 
     // TODO: Don't just stand here if you can't make progress
 
-    int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
     
     // Check the cache to see if we are capturing same ruin
-    if (!pathfinding.getTarget().equals(cacheLoc)) {
+    if (!Pathfinding.getTarget().equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = pathfinding.getTarget();
+      cacheLoc = Pathfinding.getTarget();
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -243,8 +231,8 @@ public class Painter {
     }
 
     // Check if someone has already captured the ruin
-    if (rc.canSenseRobotAtLocation(cacheLoc)) {
-      mapData.updateData(rc.senseMapInfo(cacheLoc));
+    if (Robot.rc.canSenseRobotAtLocation(cacheLoc)) {
+      MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
     }
@@ -259,17 +247,17 @@ public class Painter {
     }
   
     // Try painting the rest of the ruin
-    if (rc.isActionReady()) {
+    if (Robot.rc.isActionReady()) {
       for (MapLocation loc : paintCache) {
         // Only interested in ally, empty, or unknown paint
-        if (rc.canSenseLocation(loc) && (rc.senseMapInfo(loc).getPaint().isEnemy() || rc.senseMapInfo(loc).getPaint().isAlly() && rc.senseMapInfo(loc).getPaint().isSecondary() == mapData.useSecondaryPaint(loc))) { continue; }
+        if (Robot.rc.canSenseLocation(loc) && (Robot.rc.senseMapInfo(loc).getPaint().isEnemy() || Robot.rc.senseMapInfo(loc).getPaint().isAlly() && Robot.rc.senseMapInfo(loc).getPaint().isSecondary() == MapData.useSecondaryPaint(loc))) { continue; }
 
         // If we can't reach it, move towards it
-        if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
-          Direction dir = pathfinding.getGreedyMove(current, loc, true, rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
-          if (dir == null || !rc.canMove(dir)) { continue; }
-          mapData.move(dir);
-          current = rc.getLocation();
+        if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
+          Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
+          if (dir == null || !Robot.rc.canMove(dir)) { continue; }
+          MapData.move(dir);
+          current = Robot.rc.getLocation();
           // Check if there is paint under our feet
           if (paint(current)) { break; }
         }
@@ -279,9 +267,9 @@ public class Painter {
     }
 
     // Try to complete the ruin
-    if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc)) {
-      rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc);
-      mapData.updateData(rc.senseMapInfo(cacheLoc));
+    if (Robot.rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc)) {
+      Robot.rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc);
+      MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
     }
@@ -291,22 +279,22 @@ public class Painter {
 
   /**
    * Handles the logic for capturing a Special Resource Pattern
-   * @param pathfinding The class to help with movement, with the center set as the target
+   * @param Pathfinding The class to help with movement, with the center set as the target
    * @return Whether the SRP was successfully captured
    * @throws GameActionException
    */
-  public boolean paintCaptureSRP(Pathfinding pathfinding) throws GameActionException {
-    MapLocation current = rc.getLocation();
+  public static boolean paintCaptureSRP() throws GameActionException {
+    MapLocation current = Robot.rc.getLocation();
 
     // TODO: Don't just stand here if you can't make progress
 
-    int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
     
     // Check the cache to see if we are capturing same ruin
-    if (!pathfinding.getTarget().equals(cacheLoc)) {
+    if (!Pathfinding.getTarget().equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = pathfinding.getTarget();
+      cacheLoc = Pathfinding.getTarget();
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -316,8 +304,8 @@ public class Painter {
     }
 
     // Check if someone already captured SRP
-    if (rc.canSenseLocation(cacheLoc) && rc.senseMapInfo(cacheLoc).isResourcePatternCenter()) {
-      mapData.updateData(rc.senseMapInfo(cacheLoc));
+    if (Robot.rc.canSenseLocation(cacheLoc) && Robot.rc.senseMapInfo(cacheLoc).isResourcePatternCenter()) {
+      MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
     }
@@ -331,17 +319,17 @@ public class Painter {
     }
   
     // Try painting the rest of the ruin
-    if (rc.isActionReady()) {
+    if (Robot.rc.isActionReady()) {
       for (MapLocation loc : paintCache) {
         // Only interested in ally, empty, or unknown paint
-        if (rc.canSenseLocation(loc) && (rc.senseMapInfo(loc).getPaint().isEnemy() || rc.senseMapInfo(loc).getPaint().isAlly() && rc.senseMapInfo(loc).getPaint().isSecondary() == mapData.useSecondaryPaint(loc))) { continue; }
+        if (Robot.rc.canSenseLocation(loc) && (Robot.rc.senseMapInfo(loc).getPaint().isEnemy() || Robot.rc.senseMapInfo(loc).getPaint().isAlly() && Robot.rc.senseMapInfo(loc).getPaint().isSecondary() == MapData.useSecondaryPaint(loc))) { continue; }
 
         // If we can't reach it, move towards it
-        if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
-          Direction dir = pathfinding.getGreedyMove(current, loc, true, rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
-          if (dir == null || !rc.canMove(dir)) { continue; }
-          mapData.move(dir);
-          current = rc.getLocation();
+        if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
+          Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
+          if (dir == null || !Robot.rc.canMove(dir)) { continue; }
+          MapData.move(dir);
+          current = Robot.rc.getLocation();
           // Check if there is paint under our feet
           if (paint(current)) { break; }
         }
@@ -351,9 +339,9 @@ public class Painter {
     }
 
     // Try to complete the SRP
-    if (rc.canCompleteResourcePattern(cacheLoc)) {
-      rc.completeResourcePattern(cacheLoc);
-      mapData.updateData(rc.senseMapInfo(cacheLoc));
+    if (Robot.rc.canCompleteResourcePattern(cacheLoc)) {
+      Robot.rc.completeResourcePattern(cacheLoc);
+      MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
     }
@@ -365,17 +353,17 @@ public class Painter {
    * Handles the logic for defending a ruin by cleaning enemy paint
    * @returns true if our job is complete, false otherwise
    */
-  public boolean mopCaptureRuin(Pathfinding pathfinding) throws GameActionException {
-    MapLocation current = rc.getLocation();
-    int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+  public static boolean mopCaptureRuin() throws GameActionException {
+    MapLocation current = Robot.rc.getLocation();
+    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
 
     // TODO: Don't just stand here if you can't make progress
 
     // Check the cache to see if we are capturing same ruin
-    if (!pathfinding.getTarget().equals(cacheLoc)) {
+    if (!Pathfinding.getTarget().equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = pathfinding.getTarget();
+      cacheLoc = Pathfinding.getTarget();
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -385,8 +373,8 @@ public class Painter {
     }
 
     // Check if someone has already captured the ruin
-    if (rc.canSenseRobotAtLocation(cacheLoc)) {
-      mapData.updateData(rc.senseMapInfo(cacheLoc));
+    if (Robot.rc.canSenseRobotAtLocation(cacheLoc)) {
+      MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
     }
@@ -402,22 +390,22 @@ public class Painter {
     boolean jobComplete = true;
     // Try cleaning the rest of the ruin
     for (MapLocation loc : paintCache) {
-      if(!rc.canSenseLocation(loc)) { jobComplete = false; }
+      if(!Robot.rc.canSenseLocation(loc)) { jobComplete = false; }
       // Only interested in enemy (or unknown) paint
-      if (rc.canSenseLocation(loc) && !rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
+      if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
       jobComplete = false;
       // If we can't reach it, move towards it
-      if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
+      if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
         Direction dir = null;
         //we only care about staying on ally paint if we are already on ally paint
-        if(rc.senseMapInfo(current).getPaint().isAlly()){
-          dir = pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
+        if(Robot.rc.senseMapInfo(current).getPaint().isAlly()){
+          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
         }else{
-          dir = pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.NO_ENEMY);
+          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.NO_ENEMY);
         }
-        if (dir == null || !rc.canMove(dir)) { continue; }
-        mapData.move(dir);
-        current = rc.getLocation();
+        if (dir == null || !Robot.rc.canMove(dir)) { continue; }
+        MapData.move(dir);
+        current = Robot.rc.getLocation();
         // Check if there is enemy paint under our feet
         if (mop(current)) { break; }
       }
@@ -426,9 +414,9 @@ public class Painter {
     }
 
     // Try to complete the ruin
-    if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, pathfinding.getTarget())) {
-      rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, pathfinding.getTarget());
-      mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
+    if (Robot.rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget())) {
+      Robot.rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget());
+      MapData.updateData(Robot.rc.senseMapInfo(Pathfinding.getTarget()));
       cacheLoc = null;
       return true;
     }
@@ -439,22 +427,22 @@ public class Painter {
 
   /**
    * Handles the logic for defending a SRP by cleaning enemy paint
-   * @param pathfinding The pathfinding utility class
+   * @param Pathfinding The Pathfinding utility class
    * @return Whether our job is complete or not
    * @throws GameActionException
    */
-  public boolean mopCaptureSRP(Pathfinding pathfinding) throws GameActionException {
-    MapLocation current = rc.getLocation();
+  public static boolean mopCaptureSRP() throws GameActionException {
+    MapLocation current = Robot.rc.getLocation();
 
     // TODO: Don't just stand here if you can't make progress
 
-    int low_x = pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
     
     // Check the cache to see if we are capturing same ruin
-    if (!pathfinding.getTarget().equals(cacheLoc)) {
+    if (!Pathfinding.getTarget().equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = pathfinding.getTarget();
+      cacheLoc = Pathfinding.getTarget();
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -464,8 +452,8 @@ public class Painter {
     }
 
     // Check if someone already captured SRP
-    if (rc.canSenseLocation(cacheLoc) && rc.senseMapInfo(cacheLoc).isResourcePatternCenter()) {
-      mapData.updateData(rc.senseMapInfo(cacheLoc));
+    if (Robot.rc.canSenseLocation(cacheLoc) && Robot.rc.senseMapInfo(cacheLoc).isResourcePatternCenter()) {
+      MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
     }
@@ -481,22 +469,22 @@ public class Painter {
     // Try painting the rest of the ruin
     boolean jobComplete = true;
     for (MapLocation loc : paintCache) {
-      if (!rc.canSenseLocation(loc)) { jobComplete = false; }
+      if (!Robot.rc.canSenseLocation(loc)) { jobComplete = false; }
       // Only interested in ally, empty, or unknown paint
-      if (rc.canSenseLocation(loc) && !rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
+      if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
       jobComplete = false;
       // If we can't reach it, move towards it
-      if (rc.isMovementReady() && current.distanceSquaredTo(loc) > ACTION_RADIUS_SQ) {
+      if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
         Direction dir = null;
         //we only care about staying on ally paint if we are already on ally paint
-        if(rc.senseMapInfo(current).getPaint().isAlly()){
-          dir = pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
+        if(Robot.rc.senseMapInfo(current).getPaint().isAlly()){
+          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
         }else{
-          dir = pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.NO_ENEMY);
+          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.NO_ENEMY);
         }
-        if (dir == null || !rc.canMove(dir)) { continue; }
-        mapData.move(dir);
-        current = rc.getLocation();
+        if (dir == null || !Robot.rc.canMove(dir)) { continue; }
+        MapData.move(dir);
+        current = Robot.rc.getLocation();
         // Check if there is paint under our feet
         if (mop(current)) { break; }
       }
@@ -505,9 +493,9 @@ public class Painter {
     }
 
     // Try to complete the SRP
-    if (rc.canCompleteResourcePattern(cacheLoc)) {
-      rc.completeResourcePattern(cacheLoc);
-      mapData.updateData(rc.senseMapInfo(cacheLoc));
+    if (Robot.rc.canCompleteResourcePattern(cacheLoc)) {
+      Robot.rc.completeResourcePattern(cacheLoc);
+      MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
     }

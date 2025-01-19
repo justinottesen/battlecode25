@@ -5,9 +5,6 @@ import sprint_2.util.*;
 
 public final class Soldier extends Robot {
 
-  // Utility Classes
-  private final Painter painter;
-
   // Constants
   private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD;
 
@@ -23,8 +20,6 @@ public final class Soldier extends Robot {
   public Soldier(RobotController rc_) throws GameActionException {
     super(rc_);
     
-    painter = new Painter(rc, mapData);
-
     //set variables for hard coding the first 2 soldiers (initializeSoldiers, followID, spawnedFromPaintTower)
     initialSoldiers = (rc.getRoundNum()<10);
     followID=-1;
@@ -47,9 +42,9 @@ public final class Soldier extends Robot {
       opening();
       return;
     }
-    rc.setIndicatorString("GOAL - " + goals.current());
-    if (pathfinding.getTarget() != null) {
-      rc.setIndicatorLine(rc.getLocation(), pathfinding.getTarget(), 255, 0, 255);
+    rc.setIndicatorString("GOAL - " + GoalManager.current());
+    if (Pathfinding.getTarget() != null) {
+      rc.setIndicatorLine(rc.getLocation(), Pathfinding.getTarget(), 255, 0, 255);
     }
 
     // TODO: TAKE THIS OUT AND DEAL WITH CROWDING lol
@@ -64,68 +59,68 @@ public final class Soldier extends Robot {
     // Update any close ruins sites (skip the first few rounds to save bytecode)
     if (rc.getRoundNum() > 10) {
       for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-        mapData.updateData(rc.senseMapInfo(ruin));
+        MapData.updateData(rc.senseMapInfo(ruin));
       }
     }
 
     // Check for a suicide message, if received this is priority number 1
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
-      if (comms.getMessageType(m.getBytes()) == comms.SUICIDE) {
+      if (Communication.getMessageType(m.getBytes()) == Communication.SUICIDE) {
         System.out.println("Received suicide message");
-        goals.pushGoal(Goal.Type.CAPTURE_RUIN, comms.getCoordinates(m.getBytes()));
-        painter.paintCaptureRuin(pathfinding);
+        GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
+        Painter.paintCaptureRuin();
       }
     }
 
     // Check if someone else finished the current ruin
-    // TODO: Should this check stay here? Duplicated in painter
-    if (goals.current().type == Goal.Type.CAPTURE_RUIN) {
-      if (rc.canSenseRobotAtLocation(pathfinding.getTarget())) {
-        mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
-        goals.setNewGoal(Goal.Type.REFILL_PAINT, pathfinding.getTarget());
+    // TODO: Should this check stay here? Duplicated in Painter
+    if (GoalManager.current().type == Goal.Type.CAPTURE_RUIN) {
+      if (rc.canSenseRobotAtLocation(Pathfinding.getTarget())) {
+        MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
+        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
       }
     }
 
     // Check if someone else finished the current SRP
-    // TODO: Should this check stay here? Duplicated in painter
-    if (goals.current().type == Goal.Type.CAPTURE_SRP) {
-      MapLocation target = pathfinding.getTarget();
+    // TODO: Should this check stay here? Duplicated in Painter
+    if (GoalManager.current().type == Goal.Type.CAPTURE_SRP) {
+      MapLocation target = Pathfinding.getTarget();
       if (rc.canSenseLocation(target) && rc.senseMapInfo(target).isResourcePatternCenter()) {
-        mapData.updateData(rc.senseMapInfo(target));
-        goals.popGoal();
+        MapData.updateData(rc.senseMapInfo(target));
+        GoalManager.popGoal();
       }
     }
 
     // If received paint transfer from mopper, update goal
-    if (goals.current().type == Goal.Type.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      goals.popGoal();
+    if (GoalManager.current().type == Goal.Type.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      GoalManager.popGoal();
     }
 
     // TODO: High and low watermark for paint refill so we don't get stuck in a loop
     
     // If low on paint, set goal to refill
-    if (goals.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      goals.pushGoal(Goal.Type.REFILL_PAINT, pathfinding.getTarget());
+    if (GoalManager.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
     }
 
     // Look for nearby ruins if we aren't already fighting a tower
-    if (goals.current().type.v < Goal.Type.FIGHT_TOWER.v) {
+    if (GoalManager.current().type.v < Goal.Type.FIGHT_TOWER.v) {
       boolean setGoal = false;
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
         RobotInfo info = rc.senseRobotAtLocation(ruin);
         if (info == null) { // Unclaimed Ruin
-          if (goals.current().type.v >= Goal.Type.CAPTURE_RUIN.v) { continue; }
-          goals.pushGoal(Goal.Type.CAPTURE_RUIN, ruin);
+          if (GoalManager.current().type.v >= Goal.Type.CAPTURE_RUIN.v) { continue; }
+          GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, ruin);
           setGoal = true;
           continue;
         }
         if (info.getTeam() == OPPONENT) { // Enemy Tower
           if (setGoal) {
-            goals.replaceTopGoal(Goal.Type.FIGHT_TOWER, ruin);
+            GoalManager.replaceTopGoal(Goal.Type.FIGHT_TOWER, ruin);
           } else {
-            goals.pushGoal(Goal.Type.FIGHT_TOWER, ruin);
+            GoalManager.pushGoal(Goal.Type.FIGHT_TOWER, ruin);
           }
           goalTower = info;
           break;
@@ -135,10 +130,10 @@ public final class Soldier extends Robot {
 
     // Look for SRP if we are a lower priority
     // TODO: Make this process more intelligent. Pack better with other SRPs, etc
-    if (goals.current().type.v < Goal.Type.CAPTURE_SRP.v) {
+    if (GoalManager.current().type.v < Goal.Type.CAPTURE_SRP.v) {
       for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), GameConstants.MARK_RADIUS_SQUARED)) {
-        if (mapData.tryMarkSRP(loc)) {
-          goals.pushGoal(Goal.Type.CAPTURE_SRP, loc);
+        if (MapData.tryMarkSRP(loc)) {
+          GoalManager.pushGoal(Goal.Type.CAPTURE_SRP, loc);
           break;
         }
       }
@@ -150,47 +145,47 @@ public final class Soldier extends Robot {
     if (!rc.isMovementReady() && !rc.isActionReady()) { return; }
 
     // Can't move, might as well try and paint
-    if (!rc.isMovementReady() && rc.isActionReady()) { painter.paint(); return; }
+    if (!rc.isMovementReady() && rc.isActionReady()) { Painter.paint(); return; }
 
-    switch (goals.current().type) {
+    switch (GoalManager.current().type) {
       case FIGHT_TOWER:
-        painter.paintFight(goalTower, pathfinding);
+        Painter.paintFight(goalTower);
         break;
       case CAPTURE_SRP:
-        if (painter.paintCaptureSRP(pathfinding)) {
-          goals.popGoal();
+        if (Painter.paintCaptureSRP()) {
+          GoalManager.popGoal();
         }
         break;
       case CAPTURE_RUIN:
-        if (painter.paintCaptureRuin(pathfinding)) {
-          goals.replaceTopGoal(Goal.Type.REFILL_PAINT, pathfinding.getTarget());
+        if (Painter.paintCaptureRuin()) {
+          GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
         }
         // Pathfinding target is the tower which was just built, should have paint
         break;
       case REFILL_PAINT:
-        if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
-          RobotInfo tower = rc.senseRobotAtLocation(pathfinding.getTarget());
+        if (rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
+          RobotInfo tower = rc.senseRobotAtLocation(Pathfinding.getTarget());
           if (tower == null) {
-            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, pathfinding.getTarget())) {
-              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, pathfinding.getTarget());
-              tower = rc.senseRobotAtLocation(pathfinding.getTarget());
+            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget())) {
+              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget());
+              tower = rc.senseRobotAtLocation(Pathfinding.getTarget());
             } else {
-              pathfinding.setTarget(mapData.closestFriendlyTower());
+              Pathfinding.setTarget(MapData.closestFriendlyTower());
               return;
             }
           }
           int paintAmount = rc.getType().paintCapacity - rc.getPaint();
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
-          if (rc.canTransferPaint(pathfinding.getTarget(), -paintAmount)) {
-            rc.transferPaint(pathfinding.getTarget(), -paintAmount);
-            goals.popGoal();
+          if (rc.canTransferPaint(Pathfinding.getTarget(), -paintAmount)) {
+            rc.transferPaint(Pathfinding.getTarget(), -paintAmount);
+            GoalManager.popGoal();
           }
         }
         break;
       case EXPLORE: // TODO: Address clumping of units
-        if (rc.getLocation().isWithinDistanceSquared(pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
-          mapData.updateData(rc.senseMapInfo(pathfinding.getTarget()));
-          pathfinding.setTarget(mapData.getExploreTarget());
+        if (rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
+          MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
+          Pathfinding.setTarget(MapData.getExploreTarget());
         }
         break;
       default: break;
@@ -199,18 +194,18 @@ public final class Soldier extends Robot {
 
   protected void doMacro() throws GameActionException {
     if (rc.isMovementReady()) {
-      Direction dir = pathfinding.getMove();
+      Direction dir = Pathfinding.getMove();
       if (dir == null) {
         System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
-        mapData.move(dir);
-        if (mapData.foundSRP != null && goals.current().type.v < Goal.Type.CAPTURE_SRP.v) {
-          goals.setNewGoal(Goal.Type.CAPTURE_SRP, mapData.foundSRP);
+        MapData.move(dir);
+        if (MapData.foundSRP != null && GoalManager.current().type.v < Goal.Type.CAPTURE_SRP.v) {
+          GoalManager.setNewGoal(Goal.Type.CAPTURE_SRP, MapData.foundSRP);
         }
       }
     }
     if(!initialSoldiers){  //initial soldier shouldn't waste paint
-      painter.paint();
+      Painter.paint();
     }
   }
 
@@ -219,12 +214,12 @@ public final class Soldier extends Robot {
     MapLocation closestRuin = null;
     // Update any close ruins sites
     for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-      mapData.updateData(rc.senseMapInfo(ruin));
+      MapData.updateData(rc.senseMapInfo(ruin));
       RobotInfo tower = rc.senseRobotAtLocation(ruin);
       if(tower!=null){
         if(tower.getTeam()==rc.getTeam().opponent()){
           //enemy tower, attack!
-          painter.paintFight(tower, pathfinding);
+          Painter.paintFight(tower);
           rc.setIndicatorDot(ruin,255,0,0);
           return;
         }else{
@@ -232,7 +227,7 @@ public final class Soldier extends Robot {
           continue;
         }
       }
-      if(mapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
+      if(MapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
       if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
         closestRuin = ruin;
       }
@@ -244,7 +239,7 @@ public final class Soldier extends Robot {
       MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(closestRuin,8);
       for(MapInfo m : towerPatternTiles){
         if(m.getPaint().isEnemy()){
-          mapData.setContested(closestRuin);
+          MapData.setContested(closestRuin);
           ruinGood = false;
           break;
         }
@@ -253,21 +248,21 @@ public final class Soldier extends Robot {
 
     //ruinGood is only true if there exists a closest ruin and the closest ruin doesn't have any enemy paint visible
     if(ruinGood){
-      pathfinding.setTarget(closestRuin);
-      if (painter.paintCaptureRuin(pathfinding)) {
+      Pathfinding.setTarget(closestRuin);
+      if (Painter.paintCaptureRuin()) {
         initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
-        goals.setNewGoal(Goal.Type.REFILL_PAINT, pathfinding.getTarget());
+        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
       }
     }else{
       //roam if there's no ruin in sight
       if(followID!=-1 && rc.canSenseRobot(followID)){ //second soldier
         RobotInfo firstSoldier = rc.senseRobot(followID);
-        pathfinding.setTarget(firstSoldier.getLocation());
+        Pathfinding.setTarget(firstSoldier.getLocation());
         rc.setIndicatorString("second soldier, followid: "+followID);
       }else{
-        MapLocation closestEnemyTower = mapData.closestEnemyTower();
+        MapLocation closestEnemyTower = MapData.closestEnemyTower();
         if(closestEnemyTower!=null){
-          pathfinding.setTarget(closestEnemyTower);
+          Pathfinding.setTarget(closestEnemyTower);
         }else{
           int[] symmetryPriority = new int[3];
           //we want the soldiers from each tower to assume different symmetries
@@ -282,13 +277,13 @@ public final class Soldier extends Robot {
           }
 
           //Guess the location of the enemy tower and choose it as our target
-          MapLocation guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[0]);
+          MapLocation guessEnemyTower = MapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[0]);
 
-          if(mapData.known(guessEnemyTower)){
-            guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[1]);
-            if(mapData.known(guessEnemyTower)){
-              guessEnemyTower = mapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[2]);
-              if(mapData.known(guessEnemyTower)){
+          if(MapData.known(guessEnemyTower)){
+            guessEnemyTower = MapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[1]);
+            if(MapData.known(guessEnemyTower)){
+              guessEnemyTower = MapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[2]);
+              if(MapData.known(guessEnemyTower)){
                 guessEnemyTower = null;
                 
               }
@@ -296,11 +291,11 @@ public final class Soldier extends Robot {
           }
 
           if(guessEnemyTower!=null){
-            pathfinding.setTarget(guessEnemyTower);
+            Pathfinding.setTarget(guessEnemyTower);
           }else{
             //this should never run, since it rules out all 3 symmetries, but if it does, default to normal exploration
             System.out.println("Initial soldiers ruled out all 3 symmetries???");
-            pathfinding.setTarget(mapData.getExploreTarget());
+            Pathfinding.setTarget(MapData.getExploreTarget());
           }
         }
       }

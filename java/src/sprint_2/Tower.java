@@ -28,11 +28,25 @@ public final class Tower extends Robot {
         rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
-        Communication.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
+        Communication.trySendAllMessage( // We successfully sent the message to an adjacent bot
           Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
       System.out.println("Sent suicide message");
       rc.disintegrate();
       return;
+    }
+
+    // Read incoming messages
+    for (Message m : rc.readMessages(-1)) {
+      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
+        case Communication.REQUEST_MOPPER:
+          MapLocation spawnLoc = trySpawn(UnitType.MOPPER, Communication.getCoordinates(m.getBytes()));
+          if (spawnLoc != null) {
+            Communication.trySendMessage(m.getBytes(), spawnLoc);
+          }
+          break;
+        default:
+          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
+      }
     }
   }
 
@@ -125,17 +139,13 @@ public final class Tower extends Robot {
    * Tries to spawn a robot at the closest available location to the target
    * @param type The type of the robot to spawn
    * @param target The location to get close to
-   * @param skipTimer Whether or not to skip the spawn cooldown
-   * @return Whether the robot was spawned or not
+   * @return The location the robot was spawned at, if successful
    * @throws GameActionException
    */
-  private boolean trySpawn(UnitType type, MapLocation target) throws GameActionException {
+  private MapLocation trySpawn(UnitType type, MapLocation target) throws GameActionException {
     MapLocation loc = getSpawnLoc(type, target);
-    if (loc != null) {
-      rc.buildRobot(type, loc);
-      return true;
-    }
-    return false;
+    if (loc != null) { rc.buildRobot(type, loc); }
+    return loc;
   }
 
   /**

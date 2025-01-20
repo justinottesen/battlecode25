@@ -8,13 +8,21 @@ public final class Mopper extends Robot {
   // Constants
   private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD / 2;
 
-  // Possible goal values, ordered by priority number (higher is more important)
-  private MapLocation completedRuinJob;
+  private MapLocation completedRuinJob = null;
   
   public Mopper(RobotController rc_) throws GameActionException {
     super(rc_);
 
-    completedRuinJob = null;
+    // Read incoming messages
+    for (Message m : rc.readMessages(-1)) {
+      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
+        case Communication.REQUEST_MOPPER:
+          GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
+          break;
+        default:
+          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
+      }
+    }
   }
 
   protected void doMicro() throws GameActionException {

@@ -10,7 +10,8 @@ public class Goal {
     CAPTURE_RUIN(2),
     FIGHT_TOWER(3),
     REFILL_PAINT(4),
-    SURVIVE(5);
+    GET_BACKUP(5),
+    SURVIVE(6);
 
     public final int v;
 
@@ -30,13 +31,13 @@ public class Goal {
   @Override
   public String toString() { 
     return switch (type) {
-      case Type.EXPLORE -> "EXPLORE";
-      case Type.CAPTURE_SRP -> "CAPTURE_SRP"; 
-      case Type.CAPTURE_RUIN -> "CAPTURE_RUIN"; 
-      case Type.FIGHT_TOWER -> "FIGHT_TOWER";
-      case Type.REFILL_PAINT -> "REFILL_PAINT"; 
-      case Type.SURVIVE -> "SURVIVE";
-      default -> "UNDEFINED";
+      case EXPLORE -> "EXPLORE";
+      case CAPTURE_SRP -> "CAPTURE_SRP"; 
+      case CAPTURE_RUIN -> "CAPTURE_RUIN"; 
+      case FIGHT_TOWER -> "FIGHT_TOWER";
+      case REFILL_PAINT -> "REFILL_PAINT"; 
+      case GET_BACKUP -> "GET_BACKUP";
+      case SURVIVE -> "SURVIVE";
     } + target;
   }
 

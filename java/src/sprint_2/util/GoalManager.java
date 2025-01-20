@@ -90,4 +90,24 @@ public class GoalManager {
     goalStack.push(goal);
     Pathfinding.setTarget(goal);
   }
+
+  /**
+   * Returns whether goal is in the stack
+   * @param type The type of the new goal to set
+   * @param target The location to set as the target for the goal
+   */
+  public static boolean contains(Goal.Type type, MapLocation target){
+    Goal g = new Goal(type,target);
+    return goalStack.contains(g);
+  }
+
+  /**
+   * Pushes goal to the bottom of the stack
+   * @param type The type of the new goal to set
+   * @param target The location to set as the target for the goal
+   */
+  public static boolean pushSecondaryGoal(Goal.Type type, MapLocation target){
+    if(goalStack.available()==0) return false;
+    return goalStack.insert(new Goal(type,target),0);
+  }
 }

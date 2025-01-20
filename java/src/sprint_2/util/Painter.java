@@ -246,24 +246,30 @@ public class Painter {
       paint(current);
     }
   
+    boolean jobComplete = true;
     // Try painting the rest of the ruin
-    if (Robot.rc.isActionReady()) {
-      for (MapLocation loc : paintCache) {
-        // Only interested in ally, empty, or unknown paint
-        if (Robot.rc.canSenseLocation(loc) && (Robot.rc.senseMapInfo(loc).getPaint().isEnemy() || Robot.rc.senseMapInfo(loc).getPaint().isAlly() && Robot.rc.senseMapInfo(loc).getPaint().isSecondary() == MapData.useSecondaryPaint(loc))) { continue; }
-
-        // If we can't reach it, move towards it
-        if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
-          Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
-          if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-          MapData.move(dir);
-          current = Robot.rc.getLocation();
-          // Check if there is paint under our feet
-          if (paint(current)) { break; }
-        }
-        if (!shouldPaint(loc)) { continue; }
-        if (paint(loc)) { break; }
+    for (MapLocation loc : paintCache) {
+      if (loc.equals(cacheLoc)) { continue; }
+      if (!Robot.rc.canSenseLocation(loc)) { jobComplete = false; }
+      // Only interested in ally, empty, or unknown paint
+      if (Robot.rc.canSenseLocation(loc)) {
+        PaintType paint = Robot.rc.senseMapInfo(loc).getPaint();
+        if (paint.isEnemy() || (paint.isAlly() && (paint.isSecondary() == MapData.useSecondaryPaint(loc)))) { continue; }
       }
+      if (jobComplete) { Robot.rc.setIndicatorDot(loc, 0, 255, 0); }
+      else { Robot.rc.setIndicatorDot(loc, 255, 0, 0); }
+      jobComplete = false;
+      // If we can't reach it, move towards it
+      if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
+        Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
+        if (dir == null || !Robot.rc.canMove(dir)) { continue; }
+        MapData.move(dir);
+        current = Robot.rc.getLocation();
+        // Check if there is paint under our feet
+        if (paint(current)) { break; }
+      }
+      if (!shouldPaint(loc)) { continue; }
+      if (paint(loc)) { break; }
     }
 
     // Try to complete the ruin
@@ -273,8 +279,8 @@ public class Painter {
       cacheLoc = null;
       return true;
     }
-      
-    return false;
+
+    return jobComplete;
   }
 
   /**

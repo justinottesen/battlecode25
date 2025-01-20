@@ -87,7 +87,7 @@ public class Communication {
    * @return Whether anyone was successfully sent the message
    * @throws GameActionException
    */
-  public static boolean tryBroadcastMessage(int message, RobotInfo[] targets) throws GameActionException {
+  public static boolean trySendAllMessage(int message, RobotInfo[] targets) throws GameActionException {
     boolean success = false;
     for (RobotInfo robot : targets) {
       success = trySendMessage(message, robot.getLocation()) || success;

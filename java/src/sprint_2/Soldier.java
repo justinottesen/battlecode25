@@ -172,10 +172,26 @@ public final class Soldier extends Robot {
         break;
       case CAPTURE_RUIN:
         if (Painter.paintCaptureRuin()) {
-          GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+          // Check if we actually finished ruin or if we just can't make progress
+          if (rc.canSenseRobotAtLocation(Pathfinding.getTarget())) {
+            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+          } else {
+            // Only request backup if we don't already see a mopper
+            boolean foundMopper = false;
+            for (RobotInfo info : rc.senseNearbyRobots(-1, TEAM)) {
+              if (info.getType() == UnitType.MOPPER) {
+                foundMopper = true;
+                break;
+              }
+            }
+            if (!foundMopper) {
+              GoalManager.pushGoal(Goal.Type.GET_BACKUP, MapData.closestFriendlyTower());
+            }
+          }
         }
         // Pathfinding target is the tower which was just built, should have paint
         break;
+      case GET_BACKUP: // INTENTIONAL FALLTHROUGH
       case REFILL_PAINT:
         if (rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
           RobotInfo tower = rc.senseRobotAtLocation(Pathfinding.getTarget());
@@ -192,7 +208,12 @@ public final class Soldier extends Robot {
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
           if (rc.canTransferPaint(Pathfinding.getTarget(), -paintAmount)) {
             rc.transferPaint(Pathfinding.getTarget(), -paintAmount);
+            Goal.Type prevGoalType = GoalManager.current().type;
             GoalManager.popGoal();
+            if (prevGoalType == Goal.Type.GET_BACKUP) {
+              int message = Communication.REQUEST_MOPPER;
+              Communication.trySendMessage(Communication.addCoordinates(message, GoalManager.current().target), tower.getLocation());
+            }
           }
         }
         break;
@@ -286,7 +307,12 @@ public final class Soldier extends Robot {
       MapLocation targetRuin = GoalManager.current().target;
       if (Painter.paintCaptureRuin() || (rc.canSenseLocation(targetRuin) && rc.senseRobotAtLocation(targetRuin)!=null)) {
         initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
-        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, targetRuin);
+        // Check if we actually finished ruin or if we just can't make progress
+        if (rc.canSenseRobotAtLocation(Pathfinding.getTarget())) {
+          GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+        } else {
+          GoalManager.pushGoal(Goal.Type.GET_BACKUP, MapData.closestFriendlyTower());
+        }
       }
     }else{ //explore
       //roam if there's no ruin in sight

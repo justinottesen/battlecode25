@@ -84,5 +84,16 @@ public class Stack<T> {
    * Removes all elements from the stack
    */
   public void clear() { index = 0; }
+
+  /**
+   * Checks whether a given item is in the stack
+   */
+  public boolean contains(T obj) {
+    for (int i = 0; i < index; ++i) {
+      if (data[i].equals(obj)) { return true; }
+    }
+    return false;
+  }
+
 }
 

@@ -273,8 +273,8 @@ public class Painter {
     }
 
     // Try to complete the ruin
-    if (Robot.rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc)) {
-      Robot.rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, cacheLoc);
+    if (Robot.rc.canCompleteTowerPattern(MapData.getGoalTowerType(cacheLoc), cacheLoc)) {
+      Robot.rc.completeTowerPattern(MapData.getGoalTowerType(cacheLoc), cacheLoc);
       MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
@@ -420,8 +420,8 @@ public class Painter {
     }
 
     // Try to complete the ruin
-    if (Robot.rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget())) {
-      Robot.rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget());
+    if (Robot.rc.canCompleteTowerPattern(MapData.getGoalTowerType(cacheLoc), Pathfinding.getTarget())) {
+      Robot.rc.completeTowerPattern(MapData.getGoalTowerType(cacheLoc), Pathfinding.getTarget());
       MapData.updateData(Robot.rc.senseMapInfo(Pathfinding.getTarget()));
       cacheLoc = null;
       return true;

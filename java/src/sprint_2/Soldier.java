@@ -46,8 +46,8 @@ public final class Soldier extends Robot {
   protected void doMicro() throws GameActionException {
     //surviving takes all precendent over everything
     if(GoalManager.current().type == Goal.Type.SURVIVE){
-      survive();
       rc.setIndicatorString("SURVIVE");
+      survive();
       return;
     }
     //hard code the opening (ignores the rest of the function for now)
@@ -239,7 +239,7 @@ public final class Soldier extends Robot {
         }
       }
     }
-    if(!initialSoldiers || GoalManager.current().type == Goal.Type.SURVIVE){  //initial soldier and SURVIVE soldiers shouldn't waste paint
+    if(!initialSoldiers && GoalManager.current().type != Goal.Type.SURVIVE){  //initial soldier and SURVIVE soldiers shouldn't waste paint
       Painter.paint();
     }
   }
@@ -363,10 +363,148 @@ public final class Soldier extends Robot {
       
     }
   }
-  private void survive(){
-    //only 3 main priorities: stay on allied paint and stay away from enemy towers (and allied robots)
-    //secondary priorities: make sure every ruin we see has at least 1 of our paint around it, try to navigate back to an allied tower to refill paint (without dying)
-    
 
+  //called by micro (and opening) when we only want the soldiers to survive
+  //we don't care that much about soldiers doing anything like capturing towers or srps
+  //runs when we think the soldier is low on paint deep in enemy territory
+  private void survive() throws GameActionException{
+    //only 3 main priorities: stay on allied paint and stay away from enemy towers/moppers (and allied robots)
+    //secondary priorities: make sure every ruin we see has at least 1 of our paint around it, try to navigate back to an allied tower to refill paint (without dying)
+
+    MapLocation currentLoc = rc.getLocation();
+    int[] directionScores = {0,0,0,0,0,0,0,0,0}; //a score for every direction (including center) in the order described by Direction.getDirectionOrderNum()
+
+    String enemyTowerString = "";
+    MapLocation[] nearbyRuins = rc.senseNearbyRuins(-1);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+
+    //fill enemyTowerString with a for loop
+    for (MapLocation ruin : nearbyRuins){
+      if(rc.senseRobotAtLocation(ruin)!=null && rc.senseRobotAtLocation(ruin).getTeam()==rc.getTeam().opponent()){
+        //add to enemyTowerString
+        //note, we can't use maplocation.toString() here because toString will result in strings of variable length ie: "(1,0)" doesn't have the same length as "(51,24)"
+        //we use a string bc it's a low-bytecode resizable array
+        enemyTowerString += (char) ruin.x;
+        enemyTowerString += (char) ruin.y;
+        enemyTowerString += (char) 69;  //hope that no map exceeds 68x68 cuz its funny
+      }
+    }
+
+    //This is the trigger for searching the map for nearby allied paint
+    boolean alliedPaintInMoveRange = false;
+
+    //give scores to each direction (scores are initialized to 0s)
+    for(Direction d : Direction.DIRECTION_ORDER){
+      MapLocation destination = currentLoc.add(d);
+      if(!rc.onTheMap(destination) || !rc.sensePassability(destination) || (d!=Direction.CENTER && rc.senseRobotAtLocation(destination)!=null)){
+        //ignore tiles off the map, walls, and tiles with robots on them (we can't move through robots) 
+        directionScores[d.getDirectionOrderNum()]=Integer.MIN_VALUE;
+        continue;
+      }
+      //give direction score penalties based on enemy towers
+      if(enemyTowerString.length()>0){
+        for(int i = 0; i<enemyTowerString.length(); i+=3){
+          MapLocation enemyTower = new MapLocation(enemyTowerString.charAt(i),enemyTowerString.charAt(i+1));  //don't worry, I did my research, charAt is very bytecode efficient (although it doesn't have set-1 bytecode)
+          int destinationDistanceToTower = destination.distanceSquaredTo(enemyTower);
+          int currentDistanceToTower = currentLoc.distanceSquaredTo(enemyTower);
+          if(destinationDistanceToTower<=16){ //tower attack range is 4 (and it's not a gameconstant)
+            //penalize a direction's score if it's in range of an enemy tower
+            directionScores[d.getDirectionOrderNum()]-=100;
+          }
+          if(currentDistanceToTower<=16 && destinationDistanceToTower < currentDistanceToTower){
+            //penalize a direction's score if it gets closer to an enemy tower (only if we're already in attack range of the tower)
+            directionScores[d.getDirectionOrderNum()]-=100;
+          }
+        }
+      }
+
+      //give direction score penalties/bonuses based on paint
+      MapInfo tile = rc.senseMapInfo(destination);
+      switch(tile.getPaint()){
+        case PaintType.ALLY_PRIMARY:  //I'm the goat if switch case statements work like this
+        case PaintType.ALLY_SECONDARY:
+          directionScores[d.getDirectionOrderNum()]+=50;
+          alliedPaintInMoveRange = true;
+          break;
+        case PaintType.ENEMY_PRIMARY:
+        case PaintType.ENEMY_SECONDARY:
+          directionScores[d.getDirectionOrderNum()]-=50;
+          if(rc.getPaint()<10) directionScores[d.getDirectionOrderNum()]-=100;
+          break;
+        case PaintType.EMPTY:
+          directionScores[d.getDirectionOrderNum()]-=25;
+          if(rc.getPaint()<10) directionScores[d.getDirectionOrderNum()]-=50;
+          break;
+      }
+
+      //give penalties based on enemy moppers and allied units
+      for(RobotInfo r : nearbyRobots){
+        if(r.getType().isTowerType() || (r.getTeam()!=rc.getTeam() && r.getType()!=UnitType.MOPPER)) continue;  //ignore towers (both teams) and enemies that aren't moppers
+        if(r.getTeam()==rc.getTeam() && r.getLocation().distanceSquaredTo(destination)<=2){
+          //allied crowding penalty
+          directionScores[d.getDirectionOrderNum()]-=100;
+          //rc.setIndicatorDot(destination,0,255,0);
+        }else if(r.getTeam()!=rc.getTeam() && r.getType()==UnitType.MOPPER && r.getLocation().distanceSquaredTo(destination)<=13){
+          //mopper in range of destination
+          if(r.getLocation().distanceSquaredTo(currentLoc)<=5 && r.getLocation().distanceSquaredTo(destination)>r.getLocation().distanceSquaredTo(currentLoc)){
+            //in this case, we are currently in a position where it's impossible to move outside of mopper range
+            //it would be nice to move further away from it, but not crucial since we're getting hit either way
+            directionScores[d.getDirectionOrderNum()]+=50;
+          }
+          directionScores[d.getDirectionOrderNum()]-=100;
+          //rc.setIndicatorDot(destination,255,0,0);
+        }
+      }
+    }
+
+    //calculate the direction to the nearest allied paint
+    if(!alliedPaintInMoveRange){
+      MapInfo[] nearbyTiles = rc.senseNearbyMapInfos();
+      for(MapInfo m : nearbyTiles){
+        if(currentLoc.distanceSquaredTo(m.getMapLocation())<=2) continue; //we already checked these in previous scoring
+        if(m.getPaint().isAlly()){
+          //(20 - distance to allied paint) will give us a good, small score to add. Note that it will never be greater than any other single score addition, so it's essentially just a tiebreaker
+          directionScores[currentLoc.directionTo(m.getMapLocation()).getDirectionOrderNum()]+=(20-currentLoc.distanceSquaredTo(m.getMapLocation()));
+        }
+        if(Clock.getBytecodesLeft()<500) break; //this for loop may get costly
+      }
+    }
+
+    //another tiebreaker: distance to nearest allied tower:
+    if(Clock.getBytecodesLeft()>500){
+      MapLocation nearestAlliedTower = MapData.closestFriendlyTower();
+      directionScores[currentLoc.directionTo(nearestAlliedTower).getDirectionOrderNum()] += 10;
+    }
+
+    //now pick the best direction
+    Direction bestDirection = Direction.CENTER; // Start with center, guaranteed can move
+    if (directionScores[0]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[0]; }
+    if (directionScores[1]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[1]; }
+    if (directionScores[2]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[2]; }
+    if (directionScores[3]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[3]; }
+    if (directionScores[4]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[4]; }
+    if (directionScores[5]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[5]; }
+    if (directionScores[6]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[6]; }
+    if (directionScores[7]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[7]; }
+    if (directionScores[8]>(directionScores[bestDirection.getDirectionOrderNum()])) { bestDirection = Direction.DIRECTION_ORDER[8]; }
+
+    /*
+    String indicatorString = "Loc "+rc.getLocation().toString()+"\n";
+    for(int i = 0; i<9; ++i){
+      indicatorString += Direction.DIRECTION_ORDER[i].toString()+": "+directionScores[i] + "\n";
+    }
+    rc.setIndicatorString(indicatorString);
+    */
+
+    //set goal to the best direction
+    GoalManager.setNewGoal(Goal.Type.SURVIVE,currentLoc.add(bestDirection));
+    //rc.setIndicatorDot(currentLoc.add(bestDirection),0,0,255);
+    if(rc.canMove(bestDirection)){
+      rc.move(bestDirection);
+      //paint tile we want to go to if we never saw any allied paint nearby
+      if(!alliedPaintInMoveRange && rc.getPaint()>7 && rc.canAttack(currentLoc.add(bestDirection))){
+        rc.attack(currentLoc.add(bestDirection));
+      }
+    }
   }
 }

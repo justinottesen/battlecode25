@@ -9,7 +9,8 @@ public class Goal {
     CAPTURE_SRP(1),
     CAPTURE_RUIN(2),
     FIGHT_TOWER(3),
-    REFILL_PAINT(4);
+    REFILL_PAINT(4),
+    SURVIVE(5);
 
     public final int v;
 
@@ -34,7 +35,18 @@ public class Goal {
       case Type.CAPTURE_RUIN -> "CAPTURE_RUIN"; 
       case Type.FIGHT_TOWER -> "FIGHT_TOWER";
       case Type.REFILL_PAINT -> "REFILL_PAINT"; 
+      case Type.SURVIVE -> "SURVIVE";
+      default -> "UNDEFINED";
     } + target;
+  }
+
+  @Override
+  public boolean equals(Object obj){
+    if (obj == null || obj.getClass() != this.getClass()) {
+      return false;
+    }
+    Goal g = (Goal) obj;
+    return (this.type == g.type && this.target.equals(g.target));
   }
 
 }

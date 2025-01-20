@@ -25,17 +25,31 @@ public final class Soldier extends Robot {
     followID=-1;
     if(initialSoldiers){
       RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+
+      //find the home tower (might have trouble if soldier is in spawn-range of both starting tower)
       for(RobotInfo robot : nearbyRobots){
-        if(robot.getType().isTowerType() && robot.getLocation().distanceSquaredTo(rc.getLocation())< GameConstants.BUILD_ROBOT_RADIUS_SQUARED){
+        if(robot.getType().isTowerType() && robot.getLocation().distanceSquaredTo(rc.getLocation())<= GameConstants.BUILD_ROBOT_RADIUS_SQUARED){
           spawnTower = robot;
-        }else if(rc.getRoundNum()>2&&robot.getType()==UnitType.SOLDIER){  //TODO: change the roundNum threshold once we don't overflow on bytecode turn 1
+        }
+      }
+      MapLocation correctFirstSoldier = null;
+      for(RobotInfo robot : nearbyRobots){
+        if(rc.getRoundNum()>2&&robot.getType()==UnitType.SOLDIER && //TODO: change the roundNum threshold once we don't overflow on bytecode turn 1
+        (correctFirstSoldier==null || spawnTower.getLocation().distanceSquaredTo(robot.getLocation()) < spawnTower.getLocation().distanceSquaredTo(correctFirstSoldier))){
           followID = robot.getID();
+          correctFirstSoldier = robot.getLocation();
         }
       }
     }
   }
 
   protected void doMicro() throws GameActionException {
+    //surviving takes all precendent over everything
+    if(GoalManager.current().type == Goal.Type.SURVIVE){
+      survive();
+      rc.setIndicatorString("SURVIVE");
+      return;
+    }
     //hard code the opening (ignores the rest of the function for now)
     if(initialSoldiers){
       rc.setIndicatorString("INITIAL SOLDIERS");
@@ -204,13 +218,13 @@ public final class Soldier extends Robot {
         }
       }
     }
-    if(!initialSoldiers){  //initial soldier shouldn't waste paint
+    if(!initialSoldiers || GoalManager.current().type == Goal.Type.SURVIVE){  //initial soldier and SURVIVE soldiers shouldn't waste paint
       Painter.paint();
     }
   }
 
   private void opening() throws GameActionException {
-    // Combat takes first priority
+    boolean isExploring = GoalManager.current().type == Goal.Type.CAPTURE_RUIN; //note that the for loop can set the GoalManager, I want to remember what it had before we enter the for loop
     MapLocation closestRuin = null;
     // Update any close ruins sites
     for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
@@ -219,41 +233,62 @@ public final class Soldier extends Robot {
       if(tower!=null){
         if(tower.getTeam()==rc.getTeam().opponent()){
           //enemy tower, attack!
-          Painter.paintFight(tower);
-          rc.setIndicatorDot(ruin,255,0,0);
-          return;
+          GoalManager.pushGoal(Goal.Type.FIGHT_TOWER,tower.getLocation());
+          goalTower = tower;
+          //if we're attacking a tower, assume that's all we're doing (we don't care about any other opening logic)
+          break;
         }else{
           //ally tower (probably the spawn tower), we don't care
           continue;
         }
       }
+      if(isExploring) continue;
       if(MapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
       if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
         closestRuin = ruin;
+        GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN,ruin);
+      }else if(!GoalManager.contains(Goal.Type.CAPTURE_RUIN,ruin)){
+        GoalManager.pushSecondaryGoal(Goal.Type.CAPTURE_RUIN,ruin);
       }
     }
 
-    boolean ruinGood = (closestRuin != null);
     // if we have a ruin in sight, look for enemy paint around it
-    if(closestRuin != null){
-      MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(closestRuin,8);
+    // we use a while loop so we can calculate multiple ruins at once (if possible)
+    while(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
+      MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(GoalManager.current().target,8);
+      boolean ruinGood = true;
       for(MapInfo m : towerPatternTiles){
         if(m.getPaint().isEnemy()){
-          MapData.setContested(closestRuin);
+          MapData.setContested(GoalManager.current().target);
+          //remove from GoalManager (we never want to go to a contested ruin in the opening)
+          GoalManager.popGoal();
           ruinGood = false;
           break;
         }
       }
+      if(ruinGood || Clock.getBytecodesLeft() < 500) break;
     }
+    
 
-    //ruinGood is only true if there exists a closest ruin and the closest ruin doesn't have any enemy paint visible
-    if(ruinGood){
-      Pathfinding.setTarget(closestRuin);
-      if (Painter.paintCaptureRuin()) {
-        initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
-        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+    if(GoalManager.current().type == Goal.Type.FIGHT_TOWER){
+      MapLocation enemyTower = GoalManager.current().target;
+      //goalTower is a class variable set in the ruin-scanning for loop (only set to enemy towers in opening())
+      Painter.paintFight(goalTower);
+      rc.setIndicatorDot(enemyTower,0,255,0);
+      if(rc.canSenseLocation(enemyTower)&&!rc.canSenseRobotAtLocation(enemyTower)){
+        //if we've killed the enemy tower
+        //set to survive mode
+        initialSoldiers=false;  //we can be done with the opening if we successfully kill a tower
+        GoalManager.setNewGoal(Goal.Type.SURVIVE,rc.getLocation());
+        survive();
       }
-    }else{
+    }else if(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
+      MapLocation targetRuin = GoalManager.current().target;
+      if (Painter.paintCaptureRuin() || (rc.canSenseLocation(targetRuin) && rc.senseRobotAtLocation(targetRuin)!=null)) {
+        initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
+        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, targetRuin);
+      }
+    }else{ //explore
       //roam if there's no ruin in sight
       if(followID!=-1 && rc.canSenseRobot(followID)){ //second soldier
         RobotInfo firstSoldier = rc.senseRobot(followID);
@@ -301,5 +336,11 @@ public final class Soldier extends Robot {
       }
       
     }
+  }
+  private void survive(){
+    //only 3 main priorities: stay on allied paint and stay away from enemy towers (and allied robots)
+    //secondary priorities: make sure every ruin we see has at least 1 of our paint around it, try to navigate back to an allied tower to refill paint (without dying)
+    
+
   }
 }

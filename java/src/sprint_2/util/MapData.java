@@ -246,11 +246,18 @@ public class MapData {
         if (towerInfo.getTeam().equals(Robot.TEAM)) { 
           mapData[index] |= FRIENDLY_TOWER;
         }
+        if ((mapData[index] & GOAL_TOWER_BITMASK) == 0) {
+          setGoalTowerType(index, towerInfo.getType().getBaseType());
+        }
       } else {
         mapData[index] |= UNCLAIMED_RUIN;
+        // TODO: Put this elsewhere and add logic for different tower types
+        if (Robot.rc.getNumberTowers() < 5) {
+          setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
+        } else {
+          setGoalTowerType(index, UnitType.LEVEL_ONE_PAINT_TOWER);
+        }
       }
-      // TODO: Put this elsewhere and add logic for different tower types
-      setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
     } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
       if (info.isResourcePatternCenter()) {
         markSRP(loc, false);
@@ -717,6 +724,17 @@ public class MapData {
    * @return Whether this was successfully set
    */
   private static boolean setGoalTowerType(int index, UnitType towerType) { return setGoalTowerType(getLoc(index), towerType); }
+
+  public static UnitType getGoalTowerType(MapLocation loc) { return getGoalTowerType(getIndex(loc)); }
+
+  private static UnitType getGoalTowerType(int index) {
+    return switch (mapData[index] & GOAL_TOWER_BITMASK) {
+      case GOAL_MONEY_TOWER -> UnitType.LEVEL_ONE_MONEY_TOWER;
+      case GOAL_PAINT_TOWER -> UnitType.LEVEL_ONE_PAINT_TOWER;
+      case GOAL_DEFENSE_TOWER -> UnitType.LEVEL_ONE_DEFENSE_TOWER;
+      default -> null;
+    };
+  }
 
   /**
    * Returns the closest unknown center of a NxN chunk of the map

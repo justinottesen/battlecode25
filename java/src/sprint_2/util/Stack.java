@@ -24,6 +24,23 @@ public class Stack<T> {
   }
 
   /**
+   * Inserts an item to the given position on the stack.
+   * It replaces the current item at that index and bumps the rest
+   * of the stack up.
+   * @param item The item to insert
+   * @param i The index in the stack to insert the item
+   * @return Whether the item was successfully inserted
+   */
+  public boolean insert(T item, int i) {
+    if (index == data.length || i > index) { return false; }
+    for (int j = index++; j > i; --j) {
+      data[j] = data[j - 1];
+    }
+    data[i] = item;
+    return true;
+  }
+
+  /**
    * Removes an item from the stack.
    * @return The item which was removed, or `null` if empty
    */
@@ -32,11 +49,33 @@ public class Stack<T> {
   }
 
   /**
+   * Removes the item at the given position from the stack.
+   * @return The item that was removed or null
+   */
+  public T remove(int i) {
+    if (index == 0 || i >= index) { return null; }
+    T ret = data[i];
+    --index;
+    for (int j = i; i < index; ++i) {
+      data[j] = data[j+1];
+    }
+    return ret; 
+  }
+
+  /**
    * Peeks at the next item on the stack without modifying it
    * @return The top item on the stack
    */
   public T top() {
     return (index == 0 ? null : data[index - 1]);
+  }
+
+  /**
+   * Returns the item at the given index
+   * @param i The index to retrieve the entry at
+   */
+  public T peek(int i) {
+    return (i < index ? data[i] : null);
   }
 
   /**

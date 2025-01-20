@@ -13,6 +13,7 @@ public class GoalManager {
 
   public static void init() {
     goalStack.push(new Goal(Goal.Type.EXPLORE, MapData.getExploreTarget()));
+    Pathfinding.setTarget(goalStack.top());
   }
 
   /**

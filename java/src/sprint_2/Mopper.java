@@ -153,8 +153,8 @@ public final class Mopper extends Robot {
         }
         break;
       case EXPLORE:
-        if (rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
-          MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
+        if (Pathfinding.getTarget()==null || rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
+          //MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
           Pathfinding.setTarget(MapData.getExploreTarget());
         }
         break;

@@ -115,7 +115,7 @@ public final class Soldier extends Robot {
     
     // If low on paint, set goal to refill
     if (GoalManager.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
     }
 
     // Look for nearby ruins if we aren't already fighting a tower
@@ -218,8 +218,8 @@ public final class Soldier extends Robot {
         }
         break;
       case EXPLORE: // TODO: Address clumping of units
-        if (rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
-          MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
+        if (Pathfinding.getTarget() == null || rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
+          //MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
           Pathfinding.setTarget(MapData.getExploreTarget());
         }
         break;

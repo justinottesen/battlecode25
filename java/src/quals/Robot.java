@@ -32,6 +32,12 @@ public abstract class Robot {
 
   final public void run() throws GameActionException {
     MovementManager.update();
+    MapData.updateVisibleRuins();
+    Goal.Type currentGoalType = GoalManager.current().type;
+    if ((currentGoalType == Goal.Type.REFILL_PAINT || currentGoalType == Goal.Type.GET_BACKUP) && 
+        !MapData.isFriendlyTower(GoalManager.current().target)) {
+      GoalManager.replaceTopGoal(currentGoalType, MapData.closestFriendlyTower());
+    }
     doMicro(); // Act based on immediate surroundings
     doMacro(); // Secondarily act to achieve big picture goal
   }

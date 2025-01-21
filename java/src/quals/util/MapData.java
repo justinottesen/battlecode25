@@ -104,6 +104,19 @@ public class MapData {
       updateData(info);
     }
   }
+
+  /**
+   * Checks visible ruins and updates their data
+   * @throws GameActionException
+   */
+  public static void updateVisibleRuins() throws GameActionException {
+    for (int i = 0; i < ruinIndex; ++i) {
+      MapLocation loc = getLoc(i);
+      if (Robot.rc.canSenseLocation(loc)) {
+        updateData(Robot.rc.senseMapInfo(loc));
+      }
+    }
+  }
   
   /**
    * Updates only the newly visible squares and updates them to the mapData grid
@@ -494,6 +507,21 @@ public class MapData {
     }
     return closestRuin;
   }
+
+  /**
+   * Checks whether the given location has a friendly tower on it
+   */
+  public static boolean isFriendlyTower(MapLocation loc) { return isFriendlyTower(getIndex(loc)); }
+
+  /**
+   * Checks whether the given location has a friendly tower on it
+   */
+  private static boolean isFriendlyTower(int index) {
+    if ((mapData[index] & TOWER_TYPE_BITMASK) == 0) { return false; }
+    if ((mapData[index] & TOWER_TYPE_BITMASK) == UNCLAIMED_RUIN) { return false; }
+    if ((mapData[index] & FRIENDLY_TOWER) == 0) { return false; }
+    return true;
+  }
   
   /**
    * Returns the closest known friendly tower to the robot
@@ -505,9 +533,7 @@ public class MapData {
     MapLocation closestTower = null;
     int closestDist = 0;
     for (int i = 0; i < ruinIndex; ++i) {
-      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == 0) { continue; }
-      if ((mapData[knownRuins[i]] & TOWER_TYPE_BITMASK) == UNCLAIMED_RUIN) { continue; }
-      if ((mapData[knownRuins[i]] & FRIENDLY_TOWER) == 0) { continue; }
+      if (!isFriendlyTower(knownRuins[i])) { continue; }
       MapLocation towerLoc = getLoc(knownRuins[i]);
       int ruinDist = current.distanceSquaredTo(towerLoc);
       if (closestTower == null || ruinDist < closestDist) {

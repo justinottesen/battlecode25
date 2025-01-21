@@ -142,7 +142,8 @@ public class Painter {
    * @throws GameActionException
    */
   public static void paintFight(RobotInfo enemy) throws GameActionException {
-    if (enemy == null) { return; } // We are far away, let macro take care of Pathfinding
+    // We are far away, let macro take care of Pathfinding
+    if (enemy == null || !Robot.rc.getLocation().isWithinDistanceSquared(enemy.getLocation(), GameConstants.VISION_RADIUS_SQUARED)) { return; }
     MapLocation enemyLoc = enemy.getLocation();
     int distance_sq = Robot.rc.getLocation().distanceSquaredTo(enemyLoc);
     int enemyRange = enemy.getType().actionRadiusSquared;

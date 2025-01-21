@@ -164,6 +164,9 @@ public final class Soldier extends Robot {
     switch (GoalManager.current().type) {
       case FIGHT_TOWER:
         Painter.paintFight(goalTower);
+        if (!rc.canSenseRobotAtLocation(GoalManager.current().target) || rc.senseRobotAtLocation(GoalManager.current().target).getTeam() != OPPONENT) {
+          GoalManager.setNewGoal(Goal.Type.CAPTURE_RUIN, GoalManager.current().target);
+        }
         break;
       case CAPTURE_SRP:
         if (Painter.paintCaptureSRP()) {

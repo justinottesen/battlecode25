@@ -144,8 +144,8 @@ public final class Tower extends Robot {
    */
   private MapLocation trySpawn(UnitType type, MapLocation target) throws GameActionException {
     MapLocation loc = getSpawnLoc(type, target);
-    if (loc != null && rc.canBuildRobot(type, loc)) { rc.buildRobot(type, loc); }
-    return loc;
+    if (loc != null && rc.canBuildRobot(type, loc)) { rc.buildRobot(type, loc); return loc; }
+    return null;
   }
 
   /**

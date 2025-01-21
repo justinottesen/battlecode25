@@ -159,7 +159,7 @@ public class Painter {
       }
       // But only move in range of enemy if we are ready to attack
       if (moveIn != null) {
-        MapData.move(moveIn);
+        MovementManager.move(moveIn);
       }
     }
 
@@ -177,7 +177,7 @@ public class Painter {
           backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ANY);
         }
       }
-      if (backup != null) { MapData.move(backup); }
+      if (backup != null) { MovementManager.move(backup); }
     }
 
     // Whatever square we end on, try to paint it
@@ -199,7 +199,7 @@ public class Painter {
       Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ALLY_ONLY);
       // But only move in range of enemy if we are ready to attack
       if (moveIn != null && Robot.rc.canMove(moveIn) && (Robot.rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || Robot.rc.isActionReady())) {
-        MapData.move(moveIn);
+        MovementManager.move(moveIn);
       }
     }
 
@@ -209,7 +209,7 @@ public class Painter {
     // If enemy can see us, back up
     if (distance_sq <= enemy_range_sq && Robot.rc.isMovementReady()) {
       Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ANY);
-      if (backup != null && Robot.rc.canMove(backup)) { MapData.move(backup); }
+      if (backup != null && Robot.rc.canMove(backup)) { MovementManager.move(backup); }
     }
 
     // Whatever square we end on, try to paint it
@@ -275,7 +275,7 @@ public class Painter {
       if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
         Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? MovementManager.Mode.ANY : MovementManager.Mode.NO_ENEMY);
         if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-        MapData.move(dir);
+        MovementManager.move(dir);
         current = Robot.rc.getLocation();
         // Check if there is paint under our feet
         if (paint(current)) { break; }
@@ -346,7 +346,7 @@ public class Painter {
         if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
           Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? MovementManager.Mode.ANY : MovementManager.Mode.NO_ENEMY);
           if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-          MapData.move(dir);
+          MovementManager.move(dir);
           current = Robot.rc.getLocation();
           // Check if there is paint under our feet
           if (paint(current)) { break; }
@@ -422,7 +422,7 @@ public class Painter {
           dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.NO_ENEMY);
         }
         if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-        MapData.move(dir);
+        MovementManager.move(dir);
         current = Robot.rc.getLocation();
         // Check if there is enemy paint under our feet
         if (mop(current)) { break; }
@@ -501,7 +501,7 @@ public class Painter {
           dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.NO_ENEMY);
         }
         if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-        MapData.move(dir);
+        MovementManager.move(dir);
         current = Robot.rc.getLocation();
         // Check if there is paint under our feet
         if (mop(current)) { break; }

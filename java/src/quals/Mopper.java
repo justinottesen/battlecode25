@@ -169,6 +169,7 @@ public final class Mopper extends Robot {
 
   protected void doMacro() throws GameActionException {
     Pathfinding.moveTo(GoalManager.current().target); //note that Mopper is currently set to NO_ENEMY by the constructor, and is never changed
+    Painter.mop();
   }
 
   private Direction pickMopSwingDirection() throws GameActionException{

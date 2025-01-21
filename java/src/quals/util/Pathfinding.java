@@ -125,6 +125,7 @@ public class Pathfinding {
   public static Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove, MovementManager.Mode mode) throws GameActionException {
     // Try going towards it
     MapLocation next = loc.add(dir);
+    if(!Robot.rc.onTheMap(next)) return null;
     if (MapData.passable(next) && 
         (!checkCanMove || Robot.rc.canMove(dir)) &&
         (switch (mode) { 

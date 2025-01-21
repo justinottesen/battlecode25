@@ -732,7 +732,7 @@ public class MapData {
       case GOAL_MONEY_TOWER -> UnitType.LEVEL_ONE_MONEY_TOWER;
       case GOAL_PAINT_TOWER -> UnitType.LEVEL_ONE_PAINT_TOWER;
       case GOAL_DEFENSE_TOWER -> UnitType.LEVEL_ONE_DEFENSE_TOWER;
-      default -> null;
+      default -> UnitType.LEVEL_ONE_MONEY_TOWER;
     };
   }
 

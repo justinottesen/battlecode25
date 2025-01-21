@@ -48,7 +48,7 @@ public class MovementManager {
     }
 
     public static void move(Direction dir) throws GameActionException {
-        if (dir == Direction.CENTER) return;
+        if (dir == null || dir == Direction.CENTER) return;
         int m = movementTypes[dir.getDirectionOrderNum()];
         if (m == PASSABLE) {
             Robot.rc.move(dir);

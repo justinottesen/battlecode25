@@ -1,4 +1,4 @@
-package sprint_2;
+/*package sprint_2;
 
 import battlecode.common.*;
 
@@ -14,3 +14,4 @@ public final class Splasher extends Robot {
   
   public void doMacro() {}
 }
+  */

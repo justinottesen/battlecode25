@@ -297,14 +297,11 @@ public final class Soldier extends Robot {
       }
     }else if(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
       MapLocation targetRuin = GoalManager.current().target;
-      if (Painter.paintCaptureRuin() || (rc.canSenseLocation(targetRuin) && rc.senseRobotAtLocation(targetRuin)!=null)) {
+      Painter.paintCaptureRuin();
+      if (rc.canSenseLocation(targetRuin) && rc.senseRobotAtLocation(targetRuin)!=null) {
         initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
-        // Check if we actually finished ruin or if we just can't make progress
-        if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {
-          GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
-        } else {
-          GoalManager.pushGoal(Goal.Type.GET_BACKUP, MapData.closestFriendlyTower());
-        }
+        //note initial soldiers will never finish working on a tower that is contested, so we never need to call for reinforcements
+        GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
       }
     }else{ //explore
       //roam if there's no ruin in sight

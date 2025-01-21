@@ -164,12 +164,12 @@ public class Painter {
     }
 
     // Attack enemy
-    if (Robot.rc.canAttack(enemyLoc)) { 
+    if (Robot.rc.canAttack(enemyLoc)) {
       paint(enemyLoc);
     }
 
     // If enemy can see us, back up
-    if (distance_sq <= enemyRange && Robot.rc.isMovementReady() && !Robot.rc.isActionReady()) {
+    if (distance_sq <= enemyRange && Robot.rc.isMovementReady()) {
       Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ALLY_ONLY);
       if (backup == null || Robot.rc.getLocation().add(backup).isWithinDistanceSquared(enemyLoc, enemyRange)) {
         backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.NO_ENEMY);

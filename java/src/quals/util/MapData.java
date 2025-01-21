@@ -94,14 +94,6 @@ public class MapData {
   }
 
   /**
-   * Moves the robot and updates the mapData
-   */
-  public static void move(Direction dir) throws GameActionException {
-    Robot.rc.move(dir);
-    updateNewlyVisible(dir);
-  }
-
-  /**
    * Checks all visible squares around the robot and adds their information to the
    * mapData grid.
    * 

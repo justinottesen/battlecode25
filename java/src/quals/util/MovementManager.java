@@ -52,7 +52,7 @@ public class MovementManager {
         int m = movementTypes[dir.getDirectionOrderNum()];
         if (m == PASSABLE) {
             Robot.rc.move(dir);
-            //maybe update
+            MapData.updateNewlyVisible(dir);
         }
     }
 }

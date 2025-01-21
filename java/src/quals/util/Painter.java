@@ -323,6 +323,10 @@ public class Painter {
 
     // Check if someone already captured SRP
     if (Robot.rc.canSenseLocation(cacheLoc) && Robot.rc.senseMapInfo(cacheLoc).isResourcePatternCenter()) {
+      // Might not actually be captured yet
+      if (Robot.rc.canCompleteResourcePattern(cacheLoc)) {
+        Robot.rc.completeResourcePattern(cacheLoc);
+      }
       MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;
@@ -471,6 +475,10 @@ public class Painter {
 
     // Check if someone already captured SRP
     if (Robot.rc.canSenseLocation(cacheLoc) && Robot.rc.senseMapInfo(cacheLoc).isResourcePatternCenter()) {
+      // Might not actually be captured yet
+      if (Robot.rc.canCompleteResourcePattern(cacheLoc)) {
+        Robot.rc.completeResourcePattern(cacheLoc);
+      }
       MapData.updateData(Robot.rc.senseMapInfo(cacheLoc));
       cacheLoc = null;
       return true;

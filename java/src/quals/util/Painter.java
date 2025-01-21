@@ -148,8 +148,8 @@ public class Painter {
     int enemyRange = enemy.getType().actionRadiusSquared;
     int myRange = Robot.rc.getType().actionRadiusSquared;
 
-    // If we can't attack move in
-    if (distance_sq > myRange && Robot.rc.isMovementReady() && Robot.rc.isActionReady()) {
+    // If we can't attack move in (and only on even number turns so synchronized with other robots)
+    if (distance_sq > myRange && Robot.rc.isMovementReady() && Robot.rc.isActionReady() && Robot.rc.getRoundNum() % 2 == 0) {
       Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ALLY_ONLY);
       if (moveIn == null || !Robot.rc.getLocation().add(moveIn).isWithinDistanceSquared(enemyLoc, myRange)) {
         moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.NO_ENEMY);

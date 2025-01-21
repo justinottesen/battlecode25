@@ -32,11 +32,8 @@ public abstract class Robot {
 
   final public void run() throws GameActionException {
     MovementManager.update();
-    MapLocation before = rc.getLocation();
     doMicro(); // Act based on immediate surroundings
     doMacro(); // Secondarily act to achieve big picture goal
-    MapLocation after = rc.getLocation();
-    MapData.updateNewlyVisible(before.directionTo(after));
   }
 
   /**

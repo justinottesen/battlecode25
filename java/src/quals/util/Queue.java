@@ -1,4 +1,4 @@
-package sprint_2.util;
+package quals.util;
 
 /**
  * Simple fixed size queue helper class

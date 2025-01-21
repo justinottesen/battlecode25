@@ -1,4 +1,4 @@
-package sprint_2.util;
+package quals.util;
 
 import battlecode.common.*;
 
@@ -13,7 +13,6 @@ public class GoalManager {
 
   public static void init() {
     goalStack.push(new Goal(Goal.Type.EXPLORE, MapData.getExploreTarget()));
-    Pathfinding.setTarget(goalStack.top());
   }
 
   /**
@@ -35,7 +34,6 @@ public class GoalManager {
    */
   public static boolean pushGoal(Goal goal) {
     if (goalStack.push(goal)) {
-      Pathfinding.setTarget(goal);
       return true;
     }
     return false;
@@ -55,7 +53,6 @@ public class GoalManager {
   public static void popGoal(Goal fallback) {
     goalStack.pop();
     if (goalStack.empty()) { goalStack.push(fallback); }
-    Pathfinding.setTarget(goalStack.top());
   }
 
   /**
@@ -72,7 +69,6 @@ public class GoalManager {
   public static void setNewGoal(Goal goal) {
     goalStack.clear();
     goalStack.push(goal);
-    Pathfinding.setTarget(goal);
   }
 
   /**
@@ -89,7 +85,6 @@ public class GoalManager {
   public static void replaceTopGoal(Goal goal) {
     goalStack.pop();
     goalStack.push(goal);
-    Pathfinding.setTarget(goal);
   }
 
   /**

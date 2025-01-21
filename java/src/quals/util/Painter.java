@@ -1,6 +1,6 @@
-package sprint_2.util;
+package quals.util;
 
-import sprint_2.*;
+import quals.*;
 
 import battlecode.common.*;
 
@@ -149,7 +149,7 @@ public class Painter {
 
     // If we can't attack move in
     if (distance_sq > Robot.rc.getType().actionRadiusSquared && Robot.rc.isMovementReady()) {
-      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, Pathfinding.Mode.NO_ENEMY);
+      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.NO_ENEMY);
       // But only move in range of enemy if we are ready to attack
       if (moveIn != null && Robot.rc.canMove(moveIn) && (Robot.rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || Robot.rc.isActionReady())) {
         MapData.move(moveIn);
@@ -163,7 +163,7 @@ public class Painter {
 
     // If enemy can see us, back up
     if (distance_sq <= enemy_range_sq && Robot.rc.isMovementReady()) {
-      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, Pathfinding.Mode.ANY);
+      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ANY);
       if (backup != null && Robot.rc.canMove(backup)) { MapData.move(backup); }
     }
 
@@ -174,7 +174,6 @@ public class Painter {
   /**
    * Handles the logic for fighting (mopping) an enemy
    * @param enemy The enemy to target
-   * @param Pathfinding The class to help with movement
    * @throws GameActionException
    */
   public static void mopFight(RobotInfo enemy) throws GameActionException {
@@ -184,7 +183,7 @@ public class Painter {
 
     // If we can't attack move in
     if (distance_sq > Robot.rc.getType().actionRadiusSquared && Robot.rc.isMovementReady()) {
-      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, Pathfinding.Mode.ALLY_ONLY);
+      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ALLY_ONLY);
       // But only move in range of enemy if we are ready to attack
       if (moveIn != null && Robot.rc.canMove(moveIn) && (Robot.rc.getLocation().add(moveIn).distanceSquaredTo(enemyLoc) > enemy_range_sq || Robot.rc.isActionReady())) {
         MapData.move(moveIn);
@@ -196,7 +195,7 @@ public class Painter {
 
     // If enemy can see us, back up
     if (distance_sq <= enemy_range_sq && Robot.rc.isMovementReady()) {
-      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, Pathfinding.Mode.ANY);
+      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ANY);
       if (backup != null && Robot.rc.canMove(backup)) { MapData.move(backup); }
     }
 
@@ -215,13 +214,13 @@ public class Painter {
 
     // TODO: Don't just stand here if you can't make progress
 
-    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    int low_x = GoalManager.current().target.x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = GoalManager.current().target.y - (GameConstants.PATTERN_SIZE / 2);
     
     // Check the cache to see if we are capturing same ruin
-    if (!Pathfinding.getTarget().equals(cacheLoc)) {
+    if (!GoalManager.current().target.equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = Pathfinding.getTarget();
+      cacheLoc = GoalManager.current().target;
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -261,7 +260,7 @@ public class Painter {
       jobComplete = false;
       // If we can't reach it, move towards it
       if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
-        Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
+        Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? MovementManager.Mode.ANY : MovementManager.Mode.NO_ENEMY);
         if (dir == null || !Robot.rc.canMove(dir)) { continue; }
         MapData.move(dir);
         current = Robot.rc.getLocation();
@@ -294,13 +293,13 @@ public class Painter {
 
     // TODO: Don't just stand here if you can't make progress
 
-    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    int low_x = GoalManager.current().target.x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = GoalManager.current().target.y - (GameConstants.PATTERN_SIZE / 2);
     
     // Check the cache to see if we are capturing same ruin
-    if (!Pathfinding.getTarget().equals(cacheLoc)) {
+    if (!GoalManager.current().target.equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = Pathfinding.getTarget();
+      cacheLoc = GoalManager.current().target;
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -332,7 +331,7 @@ public class Painter {
 
         // If we can't reach it, move towards it
         if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
-          Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? Pathfinding.Mode.ANY : Pathfinding.Mode.NO_ENEMY);
+          Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? MovementManager.Mode.ANY : MovementManager.Mode.NO_ENEMY);
           if (dir == null || !Robot.rc.canMove(dir)) { continue; }
           MapData.move(dir);
           current = Robot.rc.getLocation();
@@ -361,15 +360,15 @@ public class Painter {
    */
   public static boolean mopCaptureRuin() throws GameActionException {
     MapLocation current = Robot.rc.getLocation();
-    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    int low_x = GoalManager.current().target.x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = GoalManager.current().target.y - (GameConstants.PATTERN_SIZE / 2);
 
     // TODO: Don't just stand here if you can't make progress
 
     // Check the cache to see if we are capturing same ruin
-    if (!Pathfinding.getTarget().equals(cacheLoc)) {
+    if (!GoalManager.current().target.equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = Pathfinding.getTarget();
+      cacheLoc = GoalManager.current().target;
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -405,9 +404,9 @@ public class Painter {
         Direction dir = null;
         //we only care about staying on ally paint if we are already on ally paint
         if(Robot.rc.senseMapInfo(current).getPaint().isAlly()){
-          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
+          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.ALLY_ONLY);
         }else{
-          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.NO_ENEMY);
+          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.NO_ENEMY);
         }
         if (dir == null || !Robot.rc.canMove(dir)) { continue; }
         MapData.move(dir);
@@ -420,9 +419,9 @@ public class Painter {
     }
 
     // Try to complete the ruin
-    if (Robot.rc.canCompleteTowerPattern(MapData.getGoalTowerType(cacheLoc), Pathfinding.getTarget())) {
-      Robot.rc.completeTowerPattern(MapData.getGoalTowerType(cacheLoc), Pathfinding.getTarget());
-      MapData.updateData(Robot.rc.senseMapInfo(Pathfinding.getTarget()));
+    if (Robot.rc.canCompleteTowerPattern(MapData.getGoalTowerType(cacheLoc), GoalManager.current().target)) {
+      Robot.rc.completeTowerPattern(MapData.getGoalTowerType(cacheLoc), GoalManager.current().target);
+      MapData.updateData(Robot.rc.senseMapInfo(GoalManager.current().target));
       cacheLoc = null;
       return true;
     }
@@ -442,13 +441,13 @@ public class Painter {
 
     // TODO: Don't just stand here if you can't make progress
 
-    int low_x = Pathfinding.getTarget().x - (GameConstants.PATTERN_SIZE / 2);
-    int low_y = Pathfinding.getTarget().y - (GameConstants.PATTERN_SIZE / 2);
+    int low_x = GoalManager.current().target.x - (GameConstants.PATTERN_SIZE / 2);
+    int low_y = GoalManager.current().target.y - (GameConstants.PATTERN_SIZE / 2);
     
     // Check the cache to see if we are capturing same ruin
-    if (!Pathfinding.getTarget().equals(cacheLoc)) {
+    if (!GoalManager.current().target.equals(cacheLoc)) {
       // If not, build the cache
-      cacheLoc = Pathfinding.getTarget();
+      cacheLoc = GoalManager.current().target;
       // TODO: UNROLL THESE LOOPS TO SAVE BYTECODE?
       for (int x_offset = 0; x_offset < GameConstants.PATTERN_SIZE; ++x_offset) {
         for (int y_offset = 0; y_offset < GameConstants.PATTERN_SIZE; ++y_offset) {
@@ -484,9 +483,9 @@ public class Painter {
         Direction dir = null;
         //we only care about staying on ally paint if we are already on ally paint
         if(Robot.rc.senseMapInfo(current).getPaint().isAlly()){
-          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.ALLY_ONLY);
+          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.ALLY_ONLY);
         }else{
-          dir = Pathfinding.getGreedyMove(current, loc, true, Pathfinding.Mode.NO_ENEMY);
+          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.NO_ENEMY);
         }
         if (dir == null || !Robot.rc.canMove(dir)) { continue; }
         MapData.move(dir);

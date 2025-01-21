@@ -1,6 +1,6 @@
-package sprint_2;
+package quals;
 
-import sprint_2.util.*;
+import quals.util.*;
 
 import battlecode.common.*;
 

@@ -1,6 +1,6 @@
-package sprint_2;
+package quals;
 
-import sprint_2.util.*;
+import quals.util.*;
 
 import battlecode.common.*;
 
@@ -27,11 +27,16 @@ public abstract class Robot {
     MapData.init();
     MapData.updateAllVisible();
     GoalManager.init();
+    BugPath.init();
   };
 
   final public void run() throws GameActionException {
+    MovementManager.update();
+    MapLocation before = rc.getLocation();
     doMicro(); // Act based on immediate surroundings
     doMacro(); // Secondarily act to achieve big picture goal
+    MapLocation after = rc.getLocation();
+    MapData.updateNewlyVisible(before.directionTo(after));
   }
 
   /**

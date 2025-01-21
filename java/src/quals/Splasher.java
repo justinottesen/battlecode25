@@ -1,4 +1,4 @@
-package sprint_2;
+package quals;
 
 import battlecode.common.*;
 

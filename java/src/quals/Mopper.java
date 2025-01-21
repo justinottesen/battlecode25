@@ -1,7 +1,7 @@
-package sprint_2;
+package quals;
 
 import battlecode.common.*;
-import sprint_2.util.*;
+import quals.util.*;
 
 public final class Mopper extends Robot {
 
@@ -23,13 +23,11 @@ public final class Mopper extends Robot {
           System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
       }
     }
+    MovementManager.setMode(MovementManager.Mode.NO_ENEMY);
   }
 
   protected void doMicro() throws GameActionException {
     rc.setIndicatorString("GOAL - " + GoalManager.current());
-    if (Pathfinding.getTarget() != null) {
-      rc.setIndicatorLine(rc.getLocation(), Pathfinding.getTarget(), 255, 0, 255);
-    }
 
     // TODO: TAKE THIS OUT AND DEAL WITH CROWDING lol
     // If surrounded, kill yourself
@@ -59,9 +57,9 @@ public final class Mopper extends Robot {
 
     // Check if someone else finished the current ruin
     if (GoalManager.current().type == Goal.Type.CAPTURE_RUIN) {
-      if (rc.canSenseRobotAtLocation(Pathfinding.getTarget())) {
-        MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
-        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+      if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {
+        MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
+        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
       }
     }
 
@@ -116,29 +114,29 @@ public final class Mopper extends Robot {
     switch (GoalManager.current().type) {
       case CAPTURE_RUIN:
         if (Painter.mopCaptureRuin()) { 
-          if(rc.senseRobotAtLocation(Pathfinding.getTarget())==null){
+          if(rc.senseRobotAtLocation(GoalManager.current().target)==null){
             //ruin has no more enemy paint around it, start exploring
-            completedRuinJob = Pathfinding.getTarget();
+            completedRuinJob = GoalManager.current().target;
             GoalManager.popGoal();
           }else{
             //mopper built the tower, refill from the tower
-            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
           }
         }
         break;
       case CAPTURE_SRP:
         if (Painter.mopCaptureSRP()) {
-          completedRuinJob = Pathfinding.getTarget();
+          completedRuinJob = GoalManager.current().target;
           GoalManager.popGoal();
         }
         break;
       case REFILL_PAINT:
-        if (rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
-          RobotInfo tower = rc.senseRobotAtLocation(Pathfinding.getTarget());
+        if (rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
+          RobotInfo tower = rc.senseRobotAtLocation(GoalManager.current().target);
           if (tower == null) {
-            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget())) {
-              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget());
-              tower = rc.senseRobotAtLocation(Pathfinding.getTarget());
+            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target)) {
+              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
+              tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
               GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
               return;
@@ -146,16 +144,16 @@ public final class Mopper extends Robot {
           }
           int paintAmount = rc.getType().paintCapacity - rc.getPaint();
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
-          if (rc.canTransferPaint(Pathfinding.getTarget(), -paintAmount)) {
-            rc.transferPaint(Pathfinding.getTarget(), -paintAmount);
+          if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
+            rc.transferPaint(GoalManager.current().target, -paintAmount);
             GoalManager.popGoal();
           }
         }
         break;
       case EXPLORE:
-        if (Pathfinding.getTarget()==null || rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
-          //MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
-          Pathfinding.setTarget(MapData.getExploreTarget());
+        if (rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.VISION_RADIUS_SQUARED)) {
+          MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
+          GoalManager.replaceTopGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
         }
         break;
       default: break;
@@ -169,14 +167,7 @@ public final class Mopper extends Robot {
   }
 
   protected void doMacro() throws GameActionException {
-    if (rc.isMovementReady()) {
-      Direction dir = Pathfinding.getMove(Pathfinding.Mode.NO_ENEMY);
-      if (dir == null) {
-        System.out.println("Pathfinding returned null dir");
-      } else if (rc.canMove(dir)) {
-        MapData.move(dir);
-      }
-    }
+    Pathfinding.moveTo(GoalManager.current().target); //note that Mopper is currently set to NO_ENEMY by the constructor, and is never changed
   }
 
   private Direction pickMopSwingDirection() throws GameActionException{

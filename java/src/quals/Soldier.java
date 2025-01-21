@@ -1,7 +1,7 @@
-package sprint_2;
+package quals;
 
 import battlecode.common.*;
-import sprint_2.util.*;
+import quals.util.*;
 
 public final class Soldier extends Robot {
 
@@ -57,8 +57,8 @@ public final class Soldier extends Robot {
       return;
     }
     rc.setIndicatorString("GOAL - " + GoalManager.current());
-    if (Pathfinding.getTarget() != null) {
-      rc.setIndicatorLine(rc.getLocation(), Pathfinding.getTarget(), 255, 0, 255);
+    if (GoalManager.current().target != null) {
+      rc.setIndicatorLine(rc.getLocation(), GoalManager.current().target, 255, 0, 255);
     }
 
     // TODO: TAKE THIS OUT AND DEAL WITH CROWDING lol
@@ -90,16 +90,16 @@ public final class Soldier extends Robot {
     // Check if someone else finished the current ruin
     // TODO: Should this check stay here? Duplicated in Painter
     if (GoalManager.current().type == Goal.Type.CAPTURE_RUIN) {
-      if (rc.canSenseRobotAtLocation(Pathfinding.getTarget())) {
-        MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
-        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+      if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {
+        MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
+        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
       }
     }
 
     // Check if someone else finished the current SRP
     // TODO: Should this check stay here? Duplicated in Painter
     if (GoalManager.current().type == Goal.Type.CAPTURE_SRP) {
-      MapLocation target = Pathfinding.getTarget();
+      MapLocation target = GoalManager.current().target;
       if (rc.canSenseLocation(target) && rc.senseMapInfo(target).isResourcePatternCenter()) {
         MapData.updateData(rc.senseMapInfo(target));
         GoalManager.popGoal();
@@ -173,8 +173,8 @@ public final class Soldier extends Robot {
       case CAPTURE_RUIN:
         if (Painter.paintCaptureRuin()) {
           // Check if we actually finished ruin or if we just can't make progress
-          if (rc.canSenseRobotAtLocation(Pathfinding.getTarget())) {
-            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+          if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {
+            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
           } else {
             // Only request backup if we don't already see a mopper
             boolean foundMopper = false;
@@ -193,21 +193,21 @@ public final class Soldier extends Robot {
         break;
       case GET_BACKUP: // INTENTIONAL FALLTHROUGH
       case REFILL_PAINT:
-        if (rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
-          RobotInfo tower = rc.senseRobotAtLocation(Pathfinding.getTarget());
+        if (rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
+          RobotInfo tower = rc.senseRobotAtLocation(GoalManager.current().target);
           if (tower == null) {
-            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget())) {
-              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, Pathfinding.getTarget());
-              tower = rc.senseRobotAtLocation(Pathfinding.getTarget());
+            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target)) {
+              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
+              tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
-              Pathfinding.setTarget(MapData.closestFriendlyTower());
+              GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
               return;
             }
           }
           int paintAmount = rc.getType().paintCapacity - rc.getPaint();
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
-          if (rc.canTransferPaint(Pathfinding.getTarget(), -paintAmount)) {
-            rc.transferPaint(Pathfinding.getTarget(), -paintAmount);
+          if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
+            rc.transferPaint(GoalManager.current().target, -paintAmount);
             Goal.Type prevGoalType = GoalManager.current().type;
             GoalManager.popGoal();
             if (prevGoalType == Goal.Type.GET_BACKUP) {
@@ -218,9 +218,9 @@ public final class Soldier extends Robot {
         }
         break;
       case EXPLORE: // TODO: Address clumping of units
-        if (Pathfinding.getTarget() == null || rc.getLocation().isWithinDistanceSquared(Pathfinding.getTarget(), GameConstants.VISION_RADIUS_SQUARED)) {
-          //MapData.updateData(rc.senseMapInfo(Pathfinding.getTarget()));
-          Pathfinding.setTarget(MapData.getExploreTarget());
+        if (rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.VISION_RADIUS_SQUARED)) {
+          MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
+          GoalManager.replaceTopGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
         }
         break;
       default: break;
@@ -228,18 +228,8 @@ public final class Soldier extends Robot {
   }
 
   protected void doMacro() throws GameActionException {
-    if (rc.isMovementReady()) {
-      Direction dir = Pathfinding.getMove();
-      if (dir == null) {
-        System.out.println("Pathfinding returned null dir");
-      } else if (rc.canMove(dir)) {
-        MapData.move(dir);
-        if (MapData.foundSRP != null && GoalManager.current().type.v < Goal.Type.CAPTURE_SRP.v) {
-          GoalManager.setNewGoal(Goal.Type.CAPTURE_SRP, MapData.foundSRP);
-        }
-      }
-    }
-    if(!initialSoldiers && GoalManager.current().type != Goal.Type.SURVIVE){  //initial soldier and SURVIVE soldiers shouldn't waste paint
+    Pathfinding.moveTo(GoalManager.current().target); //note that Soldier defaults to ANY, can be set anywhere, but must be set back to ANY
+    if(!initialSoldiers && GoalManager.current().type != Goal.Type.SURVIVE && GoalManager.current().type != Goal.Type.REFILL_PAINT){  //initial soldier, SURVIVE, and REFILL_PAINT soldiers shouldn't waste paint
       Painter.paint();
     }
   }
@@ -308,8 +298,8 @@ public final class Soldier extends Robot {
       if (Painter.paintCaptureRuin() || (rc.canSenseLocation(targetRuin) && rc.senseRobotAtLocation(targetRuin)!=null)) {
         initialSoldiers=false;  //we can be done with the opening if we successfully capture the first tower
         // Check if we actually finished ruin or if we just can't make progress
-        if (rc.canSenseRobotAtLocation(Pathfinding.getTarget())) {
-          GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Pathfinding.getTarget());
+        if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {
+          GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
         } else {
           GoalManager.pushGoal(Goal.Type.GET_BACKUP, MapData.closestFriendlyTower());
         }
@@ -318,12 +308,12 @@ public final class Soldier extends Robot {
       //roam if there's no ruin in sight
       if(followID!=-1 && rc.canSenseRobot(followID)){ //second soldier
         RobotInfo firstSoldier = rc.senseRobot(followID);
-        Pathfinding.setTarget(firstSoldier.getLocation());
+        GoalManager.replaceTopGoal(Goal.Type.EXPLORE, firstSoldier.getLocation());
         rc.setIndicatorString("second soldier, followid: "+followID);
       }else{
         MapLocation closestEnemyTower = MapData.closestEnemyTower();
         if(closestEnemyTower!=null){
-          Pathfinding.setTarget(closestEnemyTower);
+          GoalManager.replaceTopGoal(Goal.Type.EXPLORE, closestEnemyTower);
         }else{
           int[] symmetryPriority = new int[3];
           //we want the soldiers from each tower to assume different symmetries
@@ -352,11 +342,11 @@ public final class Soldier extends Robot {
           }
 
           if(guessEnemyTower!=null){
-            Pathfinding.setTarget(guessEnemyTower);
+            GoalManager.replaceTopGoal(Goal.Type.EXPLORE, guessEnemyTower);
           }else{
             //this should never run, since it rules out all 3 symmetries, but if it does, default to normal exploration
             System.out.println("Initial soldiers ruled out all 3 symmetries???");
-            Pathfinding.setTarget(MapData.getExploreTarget());
+            GoalManager.replaceTopGoal(Goal.Type.EXPLORE, MapData.getExploreTarget());
           }
         }
       }

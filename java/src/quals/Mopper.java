@@ -155,6 +155,7 @@ public final class Mopper extends Robot {
           MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
           GoalManager.replaceTopGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
         }
+        Painter.mop();
         break;
       default: break;
     }

@@ -257,11 +257,7 @@ public class MapData {
       } else {
         mapData[index] |= UNCLAIMED_RUIN;
         // TODO: Put this elsewhere and add logic for different tower types
-        if (Robot.rc.getNumberTowers() < 5) {
-          setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
-        } else {
-          setGoalTowerType(index, UnitType.LEVEL_ONE_PAINT_TOWER);
-        }
+        setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
     } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
       if (info.isResourcePatternCenter()) {

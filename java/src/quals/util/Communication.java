@@ -75,7 +75,7 @@ public class Communication {
    * @throws GameActionException
    */
   public static boolean trySendMessage(int message, MapLocation target) throws GameActionException {
-    if (!Robot.rc.canSendMessage(target)) { return false; }
+    if (!Robot.rc.canSenseRobotAtLocation(target) || !Robot.rc.canSendMessage(target)) { return false; }
     Robot.rc.sendMessage(target, message);
     return true;
   }

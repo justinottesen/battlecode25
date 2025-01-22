@@ -67,7 +67,6 @@ public final class Mopper extends Robot {
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
       if (comms.getMessageType(m.getBytes()) == comms.SUICIDE) {
-        System.out.println("Received suicide message");
         goal = Goal.CAPTURE_RUIN;
         pathfinding.setTarget(comms.getCoordinates(m.getBytes()));
         painter.paintCapture(pathfinding);
@@ -182,7 +181,6 @@ public final class Mopper extends Robot {
     if (rc.isMovementReady()) {
       Direction dir = pathfinding.getMove(Pathfinding.Mode.NO_ENEMY);
       if (dir == null) {
-        System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
         mapData.move(dir);
       }

@@ -97,7 +97,6 @@ public final class Soldier extends Robot {
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
       if (comms.getMessageType(m.getBytes()) == comms.SUICIDE) {
-        System.out.println("Received suicide message");
         goal = Goal.CAPTURE_RUIN;
         pathfinding.setTarget(comms.getCoordinates(m.getBytes()));
         painter.paintCapture(pathfinding);
@@ -197,7 +196,6 @@ public final class Soldier extends Robot {
     if (rc.isMovementReady()) {
       Direction dir = pathfinding.getMove();
       if (dir == null) {
-        System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
         mapData.move(dir);
       }
@@ -286,7 +284,6 @@ public final class Soldier extends Robot {
             pathfinding.setTarget(guessEnemyTower);
           }else{
             //this should never run, since it rules out all 3 symmetries, but if it does, default to normal exploration
-            System.out.println("Initial soldiers ruled out all 3 symmetries???");
             pathfinding.setTarget(mapData.getExploreTarget());
           }
         }

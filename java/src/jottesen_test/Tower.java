@@ -30,7 +30,6 @@ public final class Tower extends Robot {
         CREATED_ROUND > 2 &&
         comms.tryBroadcastMessage( // We successfully sent the message to an adjacent bot
           comms.addCoordinates(comms.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
-      System.out.println("Sent suicide message");
       rc.disintegrate();
       return;
     }

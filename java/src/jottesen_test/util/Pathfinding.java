@@ -210,7 +210,6 @@ public class Pathfinding {
       stepCache.clear();
       return getMove(mode);
     } else {
-      System.out.println("No more pathfinding stack space");
       return closestAvailableDirection(current, loc.directionTo(targets.top()));
     }
   }

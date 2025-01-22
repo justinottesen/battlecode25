@@ -20,7 +20,6 @@ public final class Mopper extends Robot {
           GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
           break;
         default:
-          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
       }
     }
   }
@@ -51,7 +50,6 @@ public final class Mopper extends Robot {
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
       if (Communication.getMessageType(m.getBytes()) == Communication.SUICIDE) {
-        System.out.println("Received suicide message");
         GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
         Painter.mopCaptureRuin();
       }
@@ -172,7 +170,6 @@ public final class Mopper extends Robot {
     if (rc.isMovementReady()) {
       Direction dir = Pathfinding.getMove(Pathfinding.Mode.NO_ENEMY);
       if (dir == null) {
-        System.out.println("Pathfinding returned null dir");
       } else if (rc.canMove(dir)) {
         MapData.move(dir);
       }

@@ -15,8 +15,8 @@ public class RobotPlayer {
         default -> new Tower(rc);
       };
     } catch (GameActionException e) {
-      System.out.println(rc.getType() + " GameActionException");
-      e.printStackTrace();
+      // System.out.println(rc.getType() + " GameActionException");
+      // e.printStackTrace();
       rc.disintegrate();
     }
 
@@ -24,11 +24,11 @@ public class RobotPlayer {
       try {
         robot.run();
       } catch (GameActionException e) {
-        System.out.println(rc.getType() + " GameActionException");
-        e.printStackTrace();
+        // System.out.println(rc.getType() + " GameActionException");
+        // e.printStackTrace();
       } catch (Exception e) {
-        System.out.println(rc.getType() + " Exception");
-        e.printStackTrace();
+        // System.out.println(rc.getType() + " Exception");
+        // e.printStackTrace();
       } finally {
         Clock.yield();
       }

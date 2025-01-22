@@ -83,14 +83,14 @@ public class RobotPlayer {
                 // Oh no! It looks like we did something illegal in the Battlecode world. You should
                 // handle GameActionExceptions judiciously, in case unexpected events occur in the game
                 // world. Remember, uncaught exceptions cause your robot to explode!
-                System.out.println("GameActionException");
-                e.printStackTrace();
+                // System.out.println("GameActionException");
+                // e.printStackTrace();
 
             } catch (Exception e) {
                 // Oh no! It looks like our code tried to do something bad. This isn't a
                 // GameActionException, so it's more likely to be a bug in our code.
-                System.out.println("Exception");
-                e.printStackTrace();
+                // System.out.println("Exception");
+                // e.printStackTrace();
 
             } finally {
                 // Signify we've done everything we want to do, thereby ending our turn.
@@ -115,22 +115,22 @@ public class RobotPlayer {
         int robotType = rng.nextInt(3);
         if (robotType == 0 && rc.canBuildRobot(UnitType.SOLDIER, nextLoc)){
             rc.buildRobot(UnitType.SOLDIER, nextLoc);
-            System.out.println("BUILT A SOLDIER");
+            // System.out.println("BUILT A SOLDIER");
         }
         else if (robotType == 1 && rc.canBuildRobot(UnitType.MOPPER, nextLoc)){
             rc.buildRobot(UnitType.MOPPER, nextLoc);
-            System.out.println("BUILT A MOPPER");
+            // System.out.println("BUILT A MOPPER");
         }
         else if (robotType == 2 && rc.canBuildRobot(UnitType.SPLASHER, nextLoc)){
             // rc.buildRobot(UnitType.SPLASHER, nextLoc);
             // System.out.println("BUILT A SPLASHER");
-            rc.setIndicatorString("SPLASHER NOT IMPLEMENTED YET");
+            // rc.setIndicatorString("SPLASHER NOT IMPLEMENTED YET");
         }
 
         // Read incoming messages
         Message[] messages = rc.readMessages(-1);
         for (Message m : messages) {
-            System.out.println("Tower received message: '#" + m.getSenderID() + " " + m.getBytes());
+            // System.out.println("Tower received message: '#" + m.getSenderID() + " " + m.getBytes());
         }
 
         // TODO: can we attack other bots?
@@ -160,7 +160,7 @@ public class RobotPlayer {
             MapLocation shouldBeMarked = curRuin.getMapLocation().subtract(dir);
             if (rc.senseMapInfo(shouldBeMarked).getMark() == PaintType.EMPTY && rc.canMarkTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc)){
                 rc.markTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc);
-                System.out.println("Trying to build a tower at " + targetLoc);
+                // System.out.println("Trying to build a tower at " + targetLoc);
             }
             // Fill in any spots in the pattern with the appropriate paint.
             for (MapInfo patternTile : rc.senseNearbyMapInfos(targetLoc, 8)){
@@ -173,8 +173,8 @@ public class RobotPlayer {
             // Complete the ruin if we can.
             if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc)){
                 rc.completeTowerPattern(UnitType.LEVEL_ONE_PAINT_TOWER, targetLoc);
-                rc.setTimelineMarker("Tower built", 0, 255, 0);
-                System.out.println("Built a tower at " + targetLoc + "!");
+                // rc.setTimelineMarker("Tower built", 0, 255, 0);
+                // System.out.println("Built a tower at " + targetLoc + "!");
             }
         }
 
@@ -206,7 +206,7 @@ public class RobotPlayer {
         }
         if (rc.canMopSwing(dir)){
             rc.mopSwing(dir);
-            System.out.println("Mop Swing! Booyah!");
+            // System.out.println("Mop Swing! Booyah!");
         }
         else if (rc.canAttack(nextLoc)){
             rc.attack(nextLoc);

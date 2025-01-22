@@ -1,10 +1,9 @@
 package quals;
 
-import quals.util.*;
-
-import java.util.Random;
+import java.util.*;
 
 import battlecode.common.*;
+import quals.util.*;
 
 public abstract class Robot {
   
@@ -20,6 +19,8 @@ public abstract class Robot {
   public static int turnNum = 1;
 
   public static MapLocation spawnTower;
+
+  public static String emptyTowers = "";
   
   public Robot(RobotController rc_) throws GameActionException {
     rc = rc_;
@@ -52,7 +53,7 @@ public abstract class Robot {
     Goal.Type currentGoalType = GoalManager.current().type;
     if ((currentGoalType == Goal.Type.REFILL_PAINT || currentGoalType == Goal.Type.GET_BACKUP) && 
         !MapData.isFriendlyTower(GoalManager.current().target)) {
-      MapLocation tower = MapData.closestFriendlyTower();
+      MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
       GoalManager.replaceTopGoal(currentGoalType, tower == null ? spawnTower : tower);
     }
     doMicro(); // Act based on immediate surroundings

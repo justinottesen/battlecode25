@@ -22,11 +22,11 @@ public class RobotPlayer {
       try {
         robot.run();
       } catch (GameActionException e) {
-        System.out.println(rc.getType() + " Exception");
-        e.printStackTrace();
+        // System.out.println(rc.getType() + " Exception");
+        // e.printStackTrace();
       } catch (Exception e) {
-        System.out.println(rc.getType() + " Exception");
-        e.printStackTrace();
+        // System.out.println(rc.getType() + " Exception");
+        // e.printStackTrace();
       } finally {
         Clock.yield();
       }

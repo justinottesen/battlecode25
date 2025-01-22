@@ -30,7 +30,6 @@ public final class Tower extends Robot {
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
         Communication.trySendAllMessage( // We successfully sent the message to an adjacent bot
           Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
-      System.out.println("Sent suicide message");
       rc.disintegrate();
       return;
     }
@@ -45,7 +44,6 @@ public final class Tower extends Robot {
           }
           break;
         default:
-          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
       }
     }
   }

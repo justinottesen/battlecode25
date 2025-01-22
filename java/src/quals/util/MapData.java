@@ -193,6 +193,7 @@ public class MapData {
   public static void updateData(MapInfo info) throws GameActionException {
     // Update this square
     MapLocation loc = info.getMapLocation();
+    Robot.rc.setIndicatorDot(loc, 255, 0, 0);
     int index = getIndex(loc);
 
     // First time seeing square
@@ -239,9 +240,10 @@ public class MapData {
     
     // If it is a ruin or empty, more info can be gathered
     if ((mapData[index] & TILE_TYPE_BITMASK) == RUIN) {
+      Robot.rc.setIndicatorDot(loc, 0, 255, 0);
       RobotInfo towerInfo = Robot.rc.senseRobotAtLocation(loc);
       if (towerInfo != null) {
-        mapData[index] &= ~TILE_TYPE_BITMASK;
+        mapData[index] &= ~TOWER_TYPE_BITMASK;
         mapData[index] |= switch (towerInfo.getType().getBaseType()) {
           case UnitType.LEVEL_ONE_DEFENSE_TOWER -> DEFENSE_TOWER;
           case UnitType.LEVEL_ONE_PAINT_TOWER -> PAINT_TOWER;

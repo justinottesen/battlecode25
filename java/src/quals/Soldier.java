@@ -107,14 +107,16 @@ public final class Soldier extends Robot {
     }
 
     // If received paint transfer from mopper, update goal
-    if (GoalManager.current().type == Goal.Type.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+    if (GoalManager.current().type.v < Goal.Type.REFILL_PAINT.v && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       GoalManager.popGoal();
     }
 
     // TODO: High and low watermark for paint refill so we don't get stuck in a loop
     
     // If low on paint, set goal to refill
-    if (GoalManager.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+    if (GoalManager.current().type.v < Goal.Type.REFILL_PAINT.v && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+      // After refill, we want to explore back to our previous location in case we find something better along the way
+      GoalManager.replaceTopGoal(Goal.Type.EXPLORE, GoalManager.current().target);
       GoalManager.pushGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
     }
 

@@ -25,12 +25,12 @@ public final class Tower extends Robot {
 
     // Suicide for paint if worth it
     if (rc.getPaint() == 0 && // No more paint
-        rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
+        //rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
         Communication.trySendAllMessage( // We successfully sent the message to an adjacent bot
           Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
-      System.out.println("Sent suicide message");
+      rc.setIndicatorString("Sent suicide message");
       rc.disintegrate();
       return;
     }
@@ -105,7 +105,7 @@ public final class Tower extends Robot {
 
     // Spawn more if we got hella chips
     if (rc.getChips() > rc.getType().moneyCost * 2) {
-      switch (rc.getRoundNum() % 5) {
+      switch (rc.getRoundNum() % 4) {
         case 0: trySpawn(UnitType.MOPPER, MapData.MAP_CENTER); break;
         case 1: trySpawn(UnitType.SPLASHER, MapData.MAP_CENTER); break;
         default: trySpawn(UnitType.SOLDIER, MapData.MAP_CENTER); break;

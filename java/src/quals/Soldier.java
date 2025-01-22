@@ -95,6 +95,35 @@ public final class Soldier extends Robot {
     // TODO: Should this check stay here? Duplicated in Painter
     if (GoalManager.current().type == Goal.Type.CAPTURE_SRP) {
       MapLocation target = GoalManager.current().target;
+      //also check if the srp is contested and if it is, check if we have a nearby mopper to help
+      boolean contested = MapData.isContested(target);
+      if(!contested){
+        contested=false;
+        MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(target,8);
+        for(MapInfo m : towerPatternTiles){
+          if(m.getPaint().isEnemy()){
+            contested = true;
+            break;
+          }
+        }
+        if(!contested){
+          MapData.setUncontested(target);
+        }
+      }
+      if(contested){
+        //look for nearby moppers
+        RobotInfo[] nearbyAllies = rc.senseNearbyRobots(-1,rc.getTeam());
+        for(RobotInfo ally : nearbyAllies){
+          if(ally.getType()==UnitType.MOPPER){
+            contested=false;
+            break;
+          }
+        }
+        MapData.setContested(GoalManager.current().target);
+        //remove from GoalManager
+        GoalManager.popGoal();
+      }
+      
       if (rc.canSenseLocation(target) && rc.senseMapInfo(target).isResourcePatternCenter()) {
         MapData.updateData(rc.senseMapInfo(target));
         GoalManager.popGoal();
@@ -144,7 +173,7 @@ public final class Soldier extends Robot {
     // TODO: Make this process more intelligent. Pack better with other SRPs, etc
     if (GoalManager.current().type.v < Goal.Type.CAPTURE_SRP.v) {
       for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(rc.getLocation(), GameConstants.MARK_RADIUS_SQUARED)) {
-        if (MapData.tryMarkSRP(loc)) {
+        if (MapData.tryMarkSRP(loc) && !MapData.isContested(loc)) {
           GoalManager.pushGoal(Goal.Type.CAPTURE_SRP, loc);
           break;
         }

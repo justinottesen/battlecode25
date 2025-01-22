@@ -14,7 +14,7 @@ public final class Soldier extends Robot {
   //variables for hard coding the first 2 soldiers from each starting tower
   private boolean initialSoldiers; //true if this soldier was the 1st or 2nd soldier spawned from the starting paint/money towers
   private int followID; //2nd soldier spawned from the starting paint/money towers stores the 1st soldier's id (1st soldier store -1 here)
-  private RobotInfo spawnTower; //true if this soldier is spawned from the starting paint tower
+  private RobotInfo spawnTowerInfo; //true if this soldier is spawned from the starting paint tower
 
 
   public Soldier(RobotController rc_) throws GameActionException {
@@ -29,13 +29,13 @@ public final class Soldier extends Robot {
       //find the home tower (might have trouble if soldier is in spawn-range of both starting tower)
       for(RobotInfo robot : nearbyRobots){
         if(robot.getType().isTowerType() && robot.getLocation().distanceSquaredTo(rc.getLocation())<= GameConstants.BUILD_ROBOT_RADIUS_SQUARED){
-          spawnTower = robot;
+          spawnTowerInfo = robot;
         }
       }
       MapLocation correctFirstSoldier = null;
       for(RobotInfo robot : nearbyRobots){
         if(rc.getRoundNum()>2&&robot.getType()==UnitType.SOLDIER && //TODO: change the roundNum threshold once we don't overflow on bytecode turn 1
-        (correctFirstSoldier==null || spawnTower.getLocation().distanceSquaredTo(robot.getLocation()) < spawnTower.getLocation().distanceSquaredTo(correctFirstSoldier))){
+        (correctFirstSoldier==null || spawnTowerInfo.getLocation().distanceSquaredTo(robot.getLocation()) < spawnTowerInfo.getLocation().distanceSquaredTo(correctFirstSoldier))){
           followID = robot.getID();
           correctFirstSoldier = robot.getLocation();
         }
@@ -73,11 +73,12 @@ public final class Soldier extends Robot {
     // Check for a suicide message, if received this is priority number 1
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
-      if (Communication.getMessageType(m.getBytes()) == Communication.SUICIDE) {
-        //System.out.println("Received suicide message");
-        rc.setIndicatorString("Received suicide message");
-        GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
-        Painter.paintCaptureRuin();
+      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
+        case Communication.SUICIDE:
+          GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
+          break;
+        default:
+          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
       }
     }
 
@@ -318,7 +319,7 @@ public final class Soldier extends Robot {
         }else{
           int[] symmetryPriority = new int[3];
           //we want the soldiers from each tower to assume different symmetries
-          if(spawnTower.getType().getBaseType() == UnitType.LEVEL_ONE_PAINT_TOWER){
+          if(spawnTowerInfo.getType().getBaseType() == UnitType.LEVEL_ONE_PAINT_TOWER){
             symmetryPriority[0] = 0b010;  //horizontal
             symmetryPriority[1] = 0b001;  //rotational
             symmetryPriority[2] = 0b100;  //vertical
@@ -329,12 +330,12 @@ public final class Soldier extends Robot {
           }
 
           //Guess the location of the enemy tower and choose it as our target
-          MapLocation guessEnemyTower = MapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[0]);
+          MapLocation guessEnemyTower = MapData.symmetryLoc(spawnTowerInfo.getLocation(),symmetryPriority[0]);
 
           if(MapData.known(guessEnemyTower)){
-            guessEnemyTower = MapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[1]);
+            guessEnemyTower = MapData.symmetryLoc(spawnTowerInfo.getLocation(),symmetryPriority[1]);
             if(MapData.known(guessEnemyTower)){
-              guessEnemyTower = MapData.symmetryLoc(spawnTower.getLocation(),symmetryPriority[2]);
+              guessEnemyTower = MapData.symmetryLoc(spawnTowerInfo.getLocation(),symmetryPriority[2]);
               if(MapData.known(guessEnemyTower)){
                 guessEnemyTower = null;
                 

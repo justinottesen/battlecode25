@@ -16,6 +16,7 @@ public final class Mopper extends Robot {
     // Read incoming messages
     for (Message m : rc.readMessages(-1)) {
       switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
+        case Communication.SUICIDE: // INTENTIONAL FALLTHROUGH
         case Communication.REQUEST_MOPPER:
           GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
           break;
@@ -42,7 +43,6 @@ public final class Mopper extends Robot {
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
       if (Communication.getMessageType(m.getBytes()) == Communication.SUICIDE) {
-        System.out.println("Received suicide message");
         GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
         Painter.mopCaptureRuin();
       }

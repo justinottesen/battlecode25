@@ -10,8 +10,15 @@ public final class Tower extends Robot {
 
   private final MapLocation LOCATION;
 
+  int lastSeenEnemyRound = -1;
+  private final int LAST_SEEN_SUICIDE_THRESHOLD = 50;
+
+  private final int PAINT_SUICIDE_THRESHOLD = 50;
+
   public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
+
+    lastSeenEnemyRound = rc.getRoundNum(); // Pretend we just saw an enemy when we spawn in
 
     TOWER_ATTACK_RADIUS = rc.getType().actionRadiusSquared; // NOTE: This will have to change if upgrades modify radius
 
@@ -21,15 +28,36 @@ public final class Tower extends Robot {
   protected void doMicro() throws GameActionException {
     attackEnemies();
 
-    // TODO: Suicide conditions shouldn't wait for no visible enemies, shrink radius
+    // Check for new enemies
+    if (lastSeenEnemyRound < rc.getRoundNum() && rc.senseNearbyRobots(-1, OPPONENT).length != 0) {
+      lastSeenEnemyRound = rc.getRoundNum();
+    }
+
+    // If no enemies in a while, spend paint and try to suicide for more
+    if (rc.getRoundNum() - lastSeenEnemyRound > LAST_SEEN_SUICIDE_THRESHOLD && // In a safe location
+        rc.getPaint() >= 100 && // Leftover paint
+        rc.getChips() > rc.getType().moneyCost * 10 && // HELLA chips
+        towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER)) {
+      System.out.println("SAFE TOWER - USING RESOURCES");
+      MapLocation spawnLoc = getSpawnLoc(null);
+      if (spawnLoc != null) {
+        if (rc.getPaint() >= UnitType.SPLASHER.paintCost) {
+          trySpawn(UnitType.SPLASHER, spawnLoc);
+        } else if (rc.getPaint() >= UnitType.SOLDIER.paintCost) {
+          trySpawn(UnitType.SOLDIER, spawnLoc);
+        } else {
+          trySpawn(UnitType.MOPPER, spawnLoc);
+        }
+      }
+    }
 
     // Suicide for paint if worth it
-    if (rc.getPaint() == 0 && // No more paint
+    if ((rc.getPaint() < PAINT_SUICIDE_THRESHOLD) && // No more paint
         //rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
         rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
         Communication.trySendAllMessage( // We successfully sent the message to an adjacent bot
-          Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(2, TEAM))) {
+          Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM))) {
       rc.setIndicatorString("Sent suicide message");
       rc.disintegrate();
       return;
@@ -64,6 +92,8 @@ public final class Tower extends Robot {
     // Find nearby enemies
     RobotInfo[] enemies = rc.senseNearbyRobots(TOWER_ATTACK_RADIUS, OPPONENT);
     if (enemies.length == 0) { return; }
+  
+    lastSeenEnemyRound = rc.getRoundNum();
     
     // Perform AoE attack
     rc.attack(null);
@@ -115,18 +145,20 @@ public final class Tower extends Robot {
 
   /**
    * Finds the closest available spawn location to the provided target
-   * @param type The type of robot to be build (idk if this is even necessary)
    * @param target The location to get close to
    * @return The closest available location
    */
-  private MapLocation getSpawnLoc(UnitType type, MapLocation target) throws GameActionException {
-    if (rc.canBuildRobot(UnitType.SOLDIER, target)) { return target; }
+  private MapLocation getSpawnLoc(MapLocation target) throws GameActionException {
+    // Check if we can build mopper, the cheapest unit
+    if (target != null && rc.canBuildRobot(UnitType.MOPPER, target)) { return target; }
 
     MapLocation closest = null;
     int closest_dist = MapData.MAX_DISTANCE_SQ;
     for (MapLocation loc : rc.getAllLocationsWithinRadiusSquared(LOCATION, GameConstants.BUILD_ROBOT_RADIUS_SQUARED)) {
+      if (!rc.canBuildRobot(UnitType.MOPPER, loc)) { continue; }
+      if (target == null) { return loc; }
       int dist = loc.distanceSquaredTo(target);
-      if (rc.canBuildRobot(UnitType.SOLDIER, loc) && dist < closest_dist) {
+      if (dist < closest_dist) {
         closest = loc;
         closest_dist = dist;
         if (closest_dist < 3) { break; }
@@ -144,7 +176,7 @@ public final class Tower extends Robot {
    * @throws GameActionException
    */
   private MapLocation trySpawn(UnitType type, MapLocation target) throws GameActionException {
-    MapLocation loc = getSpawnLoc(type, target);
+    MapLocation loc = getSpawnLoc(target);
     if (loc != null && rc.canBuildRobot(type, loc)) { rc.buildRobot(type, loc); return loc; }
     return null;
   }

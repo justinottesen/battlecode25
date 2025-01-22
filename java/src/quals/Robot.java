@@ -34,7 +34,10 @@ public abstract class Robot {
     // THIS ORDER OF INITIALIZATION IS IMPORTANT
     MapData.init();
     MapData.updateAllVisible();
-    spawnTower = MapData.closestRuin(); // If the tower suicides, might be a ruin now
+    spawnTower = MapData.closestFriendlyTower(); 
+    if (spawnTower == null) { // If the tower suicides, might be a ruin now
+      spawnTower = MapData.closestRuin();
+    }
     GoalManager.init();
   };
 

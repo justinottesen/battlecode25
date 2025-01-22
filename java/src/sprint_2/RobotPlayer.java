@@ -11,7 +11,7 @@ public class RobotPlayer {
       robot = switch (rc.getType()) {
         case SOLDIER -> new Soldier(rc);
         case MOPPER -> new Mopper(rc);
-        case SPLASHER -> new Splasher(rc);
+        //case SPLASHER -> new Splasher(rc);
         default -> new Tower(rc);
       };
     } catch (GameActionException e) {

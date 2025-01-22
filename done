@@ -1,0 +1,530 @@
+[33mcommit bbd22ebb1be93c10ff94e9c75adab2e8ba7adb2b[m[33m ([m[1;36mHEAD -> [m[1;32mSplasherStart[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 21 01:11:58 2025 -0500
+
+    Moppers more likely to mop
+
+[33mcommit 95bde0fdaa29131bd0cf5fe85cdc6ec3c4265f43[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 21 01:10:47 2025 -0500
+
+    Robots no longer get stuck fighting towers
+
+[33mcommit 22f1ae1e1f76d0c98bcdd19eae8bcddb1843c474[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 21 00:04:39 2025 -0500
+
+    Eliminate paint towers from our strat for now
+
+[33mcommit 55187346bd89a3094fa07a302adc3b0528901ba7[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 21 00:01:49 2025 -0500
+
+    Fixed SRP capture not being immediate
+
+[33mcommit 5bdcb03ba803f47a3ae5dcbfba95a5ee007b4dd9[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Mon Jan 20 23:35:40 2025 -0500
+
+    Check for robot at loc before sending message
+
+[33mcommit 3b751abaca65fea50a2444ccccbc91788cfda01d[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 23:35:07 2025 -0500
+
+    Make moppers mop when exploring
+
+[33mcommit 8b440e655f692eecadff2263fba9bee283312821[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Mon Jan 20 23:30:02 2025 -0500
+
+    fixed soldiers falsely calling for backup in opening
+
+[33mcommit d5e4269225060f5f9b822aa94f405d1bf067bf2c[m[33m ([m[1;32mmain[m[33m)[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 23:15:48 2025 -0500
+
+    No more refills at enemy towers?
+
+[33mcommit b7b3a0bbbe43ec531318bd7648988824ab6ab949[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 22:55:57 2025 -0500
+
+    Stop macro from interfering with fight tower micro
+
+[33mcommit 4eccf847d4fa6258f33d198e18c587fcaa945e0f[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 22:35:08 2025 -0500
+
+    Soldiers synchronize attacks based on round num
+
+[33mcommit 1236eeef5af14cbf8b2404d51b1d854144dac361[m
+Author: Justin Ottesen <49543532+justinottesen@users.noreply.github.com>
+Date:   Mon Jan 20 22:32:25 2025 -0500
+
+    Fix soldier micro movement (#56)
+    
+    * Fix soldier micro movement
+    
+    * Fixed tower spawn bug & removed MapData.move
+    
+    * Move updateNewlyVisible next to move call
+
+[33mcommit 79045613eec362849ea4e6e6f00936b431e14574[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Mon Jan 20 22:10:41 2025 -0500
+
+    fixed exceptions
+
+[33mcommit 1e69525641ff46a08b0209276e80dc748650fd3c[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Mon Jan 20 20:38:27 2025 -0500
+
+    Fully reimplemented XSquare Bugpath
+
+[33mcommit d3ab0600dd2f21aa8690c605281244640a698ee2[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 19:51:06 2025 -0500
+
+    Soldier state diagram
+
+[33mcommit c60e1fce066907ebaa809456fefa2eaf773ca1cd[m[33m ([m[1;32mFixedExceptions[m[33m)[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Mon Jan 20 19:16:04 2025 -0500
+
+    quals folder is a copy of sprint_2
+
+[33mcommit a608f0474e50a4b0fff1454e1e31009db4f9f568[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Mon Jan 20 18:52:20 2025 -0500
+
+    final sprint2 bug fixes
+
+[33mcommit 403ec3bdeee7bf6b6d53ba91ec1581977c58f0cd[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 18:25:46 2025 -0500
+
+    Towers check if they can build a robot before building it
+
+[33mcommit 3f00ff7de96f24ef3f94539b15857fda11145cef[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 18:24:10 2025 -0500
+
+    Set pathfinding default goal in GoalManager initialization
+
+[33mcommit a03b70088cb208c145366e8faf148738a47dee95[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Mon Jan 20 18:19:23 2025 -0500
+
+    SURVIVE works (#53)
+
+[33mcommit 4f316c213488612de976bd66e4383b7b966c045d[m
+Author: Justin Ottesen <49543532+justinottesen@users.noreply.github.com>
+Date:   Mon Jan 20 18:12:13 2025 -0500
+
+    Super preliminary tower type stuff (#52)
+
+[33mcommit a8a6125c8fd5b79851297e948201efa31ac7e65f[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 20 17:11:02 2025 -0500
+
+    Soldiers request backup when capturing ruins
+
+[33mcommit 94d9147ee8f528b25bc36e1e8eda5182f42f4e67[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Sun Jan 19 23:02:58 2025 -0500
+
+    refactored soldier opening to use goals: (#50)
+
+[33mcommit 774e89becedd0148e366b247a5806f052f267ea5[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 19 20:58:42 2025 -0500
+
+    Added insert & remove to stack
+
+[33mcommit d7c8dca1ad48a39004d62859706b2a3d9723e6db[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 19 20:28:37 2025 -0500
+
+    Added .contains method to stack
+
+[33mcommit 5dd6c4e70e020685bb85ff6197dbe6fa19706640[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 19 14:49:38 2025 -0500
+
+    Make utility classes static
+
+[33mcommit 8144583ebffe5800f1c5efb834f4044ee35c1cc9[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 21:29:59 2025 -0500
+
+    Made goals use a stack
+
+[33mcommit ec5e9a64e31ef225f80023d03ed79af5d22306c6[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Sun Jan 19 13:15:23 2025 -0500
+
+    Soldier opening attack (#48)
+    
+    * There's one line that I put an if statement around
+    
+    * Remove merge code from Andrew's PR
+    
+    ---------
+    
+    Co-authored-by: Justin Ottesen <justinottesen@gmail.com>
+
+[33mcommit 371ecebfa88c8294e3f16264cb83dcd29bbb4d0f[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Sat Jan 18 17:23:17 2025 -0500
+
+    Soldier opening capture sprint2 (#47)
+    
+    * Fixing whitespace (hopefully)
+    
+    * merged soldier opening into sprint 2
+    
+    * merged soldier opening into sprint 2
+    
+    * refactored Justin's contested-stuff
+    
+    ---------
+    
+    Co-authored-by: Justin Ottesen <justinottesen@gmail.com>
+
+[33mcommit cc2b42da97928a19d51b679c41b3b8641466a413[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 14:38:32 2025 -0500
+
+    Fix SRP capture with wrong target
+
+[33mcommit 7f40f9ef024eab59d61a3d5fd9bb5c1858d2a012[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 14:16:07 2025 -0500
+
+    Add framework for contested ruins
+
+[33mcommit 6657fe1d1067cb48ee5b6c875878fe69f8a0498e[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Sat Jan 18 14:09:57 2025 -0500
+
+    starting soldiers capture towers
+
+[33mcommit 0e547e5cdc4e6546a33b00146e70ad6850193b77[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 14 01:54:25 2025 -0500
+
+    Fixing whitespace (hopefully)
+
+[33mcommit f3c087a635496dc055afd29b7720f730019aea0c[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 10:52:23 2025 -0500
+
+    Fixed SRP & out of vision ruin conflict
+
+[33mcommit 1cdfdd7fc11c10d8f0bc32810579d1a6eefb2675[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 10:21:36 2025 -0500
+
+    Remove use of secondary mark, fixed goal setting bug
+
+[33mcommit 4b3af8403dd8d0c4282bea6cff575c0b1d6263b8[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 09:57:26 2025 -0500
+
+    Fixed tower suicide bug
+
+[33mcommit f5fb4a2aacd5ddc3c1827665cf3ccfe588aa9fd3[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 01:06:29 2025 -0500
+
+    Add back in jottesen_test
+
+[33mcommit 31a951914a685c42ace1b37c37b368e54985f6bf[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 01:00:20 2025 -0500
+
+    Rename jottesen_test to sprint_2
+
+[33mcommit 2a76eebb4c05fb416cb7dcb71164538f34c11774[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 00:59:50 2025 -0500
+
+    Moppers help capture SRPs & bug fixes
+
+[33mcommit c14bcf69bed1513162c657c40ac5e857c9bacf6a[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sat Jan 18 00:03:57 2025 -0500
+
+    More required conditions to make SRP
+
+[33mcommit 3b6ff7a1eff34d248043528e88a2a3647ea2dcc7[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Fri Jan 17 22:45:07 2025 -0500
+
+    Initial SRP implementation
+
+[33mcommit 296a84ffdcd2fcd36a4e5e1e0535416d680f44dc[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Fri Jan 17 20:24:19 2025 -0500
+
+    Unroll loop to save bytecode
+
+[33mcommit 6fed9bf4a67c1a19ce1428f678b8ab81c72c24a3[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Fri Jan 17 20:08:42 2025 -0500
+
+    Add some TODOs
+
+[33mcommit 96630f0af8a1a2bcdd69db7c875c820bc68122fd[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Fri Jan 17 14:40:21 2025 -0500
+
+    Fixed 'shouldPaint' bug to allow attacking towers on non-paintable squares
+
+[33mcommit e42d8baa7aad5ee3920d865cd627828f014b76d0[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Fri Jan 17 10:53:04 2025 -0500
+
+    moppers are smarter capturers and swing now
+
+[33mcommit 487cb35a4c49331df819e0329d30d0ca0c69757d[m
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Fri Jan 17 11:49:31 2025 -0500
+
+    towers spawn logic optimized for openings
+
+[33mcommit 7d6f5337f409722a1b1b698aadca3d7596f9ea63[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 14 01:54:25 2025 -0500
+
+    Temporary crowd control
+
+[33mcommit 27fd92ec7c3b07770110a5b3f30dbdde832e0b92[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 14 01:40:12 2025 -0500
+
+    Added TODOs
+
+[33mcommit 6a502b7a0dfedea4704f40716bb34342b13e962d[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 14 01:17:18 2025 -0500
+
+    Added some more robot spawning
+
+[33mcommit 92edd761eab19fde331d1985fd70ec02c1482027[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 14 00:56:48 2025 -0500
+
+    Money towers suicide for paint, fixed Mopper explore & fixing ruins on refill
+
+[33mcommit 6a8603cb5b53e8a55cf69f37e44e0de6bb1b91a1[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Tue Jan 14 00:13:06 2025 -0500
+
+    Soldiers only paint over colors if goal is known now
+
+[33mcommit 8adcc8a36b20ebe78ff538d30a9cbc1a1013e72d[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 23:21:31 2025 -0500
+
+    Soldiers will only replace primary with secondary if they are SURE that is the goal color
+
+[33mcommit adff798e80b4a2a72204e83bd04251bb24b96352[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 23:20:57 2025 -0500
+
+    Soldiers don't get stuck at completed ruins anymore
+
+[33mcommit de0af6d59d59916a4d97dbc823514235087a962e[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 23:09:45 2025 -0500
+
+    Fixed exploring
+
+[33mcommit 71f659d8fa229c157e662841e46d19921333819e[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 22:50:34 2025 -0500
+
+    Improve robot spawning
+
+[33mcommit 83ce65ffca631c4346f97359e541f7673e6e7592[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 22:12:43 2025 -0500
+
+    Refactored goals & replaced IDLE with EXPLORE
+
+[33mcommit 433b75996d1176aa921253a3a658a82c07d0da9b[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 21:13:51 2025 -0500
+
+    Improved capture for soldier and mopper
+
+[33mcommit 41a2f804fc755eba62ea8069284d774eefdc2c66[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 21:13:36 2025 -0500
+
+    Greedy improvement
+
+[33mcommit 57a7446780756cc5f541b53f313f1be332f3dfdf[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 18:41:13 2025 -0500
+
+    Modify pathfinding to have more paint preferences
+
+[33mcommit bac717278eb9293305f2e14c67a985714a32437c[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 17:37:38 2025 -0500
+
+    Improved mopper micro
+
+[33mcommit d92e22fcf45dbeaddc06e3378e02b9f5a34ec63d[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 16:46:11 2025 -0500
+
+    Added base mopper micro
+
+[33mcommit 2601f4bf6771e4554c11de04039b799429dda80c[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 16:22:11 2025 -0500
+
+    mapData updates visible ruins each turn
+
+[33mcommit 4a8c9ec49279f80a3d543bb12e2b72fb18f56e29[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 16:00:38 2025 -0500
+
+    Fixed pathfinding to deal with body blockers
+
+[33mcommit 5b5c5574f8cf62f2fc1c58863289ebea889f1728[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 15:49:57 2025 -0500
+
+    Soldiers refill paint when they are low
+
+[33mcommit 250dfae1dd27decc774b6d008c1149a9832c7c0e[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 15:27:11 2025 -0500
+
+    Set up comms basics & restructured
+
+[33mcommit 683c780acdea2c856272871b0d0aed4f5f2652b5[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Mon Jan 13 13:44:00 2025 -0500
+
+    Added basic painting logic
+
+[33mcommit b181f56efe83625c82a0aa4511c15547ad0e5e58[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 12 20:36:51 2025 -0500
+
+    Added paint to mapdata
+
+[33mcommit 70c4a48e1409570370539b7e37f1c65f9a1d8763[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 12 20:07:28 2025 -0500
+
+    Added ruins info to mapdata
+
+[33mcommit f6c26a469a9729c2156f1fbb11c02f320ba4f87b[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 12 18:24:12 2025 -0500
+
+    Fixed pathfinding caching bug
+
+[33mcommit 6ead66ca2b633bfc0c2245a73bceb3cae309e101[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 12 18:02:38 2025 -0500
+
+    mapData only updated for newly visible squares
+
+[33mcommit 4c59f4eafde6224d385af8702c7a960f31bc2b95[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 12 17:03:02 2025 -0500
+
+    Added symmetry calculations
+
+[33mcommit d2dd8f978461875dddf5f7fe9b98da90ab7fa9b4[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 12 15:34:50 2025 -0500
+
+    Added cache for pathfinding steps
+
+[33mcommit 717158af4e88f27c4cffc9fa6c27de2ad4404535[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Sun Jan 12 14:35:35 2025 -0500
+
+    Added pathfinding
+
+[33mcommit c4bfa6b6836b06dbe0705038ff0c082fd24b3ef0[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Fri Jan 10 19:41:47 2025 -0500
+
+    Added tower round 1 spawning logic
+
+[33mcommit 20b5a494c88a68744609f735b8ece5650b2c2806[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Fri Jan 10 19:19:39 2025 -0500
+
+    Towers attack enemy units
+
+[33mcommit ac92978b8d34cdcd714f8d5ffd816d25a04a058d[m
+Author: Justin Ottesen <justinottesen@gmail.com>
+Date:   Fri Jan 10 18:46:45 2025 -0500
+
+    Add jottesen/test setup
+
+[33mcommit 1fbf5442895677e4e16106e24a79514ae5e51ff8[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Mon Jan 13 17:21:14 2025 -0500
+
+    Resource Pattern (#39)
+    
+    * Captures money towers without marks
+    
+    * capture resource patterns
+    
+    ---------
+    
+    Co-authored-by: Matthew Voynovich <143434817+mvoynovich@users.noreply.github.com>
+
+[33mcommit b496d7b55d32a46f11a2067fafcf6bc0b34c5a05[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Mon Jan 13 17:08:06 2025 -0500
+
+    Captures money towers without marks (#38)
+
+[33mcommit 21f5b6d0a6abdf3cdadbf43a56a9208f1d6c831e[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Mon Jan 13 17:07:14 2025 -0500
+
+    reduced micro mapinfo radius to sqrt2 (#37)
+
+[33mcommit cadd0efd1e06e031e181a6f75acd444e971ddcdd[m
+Merge: acb1642 9677897
+Author: Andrew Bank <banka@rpi.edu>
+Date:   Fri Jan 10 11:29:27 2025 -0500
+
+    Merge branch 'main' of https://github.com/justinottesen/battlecode25
+
+[33mcommit 9677897e22d7f7589c67279e82268b79ef07ff19[m
+Author: Andrew Bank <122238344+andrewkbank@users.noreply.github.com>
+Date:   Fri Jan 10 11:29:05 2025 -0500
+
+    soldiers more efficiently capture/rebuild towers (#35)
+    
+    * soldiers more efficiently capture/rebuild towers
+    
+    * removed nullpointerexceptions
+    
+    * Squashed commit of the following:
+    
+    commit 3eb7440a2e9163f0e4e4ecd946466c1c6a1c09cb
+    Author: Matthew Voynovich <143434817+mvoynovich@users.noreply.github.com>
+    Date:   Fri Jan 10 11:23:11 2025 -0500
+    
+        Added Clause for first turn towers not disintigrating (#36)
+    
+        * Added Clause for first turn towers not disintigrating
+    
+        * Make sure only money towers disintegrate

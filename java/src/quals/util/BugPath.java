@@ -58,7 +58,10 @@ public class BugPath {
         }
     }
 
-    public static void moveTo(MapLocation target){
+    public static void moveTo(MapLocation target) throws GameActionException {
+
+        // Bugpath hasn't been initialized yet (turn 1)
+        if (states == null) { MovementManager.move(Pathfinding.getGreedyMove(target)); return; }
 
         //Robot.bytecodeDebug += "BC_BUG_BEGIN = " + Clock.getBytecodeNum() + " ";
 

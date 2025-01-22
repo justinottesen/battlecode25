@@ -43,7 +43,7 @@ public class GoalManager {
    * Pops a goal off the stack, setting the next goal as the active goal, or
    * if no other goal is present, the default goal of explore
    */
-  public static void popGoal() { popGoal(new Goal(Goal.Type.EXPLORE, MapData.getExploreTarget())); }
+  public static void popGoal() { popGoal(null); }
 
   /**
    * Pops a goal off the stack, setting the next goal as the 
@@ -52,7 +52,7 @@ public class GoalManager {
    */
   public static void popGoal(Goal fallback) {
     goalStack.pop();
-    if (goalStack.empty()) { goalStack.push(fallback); }
+    if (goalStack.empty()) { goalStack.push(fallback == null ? new Goal(Goal.Type.EXPLORE, MapData.getExploreTarget()) : fallback); }
   }
 
   /**

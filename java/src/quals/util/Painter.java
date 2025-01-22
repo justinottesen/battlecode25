@@ -251,15 +251,18 @@ public class Painter {
     }
 
 
-    // If we are standing in the ruin, prioritize paint under our feet
-    int my_x_offset = current.x - low_x;
-    int my_y_offset = current.y - low_y;
-    if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
-        my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
-      paint(current);
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        paint(current);
+      }
     }
   
     boolean jobComplete = true;
+    boolean enemyPaintSeen = false;
     // Try painting the rest of the ruin
     for (MapLocation loc : paintCache) {
       if (loc.equals(cacheLoc)) { continue; }
@@ -267,7 +270,10 @@ public class Painter {
       // Only interested in ally, empty, or unknown paint
       if (Robot.rc.canSenseLocation(loc)) {
         PaintType paint = Robot.rc.senseMapInfo(loc).getPaint();
-        if (paint.isEnemy() || (paint.isAlly() && (paint.isSecondary() == MapData.useSecondaryPaint(loc)))) { continue; }
+        if (paint.isEnemy() || (paint.isAlly() && (paint.isSecondary() == MapData.useSecondaryPaint(loc)))) {
+          if (paint.isEnemy()) { enemyPaintSeen = true; }
+          continue;
+        }
       }
       if (jobComplete) { Robot.rc.setIndicatorDot(loc, 0, 255, 0); }
       else { Robot.rc.setIndicatorDot(loc, 255, 0, 0); }
@@ -293,7 +299,8 @@ public class Painter {
       return true;
     }
 
-    return jobComplete;
+    // In this case, we go to get reinforcements
+    return jobComplete && enemyPaintSeen;
   }
 
   /**
@@ -403,11 +410,13 @@ public class Painter {
     }
 
     // If we are standing in the ruin, prioritize paint under our feet
-    int my_x_offset = current.x - low_x;
-    int my_y_offset = current.y - low_y;
-    if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
-        my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
-      mop(current);
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        mop(current);
+      }
     }
     
     boolean jobComplete = true;

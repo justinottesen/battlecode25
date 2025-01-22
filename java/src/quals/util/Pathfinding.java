@@ -9,7 +9,7 @@ import battlecode.common.*;
  */
 public class Pathfinding {
 
-  public static void moveTo(MapLocation target){
+  public static void moveTo(MapLocation target) throws GameActionException {
       BugPath.moveTo(target);
   }
 

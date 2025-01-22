@@ -34,7 +34,8 @@ public final class Splasher extends Robot {
 
     // If low on paint, set goal to refill
     if (GoalManager.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
+      MapLocation tower = MapData.closestFriendlyTower();
+      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, tower == null ? Robot.spawnTower : tower);
     }
 
     // Look for nearby ruins if we aren't already fighting a tower

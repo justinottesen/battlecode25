@@ -90,18 +90,23 @@ public class MapData {
     DEFENSE_ARRAY = Robot.rc.getTowerPattern(UnitType.LEVEL_ONE_DEFENSE_TOWER);
 
     mapData = new int[MAP_WIDTH * MAP_HEIGHT];
-    knownRuins = new int[MAP_WIDTH / GameConstants.PATTERN_SIZE * MAP_HEIGHT / GameConstants.PATTERN_SIZE];
+    knownRuins = new int[(MAP_WIDTH / GameConstants.PATTERN_SIZE + 1) * (MAP_HEIGHT / GameConstants.PATTERN_SIZE + 1)];
   }
 
   /**
    * Checks all visible squares around the robot and adds their information to the
    * mapData grid.
-   * 
    */
   public static void updateAllVisible() throws GameActionException {
     foundSRP = null;
+    // Update the towers first to save bytecode
+    for (RobotInfo info : Robot.rc.senseNearbyRobots(GameConstants.BUILD_ROBOT_RADIUS_SQUARED, Robot.TEAM)) {
+      if (!info.getType().isTowerType()) { continue; }
+      updateData(Robot.rc.senseMapInfo(info.getLocation()), false);
+      break;
+    }
     for (MapInfo info : Robot.rc.senseNearbyMapInfos()) {
-      updateData(info);
+      updateData(info, true);
     }
   }
 
@@ -190,7 +195,16 @@ public class MapData {
    * 
    * @param info The `MapInfo` of the tile to be updated
    */
-  public static void updateData(MapInfo info) throws GameActionException {
+  public static void updateData(MapInfo info) throws GameActionException { updateData(info, false); }
+
+  /**
+   * Takes the info for a single space and updates the robot's knowledge with
+   * that information.
+   * 
+   * @param info The `MapInfo` of the tile to be updated
+   * @param cheap Whether we want to skip the expensive portions (e.g. updateAllVisible)
+   */
+  public static void updateData(MapInfo info, boolean cheap) throws GameActionException {
     // Update this square
     MapLocation loc = info.getMapLocation();
     Robot.rc.setIndicatorDot(loc, 255, 0, 0);
@@ -198,12 +212,16 @@ public class MapData {
 
     // First time seeing square
     if (mapData[index] == 0) {
-      if (info.hasRuin()) { mapData[index] = RUIN; knownRuins[ruinIndex++] = index; }
+      if (info.hasRuin()) {
+        mapData[index] = (RUIN | UNCLAIMED_RUIN);
+        knownRuins[ruinIndex++] = index;
+        setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
+      }
       else if (info.isWall()) { mapData[index] = WALL; }
       else { mapData[index] = EMPTY; }
       
       // If symmetry is not known, try to figure it out
-      if (!symmetryKnown() && Robot.rc.getRoundNum() > 2) {
+      if (!symmetryKnown() && !cheap) {
         if ((symmetryType & HORIZONTAL) > 0) {
           int h_index = symmetryIndex(index, HORIZONTAL);
           if (mapData[h_index] != UNKNOWN && mapData[h_index] != mapData[index]) {
@@ -237,13 +255,15 @@ public class MapData {
         if (info.hasRuin()) { knownRuins[ruinIndex++] = index; }
       }
     }
+
+    if (cheap) { return; }
     
     // If it is a ruin or empty, more info can be gathered
     if ((mapData[index] & TILE_TYPE_BITMASK) == RUIN) {
       Robot.rc.setIndicatorDot(loc, 0, 255, 0);
       RobotInfo towerInfo = Robot.rc.senseRobotAtLocation(loc);
+      mapData[index] &= ~TOWER_TYPE_BITMASK;
       if (towerInfo != null) {
-        mapData[index] &= ~TOWER_TYPE_BITMASK;
         mapData[index] |= switch (towerInfo.getType().getBaseType()) {
           case UnitType.LEVEL_ONE_DEFENSE_TOWER -> DEFENSE_TOWER;
           case UnitType.LEVEL_ONE_PAINT_TOWER -> PAINT_TOWER;
@@ -259,7 +279,7 @@ public class MapData {
       } else {
         mapData[index] |= UNCLAIMED_RUIN;
         // TODO: Put this elsewhere and add logic for different tower types
-        setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
+        // setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
     } else if ((mapData[index] & TILE_TYPE_BITMASK) == EMPTY) {
       if (info.isResourcePatternCenter()) {
@@ -611,122 +631,122 @@ public class MapData {
     };
     // Set the goal paint types - Unroll loop for bytecode
     int index = getIndex(loc.x - (GameConstants.PATTERN_SIZE / 2), loc.y - (GameConstants.PATTERN_SIZE / 2));
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[0][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[1][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[2][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[3][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[4][0]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[0][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[1][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[2][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[3][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[4][1]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[0][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[1][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     index += 2;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[3][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[4][2]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[0][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[1][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[2][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[3][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[4][3]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     index += MAP_WIDTH - GameConstants.PATTERN_SIZE + 1;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[0][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[1][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[2][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[3][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
     ++index;
-    mapData[index] |= GOAL_COLOR_KNOWN;
+    mapData[index] |= (GOAL_COLOR_KNOWN | EMPTY);
     if (pattern[4][4]) { mapData[index] |= GOAL_SECONDARY_PAINT; }
     else { mapData[index] &= ~GOAL_SECONDARY_PAINT; }
 
@@ -757,20 +777,31 @@ public class MapData {
    * @return The closest unexplored center of a chunk
    */
   public static MapLocation getExploreTarget() {
-    MapLocation closest = null;
-    int closest_dist = MAX_DISTANCE_SQ;
-    for (int x = EXPLORE_CHUNK_SIZE / 2; x < MAP_WIDTH; x += EXPLORE_CHUNK_SIZE) {
-      for (int y = EXPLORE_CHUNK_SIZE / 2; y < MAP_HEIGHT; y += EXPLORE_CHUNK_SIZE) {
-        if ((readData(x, y) & LAST_UPDATED_BITMASK) != 0) { continue; }
-        MapLocation newLoc = new MapLocation(x, y);
-        int dist = Robot.rc.getLocation().distanceSquaredTo(newLoc);
-        if (dist < closest_dist) {
-          closest = newLoc;
-          closest_dist = dist;
+    int startX = Robot.rng.nextInt(MAP_WIDTH / EXPLORE_CHUNK_SIZE - 1) * EXPLORE_CHUNK_SIZE + EXPLORE_CHUNK_SIZE / 2;
+    int startY = Robot.rng.nextInt(MAP_HEIGHT / EXPLORE_CHUNK_SIZE - 1) * EXPLORE_CHUNK_SIZE + EXPLORE_CHUNK_SIZE / 2;
+
+    try { Robot.rc.setIndicatorDot(new MapLocation(startX, startY), 255, 255, 0); } catch (Exception e) { e.printStackTrace(); }
+    
+    int x = startX;
+    int y = startY;
+    
+    do {
+      if ((readData(x, y) & LAST_UPDATED_BITMASK) == 0) { return new MapLocation(x, y); }
+      
+      // Increment to next
+      x += EXPLORE_CHUNK_SIZE;
+      if (x >= MAP_WIDTH) {
+        x -= MAP_WIDTH;
+        y += EXPLORE_CHUNK_SIZE;
+        if (y >= MAP_HEIGHT) {
+          y -= MAP_WIDTH;
         }
+        try { Robot.rc.setIndicatorDot(new MapLocation(x, y), 0, 255, 255); } catch (Exception e) { e.printStackTrace(); }
+
       }
-    }
-    return closest != null ? closest : MAP_CENTER; //. TODO: Make this better and such. This avoids null pointer stuff once we explore the whole map
+    } while (x != startX || y != startY);
+
+    return MAP_CENTER;
   }
 
   /**

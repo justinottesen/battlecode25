@@ -70,13 +70,6 @@ public final class Soldier extends Robot {
 
     // UPDATE GOAL ------------------------------------------------------------
 
-    // Update any close ruins sites (skip the first few rounds to save bytecode)
-    if (rc.getRoundNum() > 10) {
-      for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-        MapData.updateData(rc.senseMapInfo(ruin));
-      }
-    }
-
     // Check for a suicide message, if received this is priority number 1
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
@@ -108,7 +101,7 @@ public final class Soldier extends Robot {
     }
 
     // If received paint transfer from mopper, update goal
-    if (GoalManager.current().type.v < Goal.Type.REFILL_PAINT.v && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+    if (GoalManager.current().type == Goal.Type.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       GoalManager.popGoal();
     }
 
@@ -118,7 +111,8 @@ public final class Soldier extends Robot {
     if (GoalManager.current().type.v < Goal.Type.REFILL_PAINT.v && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       // After refill, we want to explore back to our previous location in case we find something better along the way
       GoalManager.replaceTopGoal(Goal.Type.EXPLORE, GoalManager.current().target);
-      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
+      MapLocation tower = MapData.closestFriendlyTower();
+      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, tower == null ? Robot.spawnTower : tower);
     }
 
     // Look for nearby ruins if we aren't already fighting a tower
@@ -191,7 +185,8 @@ public final class Soldier extends Robot {
               }
             }
             if (!foundMopper) {
-              GoalManager.pushGoal(Goal.Type.GET_BACKUP, MapData.closestFriendlyTower());
+              MapLocation tower = MapData.closestFriendlyTower();
+              GoalManager.pushGoal(Goal.Type.GET_BACKUP, tower == null ? Robot.spawnTower : tower);
             }
           }
         }
@@ -206,7 +201,8 @@ public final class Soldier extends Robot {
               rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
               tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
-              GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
+              MapLocation friendTower = MapData.closestFriendlyTower();
+              GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendTower == null ? Robot.spawnTower : friendTower);
               return;
             }
           }
@@ -468,7 +464,9 @@ public final class Soldier extends Robot {
     //another tiebreaker: distance to nearest allied tower:
     if(Clock.getBytecodesLeft()>500){
       MapLocation nearestAlliedTower = MapData.closestFriendlyTower();
-      directionScores[currentLoc.directionTo(nearestAlliedTower).getDirectionOrderNum()] += 10;
+      if (nearestAlliedTower != null) {
+        directionScores[currentLoc.directionTo(nearestAlliedTower).getDirectionOrderNum()] += 10;
+      }
     }
 
     //now pick the best direction

@@ -38,13 +38,6 @@ public final class Mopper extends Robot {
 
     // UPDATE GOAL ------------------------------------------------------------
 
-    // Update any close ruins sites (skip the first few rounds to save bytecode)
-    if (rc.getRoundNum() > 10) {
-      for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-        MapData.updateData(rc.senseMapInfo(ruin));
-      }
-    }
-
     // Check for a suicide message, if received this is priority number 1
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
@@ -66,7 +59,8 @@ public final class Mopper extends Robot {
     // If low on paint, set goal to refill
     // TODO: refill paint has bug, robots sometimes sit near tower with refill paint goal
     if (GoalManager.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
+      MapLocation tower = MapData.closestFriendlyTower();
+      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, tower == null ? spawnTower : tower);
     }
 
     // Look for nearby ruins if we aren't already refilling paint
@@ -138,7 +132,8 @@ public final class Mopper extends Robot {
               rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
               tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
-              GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, MapData.closestFriendlyTower());
+              MapLocation friendlyTower = MapData.closestFriendlyTower();
+              GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? spawnTower : friendlyTower);
               return;
             }
           }

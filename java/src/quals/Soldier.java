@@ -81,7 +81,8 @@ public final class Soldier extends Robot {
     Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
     for (Message m : messages) {
       if (Communication.getMessageType(m.getBytes()) == Communication.SUICIDE) {
-        System.out.println("Received suicide message");
+        //System.out.println("Received suicide message");
+        rc.setIndicatorString("Received suicide message");
         GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
         Painter.paintCaptureRuin();
       }

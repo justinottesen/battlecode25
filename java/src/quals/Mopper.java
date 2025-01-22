@@ -59,7 +59,7 @@ public final class Mopper extends Robot {
     // If low on paint, set goal to refill
     // TODO: refill paint has bug, robots sometimes sit near tower with refill paint goal
     if (GoalManager.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      MapLocation tower = MapData.closestFriendlyTower();
+      MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
       GoalManager.pushGoal(Goal.Type.REFILL_PAINT, tower == null ? spawnTower : tower);
     }
 
@@ -132,15 +132,23 @@ public final class Mopper extends Robot {
               rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
               tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
-              MapLocation friendlyTower = MapData.closestFriendlyTower();
+              MapLocation friendlyTower = MapData.closestFriendlyTower(emptyTowers);
               GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? spawnTower : friendlyTower);
-              return;
+              break;
             }
           }
+          // Don't take paint from towers that are low on paint
+          if (tower.getPaintAmount() < UnitType.SOLDIER.paintCost) {
+            emptyTowers += tower.getLocation().toString();
+            MapLocation friendlyTower = MapData.closestFriendlyTower(emptyTowers);
+            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? spawnTower : friendlyTower);
+            break;
+          }
           int paintAmount = rc.getType().paintCapacity - rc.getPaint();
-          if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
+          if (tower.getPaintAmount() - UnitType.SOLDIER.paintCost < paintAmount) { paintAmount = tower.getPaintAmount() - UnitType.SOLDIER.paintCost; }
           if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
             rc.transferPaint(GoalManager.current().target, -paintAmount);
+            emptyTowers = "";
             GoalManager.popGoal();
           }
         }

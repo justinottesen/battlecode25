@@ -112,7 +112,7 @@ public final class Soldier extends Robot {
     if (GoalManager.current().type.v < Goal.Type.REFILL_PAINT.v && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       // After refill, we want to explore back to our previous location in case we find something better along the way
       GoalManager.replaceTopGoal(Goal.Type.EXPLORE, GoalManager.current().target);
-      MapLocation tower = MapData.closestFriendlyTower();
+      MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
       GoalManager.pushGoal(Goal.Type.REFILL_PAINT, tower == null ? Robot.spawnTower : tower);
     }
 
@@ -186,7 +186,7 @@ public final class Soldier extends Robot {
               }
             }
             if (!foundMopper) {
-              MapLocation tower = MapData.closestFriendlyTower();
+              MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
               GoalManager.pushGoal(Goal.Type.GET_BACKUP, tower == null ? Robot.spawnTower : tower);
             }
           }
@@ -202,16 +202,24 @@ public final class Soldier extends Robot {
               rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
               tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
-              MapLocation friendTower = MapData.closestFriendlyTower();
+              MapLocation friendTower = MapData.closestFriendlyTower(emptyTowers);
               GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendTower == null ? Robot.spawnTower : friendTower);
               return;
             }
           }
+          // Don't take paint from towers that are low on paint
+          if (tower.getPaintAmount() < UnitType.SOLDIER.paintCost) {
+            emptyTowers += tower.getLocation().toString();
+            MapLocation friendlyTower = MapData.closestFriendlyTower(emptyTowers);
+            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? spawnTower : friendlyTower);
+            break;
+          }
           int paintAmount = rc.getType().paintCapacity - rc.getPaint();
-          if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
+          if (tower.getPaintAmount() - UnitType.SOLDIER.paintCost < paintAmount) { paintAmount = tower.getPaintAmount() - UnitType.SOLDIER.paintCost; }
           if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
             rc.transferPaint(GoalManager.current().target, -paintAmount);
             Goal.Type prevGoalType = GoalManager.current().type;
+            emptyTowers = "";
             GoalManager.popGoal();
             if (prevGoalType == Goal.Type.GET_BACKUP) {
               int message = Communication.REQUEST_MOPPER;

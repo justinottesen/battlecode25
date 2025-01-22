@@ -563,6 +563,37 @@ public class MapData {
   }
 
   /**
+   * Returns the closest known friendly tower that isn't in the "ignore" list
+   * @return The loctaion of the closest known friendly tower that fits
+   */
+  public static MapLocation closestFriendlyTower(String ignore) {
+    if (ruinIndex == 0) { return null; }
+    MapLocation current = Robot.rc.getLocation();
+    MapLocation closestTower = null;
+    int closestDist = 0;
+    for (int i = 0; i < ruinIndex; ++i) {
+      try {
+          Robot.rc.setIndicatorLine(Robot.rc.getLocation(), getLoc(knownRuins[i]), 255, 255, 0);
+      } catch (Exception e) {
+        
+      }
+      if (!isFriendlyTower(knownRuins[i]) || ignore.contains(getLoc(knownRuins[i]).toString())) { continue; }
+      try {
+          Robot.rc.setIndicatorLine(Robot.rc.getLocation(), getLoc(knownRuins[i]), 0, 255, 255);
+      } catch (Exception e) {
+        
+      }
+      MapLocation towerLoc = getLoc(knownRuins[i]);
+      int ruinDist = current.distanceSquaredTo(towerLoc);
+      if (closestTower == null || ruinDist < closestDist) {
+        closestTower = towerLoc;
+        closestDist = ruinDist;
+      }
+    }
+    return closestTower;
+  }
+
+  /**
    * Returns the closest known enemy tower to the robot
    * @return The location of the closest known enemy tower
    */

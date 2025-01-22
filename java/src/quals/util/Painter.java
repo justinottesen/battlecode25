@@ -149,8 +149,19 @@ public class Painter {
     int enemyRange = enemy.getType().actionRadiusSquared;
     int myRange = Robot.rc.getType().actionRadiusSquared;
 
+    //only move in if we have high health or a partner soldier
+    RobotInfo[] teammates = Robot.rc.senseNearbyRobots(enemy.getLocation(),20,Robot.rc.getTeam());
+    boolean nearbyPartnerSoldier = false;
+    for(RobotInfo teammate : teammates){
+      if(teammate.getType()==UnitType.SOLDIER){
+        nearbyPartnerSoldier=true;
+        break;
+      }
+    }
+    boolean highHealth = Robot.rc.getHealth()>30;
+
     // If we can't attack move in (and only on even number turns so synchronized with other robots)
-    if (distance_sq > myRange && Robot.rc.isMovementReady() && Robot.rc.isActionReady() && Robot.rc.getRoundNum() % 2 == 0) {
+    if (distance_sq > myRange && Robot.rc.isMovementReady() && Robot.rc.isActionReady() && Robot.rc.getRoundNum() % 2 == 0 && (nearbyPartnerSoldier||highHealth)) {
       Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ALLY_ONLY);
       if (moveIn == null || !Robot.rc.getLocation().add(moveIn).isWithinDistanceSquared(enemyLoc, myRange)) {
         moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.NO_ENEMY);

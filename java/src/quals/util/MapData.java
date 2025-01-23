@@ -116,7 +116,7 @@ public class MapData {
    */
   public static void updateVisibleRuins() throws GameActionException {
     for (int i = 0; i < ruinIndex; ++i) {
-      MapLocation loc = getLoc(i);
+      MapLocation loc = getLoc(knownRuins[i]);
       if (Robot.rc.canSenseLocation(loc)) {
         updateData(Robot.rc.senseMapInfo(loc));
       }
@@ -215,7 +215,7 @@ public class MapData {
       if (info.hasRuin()) {
         mapData[index] = (RUIN | UNCLAIMED_RUIN);
         knownRuins[ruinIndex++] = index;
-        setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
+          setGoalTowerType(index, UnitType.LEVEL_ONE_MONEY_TOWER);
       }
       else if (info.isWall()) { mapData[index] = WALL; }
       else { mapData[index] = EMPTY; }

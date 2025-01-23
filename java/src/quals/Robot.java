@@ -51,11 +51,6 @@ public abstract class Robot {
       MapData.updateVisibleRuins();
     }
     Goal.Type currentGoalType = GoalManager.current().type;
-    if ((currentGoalType == Goal.Type.REFILL_PAINT || currentGoalType == Goal.Type.GET_BACKUP) && 
-        !MapData.isFriendlyTower(GoalManager.current().target)) {
-      MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
-      GoalManager.replaceTopGoal(currentGoalType, tower == null ? spawnTower : tower);
-    }
     doMicro(); // Act based on immediate surroundings
     doMacro(); // Secondarily act to achieve big picture goal
     ++turnNum;

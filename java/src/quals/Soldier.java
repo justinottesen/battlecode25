@@ -75,7 +75,8 @@ public final class Soldier extends Robot {
     for (Message m : messages) {
       switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
         case Communication.SUICIDE:
-          GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
+          GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, Communication.getCoordinates(m.getBytes()));
+          Robot.rc.setIndicatorString("Received Suicide message " + Communication.getCoordinates(m.getBytes()));
           break;
         default:
           System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
@@ -146,7 +147,7 @@ public final class Soldier extends Robot {
     }
 
     // Look for nearby ruins if we aren't already fighting a tower
-    if (GoalManager.current().type.v < Goal.Type.FIGHT_TOWER.v) {
+    if (GoalManager.current().type.v < Goal.Type.FIGHT_TOWER.v && rc.getHealth() >= 30) {
       boolean setGoal = false;
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
@@ -194,6 +195,11 @@ public final class Soldier extends Robot {
         if (!rc.canSenseRobotAtLocation(GoalManager.current().target) || rc.senseRobotAtLocation(GoalManager.current().target).getTeam() != OPPONENT) {
           GoalManager.setNewGoal(Goal.Type.CAPTURE_RUIN, GoalManager.current().target);
         }
+        // If health is too low and no friends around, stop fighting and explore
+        if (rc.getHealth() < 30 && rc.senseNearbyRobots(rc.getType().actionRadiusSquared, TEAM).length == 0) {
+          rc.setIndicatorString("HP Low, Popping goal");
+          GoalManager.popGoal();
+        }
         break;
       case CAPTURE_SRP:
         if (Painter.paintCaptureSRP()) {
@@ -231,6 +237,7 @@ public final class Soldier extends Robot {
               rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
               tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
+              emptyTowers += GoalManager.current().target;
               MapLocation friendTower = MapData.closestFriendlyTower(emptyTowers);
               GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendTower == null ? Robot.spawnTower : friendTower);
               return;
@@ -279,29 +286,31 @@ public final class Soldier extends Robot {
   private void opening() throws GameActionException {
     boolean isExploring = GoalManager.current().type == Goal.Type.CAPTURE_RUIN; //note that the for loop can set the GoalManager, I want to remember what it had before we enter the for loop
     MapLocation closestRuin = null;
-    // Update any close ruins sites
-    for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-      MapData.updateData(rc.senseMapInfo(ruin));
-      RobotInfo tower = rc.senseRobotAtLocation(ruin);
-      if(tower!=null){
-        if(tower.getTeam()==rc.getTeam().opponent()){
-          //enemy tower, attack!
-          GoalManager.pushGoal(Goal.Type.FIGHT_TOWER,tower.getLocation());
-          goalTower = tower;
-          //if we're attacking a tower, assume that's all we're doing (we don't care about any other opening logic)
-          break;
-        }else{
-          //ally tower (probably the spawn tower), we don't care
-          continue;
+    // Update any close ruins sites if we don't have a goal already
+    if (goalTower == null) {
+      for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
+        MapData.updateData(rc.senseMapInfo(ruin));
+        RobotInfo tower = rc.senseRobotAtLocation(ruin);
+        if(tower!=null){
+          if(tower.getTeam()==rc.getTeam().opponent()){
+            //enemy tower, attack!
+            GoalManager.pushGoal(Goal.Type.FIGHT_TOWER,tower.getLocation());
+            goalTower = tower;
+            //if we're attacking a tower, assume that's all we're doing (we don't care about any other opening logic)
+            break;
+          }else{
+            //ally tower (probably the spawn tower), we don't care
+            continue;
+          }
         }
-      }
-      if(isExploring) continue;
-      if(MapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
-      if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
-        closestRuin = ruin;
-        GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN,ruin);
-      }else if(!GoalManager.contains(Goal.Type.CAPTURE_RUIN,ruin)){
-        GoalManager.pushSecondaryGoal(Goal.Type.CAPTURE_RUIN,ruin);
+        if(isExploring) continue;
+        if(MapData.isContested(ruin)) continue; //ignore any ruins with enemy paint that we've already seen
+        if(closestRuin == null || rc.getLocation().distanceSquaredTo(ruin)<rc.getLocation().distanceSquaredTo(closestRuin)){
+          closestRuin = ruin;
+          GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN,ruin);
+        }else if(!GoalManager.contains(Goal.Type.CAPTURE_RUIN,ruin)){
+          GoalManager.pushSecondaryGoal(Goal.Type.CAPTURE_RUIN,ruin);
+        }
       }
     }
 
@@ -409,13 +418,19 @@ public final class Soldier extends Robot {
 
     //fill enemyTowerString with a for loop
     for (MapLocation ruin : nearbyRuins){
-      if(rc.senseRobotAtLocation(ruin)!=null && rc.senseRobotAtLocation(ruin).getTeam()==rc.getTeam().opponent()){
+      RobotInfo ruinInfo = rc.senseRobotAtLocation(ruin);
+      if (ruinInfo == null) { continue; }
+      if(ruinInfo.getTeam()==rc.getTeam().opponent()){
         //add to enemyTowerString
         //note, we can't use maplocation.toString() here because toString will result in strings of variable length ie: "(1,0)" doesn't have the same length as "(51,24)"
         //we use a string bc it's a low-bytecode resizable array
         enemyTowerString += (char) ruin.x;
         enemyTowerString += (char) ruin.y;
         enemyTowerString += (char) 69;  //hope that no map exceeds 68x68 cuz its funny
+      } else {
+        // We found a friendly tower, explore in that direction
+        GoalManager.setNewGoal(Goal.Type.EXPLORE, ruin);
+        return;
       }
     }
 

@@ -13,7 +13,7 @@ public final class Tower extends Robot {
   int lastSeenEnemyRound = -1;
   private final int LAST_SEEN_SUICIDE_THRESHOLD = 50;
 
-  private final int PAINT_SUICIDE_THRESHOLD = 50;
+  private final int PAINT_SUICIDE_THRESHOLD = 100;
 
   public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
@@ -34,7 +34,7 @@ public final class Tower extends Robot {
     }
 
     // If no enemies in a while, spend paint and try to suicide for more
-    if (rc.getRoundNum() - lastSeenEnemyRound > LAST_SEEN_SUICIDE_THRESHOLD && // In a safe location
+    if (rc.getRoundNum() - lastSeenEnemyRound > LAST_SEEN_SUICIDE_THRESHOLD  && // In a safe location
         rc.getPaint() >= 100 && // Leftover paint
         rc.getChips() > rc.getType().moneyCost * 10 && // HELLA chips
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER)) {

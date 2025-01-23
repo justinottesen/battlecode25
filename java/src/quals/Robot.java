@@ -53,6 +53,8 @@ public abstract class Robot {
     Goal.Type currentGoalType = GoalManager.current().type;
     doMicro(); // Act based on immediate surroundings
     doMacro(); // Secondarily act to achieve big picture goal
+    MapData.lookForFrontsToAdd();
+    MapData.analyzeExistingFronts();
     ++turnNum;
   }
 

@@ -98,16 +98,23 @@ public final class Splasher extends Robot {
         }
         break;
       case EXPLORE:
-        if (rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.VISION_RADIUS_SQUARED)) {
+        MapLocation front = MapData.getNearestFront();
+        if(front!=null && GoalManager.current().target!=front){
+          GoalManager.replaceTopGoal(Goal.Type.EXPLORE,front);
+          rc.setIndicatorDot(front,255,255,0);
+        }else if (rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.VISION_RADIUS_SQUARED)) {
           MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
           GoalManager.replaceTopGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
-        }else{
+        }
+        /*
+        else{
           //prioritize exploring towards enemy towers
           MapLocation closestEnemyTower = MapData.closestEnemyTower();
           if(closestEnemyTower!=null && GoalManager.current().target != closestEnemyTower){
             GoalManager.replaceTopGoal(Goal.Type.EXPLORE,closestEnemyTower);
           }
         } 
+        */
         break;
       default: break;
     }

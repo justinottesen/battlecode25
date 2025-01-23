@@ -23,6 +23,9 @@ public class MapData {
   private static boolean[][] PAINT_ARRAY;
   private static boolean[][] MONEY_ARRAY;
   private static boolean[][] DEFENSE_ARRAY;
+  
+  private static String activeFronts;
+  private static String inactiveFronts;
 
   public static MapLocation foundSRP = null; // TODO: REMOVE THIS TEMPORARY WORKAROUND
 
@@ -91,6 +94,9 @@ public class MapData {
 
     mapData = new int[MAP_WIDTH * MAP_HEIGHT];
     knownRuins = new int[(MAP_WIDTH / GameConstants.PATTERN_SIZE + 1) * (MAP_HEIGHT / GameConstants.PATTERN_SIZE + 1)];
+
+    activeFronts = "";
+    inactiveFronts = "";
   }
 
   /**
@@ -207,7 +213,7 @@ public class MapData {
   public static void updateData(MapInfo info, boolean cheap) throws GameActionException {
     // Update this square
     MapLocation loc = info.getMapLocation();
-    Robot.rc.setIndicatorDot(loc, 255, 0, 0);
+    //Robot.rc.setIndicatorDot(loc, 255, 0, 0);
     int index = getIndex(loc);
 
     // First time seeing square
@@ -260,7 +266,7 @@ public class MapData {
     
     // If it is a ruin or empty, more info can be gathered
     if ((mapData[index] & TILE_TYPE_BITMASK) == RUIN) {
-      Robot.rc.setIndicatorDot(loc, 0, 255, 0);
+      //Robot.rc.setIndicatorDot(loc, 0, 255, 0);
       RobotInfo towerInfo = Robot.rc.senseRobotAtLocation(loc);
       mapData[index] &= ~TOWER_TYPE_BITMASK;
       if (towerInfo != null) {
@@ -811,7 +817,7 @@ public class MapData {
     int startX = Robot.rng.nextInt(MAP_WIDTH / EXPLORE_CHUNK_SIZE - 1) * EXPLORE_CHUNK_SIZE + EXPLORE_CHUNK_SIZE / 2;
     int startY = Robot.rng.nextInt(MAP_HEIGHT / EXPLORE_CHUNK_SIZE - 1) * EXPLORE_CHUNK_SIZE + EXPLORE_CHUNK_SIZE / 2;
 
-    try { Robot.rc.setIndicatorDot(new MapLocation(startX, startY), 255, 255, 0); } catch (Exception e) { e.printStackTrace(); }
+    //try { Robot.rc.setIndicatorDot(new MapLocation(startX, startY), 255, 255, 0); } catch (Exception e) { e.printStackTrace(); }
     
     int x = startX;
     int y = startY;
@@ -827,7 +833,7 @@ public class MapData {
         if (y >= MAP_HEIGHT) {
           y -= MAP_WIDTH;
         }
-        try { Robot.rc.setIndicatorDot(new MapLocation(x, y), 0, 255, 255); } catch (Exception e) { e.printStackTrace(); }
+        //try { Robot.rc.setIndicatorDot(new MapLocation(x, y), 0, 255, 255); } catch (Exception e) { e.printStackTrace(); }
 
       }
     } while (x != startX || y != startY);
@@ -1163,5 +1169,66 @@ public class MapData {
 
     ++index;
     mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[4][4] ? GOAL_SECONDARY_PAINT : 0));
+  }
+
+  public static void addToFronts(MapLocation m){
+    String locString = "";
+    locString +=(char)m.x;
+    locString +=(char)m.y;
+    locString +=(char)69;
+    if(inactiveFronts.contains(locString)){
+      inactiveFronts = inactiveFronts.replace(locString,""); //effectively removes locString from inactiveFronts
+    }
+    if(activeFronts.contains(locString)) return;
+    activeFronts += locString;
+  }
+
+  public static void removeFromFronts(MapLocation m){
+    String locString = "";
+    locString +=(char)m.x;
+    locString +=(char)m.y;
+    locString +=(char)69;
+    if(activeFronts.contains(locString)){
+      activeFronts = activeFronts.replace(locString,""); //effectively removes locString from activeFronts
+    }
+    if(inactiveFronts.contains(locString)) return;
+    inactiveFronts += locString;
+  }
+
+  //fronts are just enemy towers (for simplicity)
+  public static void lookForFrontsToAdd() throws GameActionException{
+    //if(Clock.getBytecodesLeft()<500) return;
+    MapLocation[] ruins = Robot.rc.senseNearbyRuins(-1);
+    for(MapLocation ruin : ruins){
+      RobotInfo tower = Robot.rc.senseRobotAtLocation(ruin);
+      if(tower!=null && tower.getTeam()!=Robot.rc.getTeam()){
+        addToFronts(ruin);
+        Robot.rc.setIndicatorDot(ruin,0,255,255);
+      }
+    }
+  }
+
+  //check if an enemy tower is still at the location
+  public static void analyzeExistingFronts() throws GameActionException{
+    //see if we need to transition any of our active fronts to inactive
+    for(int i=0; i<activeFronts.length(); i+=3){
+      MapLocation front = new MapLocation((int)activeFronts.charAt(i),(int)activeFronts.charAt(i+1));
+      if(!Robot.rc.canSenseLocation(front)) continue;
+      //if(Clock.getBytecodesLeft()<500) break;  //cut out early if we're out of bytecode
+      RobotInfo tower = Robot.rc.senseRobotAtLocation(front);
+      if(tower==null || tower.getTeam()==Robot.rc.getTeam()) removeFromFronts(front);
+    }
+  }
+
+  public static MapLocation getNearestFront() throws GameActionException{
+    MapLocation currentLoc = Robot.rc.getLocation();
+    MapLocation closestLoc = null;
+    for(int i=0; i<activeFronts.length(); i+=3){
+      MapLocation front = new MapLocation((int)activeFronts.charAt(i),(int)activeFronts.charAt(i+1));
+      if(closestLoc==null || currentLoc.distanceSquaredTo(front)<currentLoc.distanceSquaredTo(closestLoc)){
+        closestLoc = front;
+      }
+    }
+    return closestLoc;
   }
 }

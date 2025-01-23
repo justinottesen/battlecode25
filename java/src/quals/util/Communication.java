@@ -29,6 +29,12 @@ public class Communication {
 
       // Bits 4-15: Coordinates (specified above)
 
+  public static final int FRONT = 0b0100; // -----------------------------------------
+
+      // Bits 4-15: Coordinates (specified above)
+      // Bit 16: Add (1) or Remove (0)
+
+
   /**
    * Extracts the message type from the given message
    * @param message The message to extract from

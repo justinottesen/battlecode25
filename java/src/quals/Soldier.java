@@ -45,10 +45,14 @@ public final class Soldier extends Robot {
 
   protected void doMicro() throws GameActionException {
     //surviving takes all precendent over everything
-    if(GoalManager.current().type == Goal.Type.SURVIVE){
-      rc.setIndicatorString("SURVIVE");
-      survive();
-      return;
+    if(GoalManager.current().type == Goal.Type.SURVIVE || rc.getPaint()<7){
+      if(rc.getPaint()>7){
+        GoalManager.setNewGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
+      }else{
+        rc.setIndicatorString("SURVIVE");
+        survive();
+        return;
+      }
     }
     //hard code the opening (ignores the rest of the function for now)
     if(initialSoldiers){
@@ -341,8 +345,9 @@ public final class Soldier extends Robot {
         //if we've killed the enemy tower
         //set to survive mode
         initialSoldiers=false;  //we can be done with the opening if we successfully kill a tower
-        GoalManager.setNewGoal(Goal.Type.SURVIVE,rc.getLocation());
-        survive();
+        GoalManager.setNewGoal(Goal.Type.EXPLORE, MapData.getExploreTarget());
+        //GoalManager.setNewGoal(Goal.Type.SURVIVE,rc.getLocation());
+        //survive();
       }
     }else if(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
       MapLocation targetRuin = GoalManager.current().target;

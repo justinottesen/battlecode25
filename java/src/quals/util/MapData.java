@@ -810,10 +810,20 @@ public class MapData {
   }
 
   /**
+   * Returns an explore target
+   * Tries to randomize between a checker target (ie: the corners) and a normal target
+   * @return MapLocation that is the explore target
+   */
+  public static MapLocation getExploreTarget(){
+    if (Robot.rc.getID()%2 == 0) return getCheckerTarget();
+    else return getEmergencyTarget();
+  }
+
+  /**
    * Returns the closest unknown center of a NxN chunk of the map
    * @return The closest unexplored center of a chunk
    */
-  public static MapLocation getExploreTarget() {
+  public static MapLocation getEmergencyTarget() {
     int startX = Robot.rng.nextInt(MAP_WIDTH / EXPLORE_CHUNK_SIZE - 1) * EXPLORE_CHUNK_SIZE + EXPLORE_CHUNK_SIZE / 2;
     int startY = Robot.rng.nextInt(MAP_HEIGHT / EXPLORE_CHUNK_SIZE - 1) * EXPLORE_CHUNK_SIZE + EXPLORE_CHUNK_SIZE / 2;
 
@@ -839,6 +849,32 @@ public class MapData {
     } while (x != startX || y != startY);
 
     return MAP_CENTER;
+  }
+
+  /**
+   * Returns a 'random' checker location (ie: the corners of the map)
+   * @return The chosen MapLocation
+   * @throws GameActionException
+   */
+    private static MapLocation getCheckerTarget(){
+      int tries = 15;
+      MapLocation[] checkLocs = new MapLocation[5];
+      checkLocs[0] = new MapLocation(MAP_WIDTH/2,MAP_HEIGHT/2);
+      checkLocs[1] = new MapLocation(0,0);
+      checkLocs[2] = new MapLocation(MAP_WIDTH-1,0);
+      checkLocs[3] = new MapLocation(0,MAP_HEIGHT-1);
+      checkLocs[4] = new MapLocation(MAP_WIDTH-1,MAP_HEIGHT-1);
+      //MapLocation myLoc = rc.getLocation();
+      MapLocation exploreLoc = null;
+      while (tries-- > 0){
+          int checkerIndex = Robot.rng.nextInt(checkLocs.length);
+          MapLocation newLoc = checkLocs[checkerIndex];
+          if (known(newLoc)) continue;
+          if (exploreLoc != null && Robot.rc.getLocation().distanceSquaredTo(exploreLoc) < Robot.rc.getLocation().distanceSquaredTo(newLoc)) continue;
+          exploreLoc = newLoc;
+      }
+      if (exploreLoc == null) return getEmergencyTarget();
+      return exploreLoc;
   }
 
   /**
@@ -1233,6 +1269,6 @@ public class MapData {
   }
 
   public static void robotCommunicateFrontToTower() throws GameActionException{
-    
+
   }
 }

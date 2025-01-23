@@ -22,6 +22,11 @@ public class GoalManager {
   public static Goal current() { return goalStack.top(); }
 
   /**
+   * Gets the next goal without changing the current goal
+   */
+  public static Goal second() { return goalStack.peekSecond(); }
+
+  /**
    * Pushes a goal to the stack
    * @param type The type of the goal to push
    * @param target The target location of the goal

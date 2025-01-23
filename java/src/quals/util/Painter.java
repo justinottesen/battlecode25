@@ -557,4 +557,15 @@ public class Painter {
     return jobComplete;
   }
 
+
+  public static void emergencyBugNav() throws GameActionException{
+    if(!Robot.rc.isMovementReady()) return;
+    // Check if we are a dumbass running into a wall, if so bugnav
+    MapLocation towerLoc = GoalManager.current().target;
+    MapLocation myLoc = Robot.rc.getLocation();
+    int distance = myLoc.distanceSquaredTo(towerLoc);
+    if (distance == 16 || distance == 17 || distance == 20) {
+        BugPath.moveTo(towerLoc);
+    }
+  }
 }

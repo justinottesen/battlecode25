@@ -170,33 +170,9 @@ public final class Soldier extends Robot {
 
     switch (GoalManager.current().type) {
       case FIGHT_TOWER:
-        // Check if we are a dumbass running into a wall, if so bugnav
-        MapLocation towerLoc = GoalManager.current().target;
-        if (!bugPathAroundWall) {
-          MapLocation myLoc = rc.getLocation();
-          int distance = myLoc.distanceSquaredTo(towerLoc);
-          if (distance == 16 || distance == 17 || distance == 20) {
-            Direction dir = myLoc.directionTo(towerLoc);
-            MapLocation centerWall = myLoc.add(dir);
-            if (!rc.sensePassability(centerWall)) {
-              Direction dirToCenter = centerWall.directionTo(towerLoc);
-              if (!rc.sensePassability(myLoc.add(dirToCenter.rotateLeft())) && 
-              !rc.sensePassability(myLoc.add(dirToCenter.rotateRight()))) {
-                bugPathAroundWall = true;
-              }
-            }
-          }
-        }
-        if (bugPathAroundWall) {
-          BugPath.moveTo(towerLoc);
-          int distance = rc.getLocation().distanceSquaredTo(towerLoc);
-          if (distance < 19 && distance != 17 && distance != 16) {
-            bugPathAroundWall = false;
-          } else {
-            break;
-          }
-        }
+        Painter.emergencyBugNav();
         Painter.paintFight(goalTower);
+        MapLocation towerLoc = GoalManager.current().target;
         if (!rc.canSenseRobotAtLocation(towerLoc) || rc.senseRobotAtLocation(towerLoc).getTeam() != OPPONENT) {
           GoalManager.setNewGoal(Goal.Type.CAPTURE_RUIN, towerLoc);
         }
@@ -212,32 +188,7 @@ public final class Soldier extends Robot {
         }
         break;
       case CAPTURE_RUIN:
-        // Check if we are a dumbass running into a wall, if so bugnav
-        MapLocation ruinLoc = GoalManager.current().target;
-        if (!bugPathAroundWall) {
-          MapLocation myLoc = rc.getLocation();
-          int distance = myLoc.distanceSquaredTo(ruinLoc);
-          if (distance == 16 || distance == 17 || distance == 20) {
-            Direction dir = myLoc.directionTo(ruinLoc);
-            MapLocation centerWall = myLoc.add(dir);
-            if (!rc.sensePassability(centerWall)) {
-              Direction dirToCenter = centerWall.directionTo(ruinLoc);
-              if (!rc.sensePassability(myLoc.add(dirToCenter.rotateLeft())) && 
-              !rc.sensePassability(myLoc.add(dirToCenter.rotateRight()))) {
-                bugPathAroundWall = true;
-              }
-            }
-          }
-        }
-        if (bugPathAroundWall) {
-          BugPath.moveTo(ruinLoc);
-          int distance = rc.getLocation().distanceSquaredTo(ruinLoc);
-          if (distance < 19 && distance != 17 && distance != 16) {
-            bugPathAroundWall = false;
-          } else {
-            break;
-          }
-        }
+        Painter.emergencyBugNav();
         if (Painter.paintCaptureRuin()) {
           // Check if we actually finished ruin or if we just can't make progress
           if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {
@@ -344,6 +295,7 @@ public final class Soldier extends Robot {
     
 
     if(GoalManager.current().type == Goal.Type.FIGHT_TOWER){
+      Painter.emergencyBugNav();
       MapLocation enemyTower = GoalManager.current().target;
       //goalTower is a class variable set in the ruin-scanning for loop (only set to enemy towers in opening())
       Painter.paintFight(goalTower);
@@ -357,6 +309,7 @@ public final class Soldier extends Robot {
         //survive();
       }
     }else if(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
+      Painter.emergencyBugNav();
       MapLocation targetRuin = GoalManager.current().target;
       Painter.paintCaptureRuin();
       if (rc.canSenseLocation(targetRuin) && rc.canSenseRobotAtLocation(targetRuin)) {

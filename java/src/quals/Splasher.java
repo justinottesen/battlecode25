@@ -67,32 +67,7 @@ public final class Splasher extends Robot {
 
     switch (GoalManager.current().type) {
       case FIGHT_TOWER:
-        // Check if we are a dumbass running into a wall, if so bugnav
-        MapLocation ruinLoc = GoalManager.current().target;
-        if (!bugPathAroundWall) {
-          MapLocation myLoc = rc.getLocation();
-          int distance = myLoc.distanceSquaredTo(ruinLoc);
-          if (distance == 16 || distance == 17 || distance == 20) {
-            Direction dir = myLoc.directionTo(ruinLoc);
-            MapLocation centerWall = myLoc.add(dir);
-            if (!rc.sensePassability(centerWall)) {
-              Direction dirToCenter = centerWall.directionTo(ruinLoc);
-              if (!rc.sensePassability(myLoc.add(dirToCenter.rotateLeft())) && 
-              !rc.sensePassability(myLoc.add(dirToCenter.rotateRight()))) {
-                bugPathAroundWall = true;
-              }
-            }
-          }
-        }
-        if (bugPathAroundWall) {
-          BugPath.moveTo(ruinLoc);
-          int distance = rc.getLocation().distanceSquaredTo(ruinLoc);
-          if (distance < 19 && distance != 17 && distance != 16) {
-            bugPathAroundWall = false;
-          } else {
-            break;
-          }
-        }
+        Painter.emergencyBugNav();
         //fight using goalTower
         fightTower();
         //stop attacking if we killed the tower
@@ -329,7 +304,7 @@ public final class Splasher extends Robot {
     if(goalTower==null) return;
     //move closer to tower, but not in it's attack range
     int distanceSquaredToTower = goalTower.getLocation().distanceSquaredTo(rc.getLocation());
-    if(distanceSquaredToTower>16){
+    if(distanceSquaredToTower>16 && rc.isMovementReady()){
       //we are well outside of attack range, move closer
       Direction d = Pathfinding.getGreedyMove(rc.getLocation(),goalTower.getLocation());
       MovementManager.move(d);
@@ -348,7 +323,7 @@ public final class Splasher extends Robot {
 
     //move away from tower if we need to
     distanceSquaredToTower = goalTower.getLocation().distanceSquaredTo(rc.getLocation());
-    if(distanceSquaredToTower<9){
+    if(distanceSquaredToTower<9 && rc.isMovementReady()){
       Direction d = Pathfinding.getGreedyMove(rc.getLocation(),goalTower.getLocation().directionTo(rc.getLocation()),true);
       MovementManager.move(d);
       //rc.setIndicatorString("Move away from enemy tower");

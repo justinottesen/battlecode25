@@ -145,52 +145,15 @@ public class Painter {
     // We are far away, let macro take care of Pathfinding
     if (enemy == null || !Robot.rc.getLocation().isWithinDistanceSquared(enemy.getLocation(), GameConstants.VISION_RADIUS_SQUARED)) { return; }
     MapLocation enemyLoc = enemy.getLocation();
-    int distance_sq = Robot.rc.getLocation().distanceSquaredTo(enemyLoc);
-    int enemyRange = enemy.getType().actionRadiusSquared;
-    int myRange = Robot.rc.getType().actionRadiusSquared;
 
-    //only move in if we have high health or a partner soldier
-    RobotInfo[] teammates = Robot.rc.senseNearbyRobots(enemy.getLocation(),20,Robot.rc.getTeam());
-    boolean nearbyPartnerSoldier = false;
-    for(RobotInfo teammate : teammates){
-      if(teammate.getType()==UnitType.SOLDIER){
-        nearbyPartnerSoldier=true;
-        break;
-      }
-    }
-    boolean highHealth = Robot.rc.getHealth()>30;
-
-    // If we can't attack move in (and only on even number turns so synchronized with other robots)
-    if (distance_sq > myRange && Robot.rc.isMovementReady() && Robot.rc.isActionReady() && Robot.rc.getRoundNum() % 2 == 0 && (nearbyPartnerSoldier||highHealth)) {
-      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ALLY_ONLY);
-      if (moveIn == null || !Robot.rc.getLocation().add(moveIn).isWithinDistanceSquared(enemyLoc, myRange)) {
-        moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.NO_ENEMY);
-        if (moveIn == null || !Robot.rc.getLocation().add(moveIn).isWithinDistanceSquared(enemyLoc, myRange)) {
-          moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ANY);
-        }
-      }
-      // But only move in range of enemy if we are ready to attack
-      if (moveIn != null) {
-        MovementManager.move(moveIn);
-      }
-    }
+    MovementManager.move(Micro.getMove());
 
     // Attack enemy
     if (Robot.rc.canAttack(enemyLoc)) {
       paint(enemyLoc);
     }
 
-    // If enemy can see us, back up
-    if (distance_sq <= enemyRange && Robot.rc.isMovementReady()) {
-      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ALLY_ONLY);
-      if (backup == null || Robot.rc.getLocation().add(backup).isWithinDistanceSquared(enemyLoc, enemyRange)) {
-        backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.NO_ENEMY);
-        if (backup == null || Robot.rc.getLocation().add(backup).isWithinDistanceSquared(enemyLoc, enemyRange)) {
-          backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ANY);
-        }
-      }
-      if (backup != null) { MovementManager.move(backup); }
-    }
+    MovementManager.move(Micro.getMove());
 
     // Whatever square we end on, try to paint it
     if (Robot.rc.canPaint(Robot.rc.getLocation())) { paint(Robot.rc.getLocation()); }

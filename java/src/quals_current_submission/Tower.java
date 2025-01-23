@@ -1,6 +1,6 @@
-package quals;
+package quals_current_submission;
 
-import quals.util.*;
+import quals_current_submission.util.*;
 
 import battlecode.common.*;
 
@@ -10,11 +10,15 @@ public final class Tower extends Robot {
 
   private final MapLocation LOCATION;
 
-  private final int PAINT_SUICIDE_THRESHOLD = UnitType.MOPPER.paintCost;
+  int lastSeenEnemyRound = -1;
+  private final int LAST_SEEN_SUICIDE_THRESHOLD = 50;
+
+  private final int PAINT_SUICIDE_THRESHOLD = 50;
 
   public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
 
+    lastSeenEnemyRound = rc.getRoundNum(); // Pretend we just saw an enemy when we spawn in
 
     TOWER_ATTACK_RADIUS = rc.getType().actionRadiusSquared; // NOTE: This will have to change if upgrades modify radius
 
@@ -24,37 +28,53 @@ public final class Tower extends Robot {
   protected void doMicro() throws GameActionException {
     attackEnemies();
 
-    // Read incoming messages
-    for (Message m : rc.readMessages(-1)) {
-      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
-        case Communication.REQUEST_MOPPER:
-          trySpawn(UnitType.MOPPER, Communication.getCoordinates(m.getBytes()));
-          break;
-        default:
-          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
-      }
+    // Check for new enemies
+    if (lastSeenEnemyRound < rc.getRoundNum() && rc.senseNearbyRobots(-1, OPPONENT).length != 0) {
+      lastSeenEnemyRound = rc.getRoundNum();
     }
 
-    // Spawn a unit specifically for suicide strat
-    if (rc.getChips() > 5000 &&
+    // If no enemies in a while, spend paint and try to suicide for more
+    if (rc.getRoundNum() - lastSeenEnemyRound > LAST_SEEN_SUICIDE_THRESHOLD && // In a safe location
+        rc.getPaint() >= 100 && // Leftover paint
+        rc.getChips() > rc.getType().moneyCost * 10 && // HELLA chips
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER)) {
-      if (rc.getPaint() >= UnitType.SOLDIER.paintCost) {
-        trySpawn(UnitType.SOLDIER);
-      } else if (rc.getPaint() >= UnitType.MOPPER.paintCost) {
-        trySpawn(UnitType.MOPPER);
+      System.out.println("SAFE TOWER - USING RESOURCES");
+      MapLocation spawnLoc = getSpawnLoc(null);
+      if (spawnLoc != null) {
+        if (rc.getPaint() >= UnitType.SPLASHER.paintCost) {
+          trySpawn(UnitType.SPLASHER, spawnLoc);
+        } else if (rc.getPaint() >= UnitType.SOLDIER.paintCost) {
+          trySpawn(UnitType.SOLDIER, spawnLoc);
+        } else {
+          trySpawn(UnitType.MOPPER, spawnLoc);
+        }
       }
     }
 
     // Suicide for paint if worth it
-    if (rc.getType().getBaseType() == rc.getType() && // DO NOT suicide level 2 towers (starter towers only?)
-       (rc.getPaint() < PAINT_SUICIDE_THRESHOLD) && // No more paint
-        rc.getChips() > 4000 && // Enough chips (we hope)
+    if ((rc.getPaint() < PAINT_SUICIDE_THRESHOLD) && // No more paint
+        //rc.senseNearbyRobots(-1, OPPONENT).length == 0 && // No visible enemies
+        rc.getChips() > rc.getType().moneyCost * 2 && // Enough chips (we hope)
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
         Communication.trySendAllMessage( // We successfully sent the message to an adjacent bot
           Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM))) {
       rc.setIndicatorString("Sent suicide message");
       rc.disintegrate();
       return;
+    }
+
+    // Read incoming messages
+    for (Message m : rc.readMessages(-1)) {
+      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
+        case Communication.REQUEST_MOPPER:
+          MapLocation spawnLoc = trySpawn(UnitType.MOPPER, Communication.getCoordinates(m.getBytes()));
+          if (spawnLoc != null) {
+            Communication.trySendMessage(m.getBytes(), spawnLoc);
+          }
+          break;
+        default:
+          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
+      }
     }
   }
 
@@ -72,7 +92,9 @@ public final class Tower extends Robot {
     // Find nearby enemies
     RobotInfo[] enemies = rc.senseNearbyRobots(TOWER_ATTACK_RADIUS, OPPONENT);
     if (enemies.length == 0) { return; }
-      
+  
+    lastSeenEnemyRound = rc.getRoundNum();
+    
     // Perform AoE attack
     rc.attack(null);
 
@@ -111,24 +133,8 @@ public final class Tower extends Robot {
       default: break;
     }
 
-    // If we see enemy paint and don't see a mopper, spawn one
-    boolean seenMopper = false;
-    for (RobotInfo info : rc.senseNearbyRobots(-1, TEAM)) {
-      if (info.getType() == UnitType.MOPPER) { seenMopper = true; break; }
-    }
-    /*
-    if (!seenMopper && rc.getRoundNum()>50) {
-      for (MapInfo info : rc.senseNearbyMapInfos()) {
-        if (info.getPaint().isEnemy()) {
-          trySpawn(UnitType.MOPPER, info.getMapLocation());
-          break;
-        }
-      }
-    }
-      */
-
     // Spawn more if we got hella chips
-    if ((rc.getRoundNum()<50 &&rc.getChips() > rc.getType().moneyCost * 2) || (rc.getRoundNum()>=50 &&rc.getChips() >rc.getType().moneyCost+250)) {
+    if (rc.getChips() > rc.getType().moneyCost * 2) {
       switch (rc.getRoundNum() % 4) {
         case 0: trySpawn(UnitType.MOPPER, MapData.MAP_CENTER); break;
         case 1: trySpawn(UnitType.SPLASHER, MapData.MAP_CENTER); break;
@@ -161,8 +167,6 @@ public final class Tower extends Robot {
 
     return closest;
   }
-
-  private MapLocation trySpawn(UnitType type) throws GameActionException { return trySpawn(type, null); }
 
   /**
    * Tries to spawn a robot at the closest available location to the target

@@ -10,6 +10,7 @@ public final class Splasher extends Robot {
 
   // Other goal helpers
   RobotInfo goalTower;
+  String emptyTowers = "";
 
   public Splasher(RobotController rc_) throws GameActionException {
     super(rc_);
@@ -20,11 +21,6 @@ public final class Splasher extends Robot {
     rc.setIndicatorString("GOAL - " + GoalManager.current());
     if (GoalManager.current().target != null) {
       rc.setIndicatorLine(rc.getLocation(), GoalManager.current().target, 255, 0, 255);
-    }
-
-    //updates ruins
-    for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-      MapData.updateData(rc.senseMapInfo(ruin));
     }
 
     // If received paint transfer from mopper, update goal
@@ -84,16 +80,26 @@ public final class Splasher extends Robot {
               rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
               tower = rc.senseRobotAtLocation(GoalManager.current().target);
             } else {
+              emptyTowers += GoalManager.current().target;
               MapLocation friendlyTower = MapData.closestFriendlyTower(emptyTowers);
               GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? Robot.spawnTower : friendlyTower);
               return;
             }
+          }
+          if (tower.getPaintAmount() == 0) {
+            emptyTowers += tower.getLocation().toString();
+            MapLocation friendlyTower = MapData.closestFriendlyTower(emptyTowers);
+            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? spawnTower : friendlyTower);
+            break;
           }
           int paintAmount = rc.getType().paintCapacity - rc.getPaint();
           if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
           if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
             rc.transferPaint(GoalManager.current().target, -paintAmount);
             GoalManager.popGoal();
+            if (rc.getPaint() >= REFILL_PAINT_THRESHOLD) {
+              emptyTowers = "";
+            }
           }
         }
         break;

@@ -5,9 +5,6 @@ import quals.util.*;
 
 public final class Mopper extends Robot {
 
-  // Constants
-  private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD / 2;
-
   private MapLocation completedRuinJob = null;
   
   public Mopper(RobotController rc_) throws GameActionException {
@@ -44,33 +41,16 @@ public final class Mopper extends Robot {
     for (Message m : messages) {
       if (Communication.getMessageType(m.getBytes()) == Communication.SUICIDE) {
         GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
-        Painter.mopCaptureRuin();
       }
     }
 
-    // Check if someone else finished the current ruin
-    if (GoalManager.current().type == Goal.Type.CAPTURE_RUIN) {
-      if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {
-        MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
-        GoalManager.setNewGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
-      }
-    }
-
-    // If low on paint, set goal to refill
-    // TODO: refill paint has bug, robots sometimes sit near tower with refill paint goal
-    if (GoalManager.current().type != Goal.Type.REFILL_PAINT && rc.getPaint() < REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
-      GoalManager.pushGoal(Goal.Type.REFILL_PAINT, tower == null ? spawnTower : tower);
-    }
-
-    // Look for nearby ruins if we aren't already refilling paint
-    if (GoalManager.current().type.v < Goal.Type.REFILL_PAINT.v) {
+    // Look for nearby ruins if we aren't already capturing one
+    if (GoalManager.current().type.v < Goal.Type.CAPTURE_RUIN.v) {
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
         if(ruin.equals(completedRuinJob)) continue; //completedRuinJob is the last ruin that we know we don't need a mopper for 
         RobotInfo info = rc.senseRobotAtLocation(ruin);
         if (info == null) { // Unclaimed Ruin
-          if (GoalManager.current().type.v >= Goal.Type.CAPTURE_RUIN.v) { continue; }
           GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, ruin);
           break;
         }
@@ -91,30 +71,39 @@ public final class Mopper extends Robot {
     if (!rc.isMovementReady() && rc.isActionReady()) { Painter.mop(); return; }
 
     // Transfer paint if possible
-    if (rc.isActionReady() && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
-      for (RobotInfo robot : rc.senseNearbyRobots(GameConstants.PAINT_TRANSFER_RADIUS_SQUARED, rc.getTeam())) {
-        // Don't transfer to other moppers or towers, or if they have enough paint
-        if (robot.type == UnitType.MOPPER || robot.getType().isTowerType() || robot.getPaintAmount() > REFILL_PAINT_THRESHOLD) { continue; }
+    // if (rc.isActionReady() && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
+    //   for (RobotInfo robot : rc.senseNearbyRobots(GameConstants.PAINT_TRANSFER_RADIUS_SQUARED, rc.getTeam())) {
+    //     // Don't transfer to other moppers or towers, or if they have enough paint
+    //     if (robot.type == UnitType.MOPPER || robot.getType().isTowerType() || robot.getPaintAmount() > REFILL_PAINT_THRESHOLD) { continue; }
 
-        // Transfer the max possible
-        int transfer_amt = Math.min(robot.getType().paintCapacity - robot.getPaintAmount(), rc.getPaint() - REFILL_PAINT_THRESHOLD);
-        if (rc.canTransferPaint(robot.getLocation(), transfer_amt)) {
-          rc.transferPaint(robot.getLocation(), transfer_amt);
-          break;
-        }
-      }
-    }
+    //     // Transfer the max possible
+    //     int transfer_amt = Math.min(robot.getType().paintCapacity - robot.getPaintAmount(), rc.getPaint() - REFILL_PAINT_THRESHOLD);
+    //     if (rc.canTransferPaint(robot.getLocation(), transfer_amt)) {
+    //       rc.transferPaint(robot.getLocation(), transfer_amt);
+    //       break;
+    //     }
+    //   }
+    // }
 
     switch (GoalManager.current().type) {
       case CAPTURE_RUIN:
         if (Painter.mopCaptureRuin()) { 
-          if(rc.senseRobotAtLocation(GoalManager.current().target)==null){
+          if(!rc.canSenseRobotAtLocation(GoalManager.current().target)){
             //ruin has no more enemy paint around it, start exploring
             completedRuinJob = GoalManager.current().target;
             GoalManager.popGoal();
           }else{
+            RobotInfo tower = rc.senseRobotAtLocation(GoalManager.current().target);
             //mopper built the tower, refill from the tower
-            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, GoalManager.current().target);
+            if (tower.getPaintAmount() > UnitType.MOPPER.paintCost) {
+              int paintAmount = rc.getType().paintCapacity - rc.getPaint();
+              if (tower.getPaintAmount() - UnitType.MOPPER.paintCost < paintAmount) { paintAmount = tower.getPaintAmount() - UnitType.MOPPER.paintCost; }
+              if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
+                rc.transferPaint(GoalManager.current().target, -paintAmount);
+                emptyTowers = "";
+                GoalManager.popGoal();
+              }
+            }
           }
         }
         break;
@@ -122,35 +111,6 @@ public final class Mopper extends Robot {
         if (Painter.mopCaptureSRP()) {
           completedRuinJob = GoalManager.current().target;
           GoalManager.popGoal();
-        }
-        break;
-      case REFILL_PAINT:
-        if (rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.PAINT_TRANSFER_RADIUS_SQUARED)) {
-          RobotInfo tower = rc.senseRobotAtLocation(GoalManager.current().target);
-          if (tower == null) {
-            if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target)) {
-              rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
-              tower = rc.senseRobotAtLocation(GoalManager.current().target);
-            } else {
-              MapLocation friendlyTower = MapData.closestFriendlyTower(emptyTowers);
-              GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? spawnTower : friendlyTower);
-              break;
-            }
-          }
-          // Don't take paint from towers that are low on paint
-          if (tower.getPaintAmount() < UnitType.SOLDIER.paintCost) {
-            emptyTowers += tower.getLocation().toString();
-            MapLocation friendlyTower = MapData.closestFriendlyTower(emptyTowers);
-            GoalManager.replaceTopGoal(Goal.Type.REFILL_PAINT, friendlyTower == null ? spawnTower : friendlyTower);
-            break;
-          }
-          int paintAmount = rc.getType().paintCapacity - rc.getPaint();
-          if (tower.getPaintAmount() - UnitType.SOLDIER.paintCost < paintAmount) { paintAmount = tower.getPaintAmount() - UnitType.SOLDIER.paintCost; }
-          if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
-            rc.transferPaint(GoalManager.current().target, -paintAmount);
-            emptyTowers = "";
-            GoalManager.popGoal();
-          }
         }
         break;
       case EXPLORE:

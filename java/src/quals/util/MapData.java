@@ -1231,4 +1231,8 @@ public class MapData {
     }
     return closestLoc;
   }
+
+  public static void robotCommunicateFrontToTower() throws GameActionException{
+    
+  }
 }

@@ -1,8 +1,7 @@
 package quals;
 
-import quals.util.*;
-
 import battlecode.common.*;
+import quals.util.*;
 
 public final class Tower extends Robot {
 

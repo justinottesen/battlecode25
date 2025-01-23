@@ -152,52 +152,15 @@ public class Painter {
     // We are far away, let macro take care of Pathfinding
     if (enemy == null || !Robot.rc.getLocation().isWithinDistanceSquared(enemy.getLocation(), GameConstants.VISION_RADIUS_SQUARED)) { return; }
     MapLocation enemyLoc = enemy.getLocation();
-    int distance_sq = Robot.rc.getLocation().distanceSquaredTo(enemyLoc);
-    int enemyRange = enemy.getType().actionRadiusSquared;
-    int myRange = Robot.rc.getType().actionRadiusSquared;
 
-    //only move in if we have high health or a partner soldier
-    RobotInfo[] teammates = Robot.rc.senseNearbyRobots(enemy.getLocation(),20,Robot.rc.getTeam());
-    boolean nearbyPartnerSoldier = false;
-    for(RobotInfo teammate : teammates){
-      if(teammate.getType()==UnitType.SOLDIER){
-        nearbyPartnerSoldier=true;
-        break;
-      }
-    }
-    boolean highHealth = Robot.rc.getHealth()>30;
-
-    // If we can't attack move in (and only on even number turns so synchronized with other robots)
-    if (distance_sq > myRange && Robot.rc.isMovementReady() && Robot.rc.isActionReady() && Robot.rc.getRoundNum() % 2 == 0 && (nearbyPartnerSoldier||highHealth)) {
-      Direction moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ALLY_ONLY);
-      if (moveIn == null || !Robot.rc.getLocation().add(moveIn).isWithinDistanceSquared(enemyLoc, myRange)) {
-        moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.NO_ENEMY);
-        if (moveIn == null || !Robot.rc.getLocation().add(moveIn).isWithinDistanceSquared(enemyLoc, myRange)) {
-          moveIn = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc, true, MovementManager.Mode.ANY);
-        }
-      }
-      // But only move in range of enemy if we are ready to attack
-      if (moveIn != null) {
-        MovementManager.move(moveIn);
-      }
-    }
+    MovementManager.move(Micro.getMove());
 
     // Attack enemy
     if (Robot.rc.canAttack(enemyLoc)) {
       paint(enemyLoc);
     }
 
-    // If enemy can see us, back up
-    if (distance_sq <= enemyRange && Robot.rc.isMovementReady()) {
-      Direction backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ALLY_ONLY);
-      if (backup == null || Robot.rc.getLocation().add(backup).isWithinDistanceSquared(enemyLoc, enemyRange)) {
-        backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.NO_ENEMY);
-        if (backup == null || Robot.rc.getLocation().add(backup).isWithinDistanceSquared(enemyLoc, enemyRange)) {
-          backup = Pathfinding.getGreedyMove(Robot.rc.getLocation(), enemyLoc.directionTo(Robot.rc.getLocation()), true, MovementManager.Mode.ANY);
-        }
-      }
-      if (backup != null) { MovementManager.move(backup); }
-    }
+    MovementManager.move(Micro.getMove());
 
     // Whatever square we end on, try to paint it
     if (Robot.rc.canPaint(Robot.rc.getLocation())) { paint(Robot.rc.getLocation()); }
@@ -268,7 +231,7 @@ public class Painter {
       return true;
     }
 
-
+    MovementManager.move(Micro.getMove());
     // If we are standing in the ruin and can't move, prioritize paint under our feet
     if (!Robot.rc.isMovementReady()) {
       int my_x_offset = current.x - low_x;
@@ -296,17 +259,19 @@ public class Painter {
       if (jobComplete) { Robot.rc.setIndicatorDot(loc, 0, 255, 0); }
       else { Robot.rc.setIndicatorDot(loc, 255, 0, 0); }
       jobComplete = false;
-      // If we can't reach it, move towards it
-      if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
-        Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? MovementManager.Mode.ANY : MovementManager.Mode.NO_ENEMY);
-        if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-        MovementManager.move(dir);
-        current = Robot.rc.getLocation();
-        // Check if there is paint under our feet
-        if (paint(current)) { break; }
-      }
       if (!shouldPaint(loc)) { continue; }
       if (paint(loc)) { break; }
+    }
+
+    MovementManager.move(Micro.getMove());
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        paint(current);
+      }
     }
 
     // Try to complete the ruin
@@ -358,12 +323,15 @@ public class Painter {
       return true;
     }
 
-    // If we are standing in the ruin, prioritize paint under our feet
-    int my_x_offset = current.x - low_x;
-    int my_y_offset = current.y - low_y;
-    if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
-        my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
-      paint(current);
+    MovementManager.move(Micro.getMove());
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        paint(current);
+      }
     }
   
     // Try painting the rest of the ruin
@@ -371,18 +339,19 @@ public class Painter {
       for (MapLocation loc : paintCache) {
         // Only interested in ally, empty, or unknown paint
         if (Robot.rc.canSenseLocation(loc) && (Robot.rc.senseMapInfo(loc).getPaint().isEnemy() || Robot.rc.senseMapInfo(loc).getPaint().isAlly() && Robot.rc.senseMapInfo(loc).getPaint().isSecondary() == MapData.useSecondaryPaint(loc))) { continue; }
-
-        // If we can't reach it, move towards it
-        if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
-          Direction dir = Pathfinding.getGreedyMove(current, loc, true, Robot.rc.isActionReady() ? MovementManager.Mode.ANY : MovementManager.Mode.NO_ENEMY);
-          if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-          MovementManager.move(dir);
-          current = Robot.rc.getLocation();
-          // Check if there is paint under our feet
-          if (paint(current)) { break; }
-        }
         if (!shouldPaint(loc)) { continue; }
         if (paint(loc)) { break; }
+      }
+    }
+
+    MovementManager.move(Micro.getMove());
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        paint(current);
       }
     }
 
@@ -427,7 +396,8 @@ public class Painter {
       return true;
     }
 
-    // If we are standing in the ruin, prioritize paint under our feet
+    MovementManager.move(Micro.getMove());
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
     if (!Robot.rc.isMovementReady()) {
       int my_x_offset = current.x - low_x;
       int my_y_offset = current.y - low_y;
@@ -444,23 +414,19 @@ public class Painter {
       // Only interested in enemy (or unknown) paint
       if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
       jobComplete = false;
-      // If we can't reach it, move towards it
-      if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
-        Direction dir = null;
-        //we only care about staying on ally paint if we are already on ally paint
-        if(Robot.rc.senseMapInfo(current).getPaint().isAlly()){
-          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.ALLY_ONLY);
-        }else{
-          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.NO_ENEMY);
-        }
-        if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-        MovementManager.move(dir);
-        current = Robot.rc.getLocation();
-        // Check if there is enemy paint under our feet
-        if (mop(current)) { break; }
-      }
       if (!shouldMop(loc)) { continue; }
       if (mop(loc)) { break; }
+    }
+
+    MovementManager.move(Micro.getMove());
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        paint(current);
+      }
     }
 
     // Try to complete the ruin
@@ -512,14 +478,17 @@ public class Painter {
       return true;
     }
 
-    // If we are standing in the ruin, prioritize paint under our feet
-    int my_x_offset = current.x - low_x;
-    int my_y_offset = current.y - low_y;
-    if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
-        my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
-      paint(current);
+    MovementManager.move(Micro.getMove());
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        paint(current);
+      }
     }
-  
+
     // Try painting the rest of the ruin
     boolean jobComplete = true;
     for (MapLocation loc : paintCache) {
@@ -527,23 +496,19 @@ public class Painter {
       // Only interested in ally, empty, or unknown paint
       if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
       jobComplete = false;
-      // If we can't reach it, move towards it
-      if (Robot.rc.isMovementReady() && current.distanceSquaredTo(loc) > Robot.rc.getType().actionRadiusSquared) {
-        Direction dir = null;
-        //we only care about staying on ally paint if we are already on ally paint
-        if(Robot.rc.senseMapInfo(current).getPaint().isAlly()){
-          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.ALLY_ONLY);
-        }else{
-          dir = Pathfinding.getGreedyMove(current, loc, true, MovementManager.Mode.NO_ENEMY);
-        }
-        if (dir == null || !Robot.rc.canMove(dir)) { continue; }
-        MovementManager.move(dir);
-        current = Robot.rc.getLocation();
-        // Check if there is paint under our feet
-        if (mop(current)) { break; }
-      }
       if (!shouldMop(loc)) { continue; }
       if (mop(loc)) { break; }
+    }
+
+    MovementManager.move(Micro.getMove());
+    // If we are standing in the ruin and can't move, prioritize paint under our feet
+    if (!Robot.rc.isMovementReady()) {
+      int my_x_offset = current.x - low_x;
+      int my_y_offset = current.y - low_y;
+      if (my_x_offset >= 0 && my_x_offset < GameConstants.PATTERN_SIZE &&
+      my_y_offset >= 0 && my_y_offset < GameConstants.PATTERN_SIZE) {
+        paint(current);
+      }
     }
 
     // Try to complete the SRP

@@ -1,6 +1,7 @@
 package quals.util;
 
 import battlecode.common.*;
+import quals.*;
 
 /**
  * THIS CLASS WILL NEVER LET THE GOAL STACK BE EMPTY.
@@ -39,6 +40,10 @@ public class GoalManager {
    */
   public static boolean pushGoal(Goal goal) {
     if (goalStack.push(goal)) {
+      Robot.rc.setIndicatorString("GOAL - " + GoalManager.current());
+      if (GoalManager.current().target != null) {
+        try { Robot.rc.setIndicatorLine(Robot.rc.getLocation(), GoalManager.current().target, 255, 0, 255); } catch (Exception e) {}
+      }
       return true;
     }
     return false;

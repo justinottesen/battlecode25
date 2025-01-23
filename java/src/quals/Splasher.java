@@ -8,6 +8,8 @@ public final class Splasher extends Robot {
   // Constants
   private final int REFILL_PAINT_THRESHOLD = GameConstants.INCREASED_COOLDOWN_THRESHOLD;
 
+  private boolean bugPathAroundWall = false;
+
   // Other goal helpers
   RobotInfo goalTower;
   String emptyTowers = "";
@@ -65,6 +67,32 @@ public final class Splasher extends Robot {
 
     switch (GoalManager.current().type) {
       case FIGHT_TOWER:
+        // Check if we are a dumbass running into a wall, if so bugnav
+        MapLocation ruinLoc = GoalManager.current().target;
+        if (!bugPathAroundWall) {
+          MapLocation myLoc = rc.getLocation();
+          int distance = myLoc.distanceSquaredTo(ruinLoc);
+          if (distance == 16 || distance == 17 || distance == 20) {
+            Direction dir = myLoc.directionTo(ruinLoc);
+            MapLocation centerWall = myLoc.add(dir);
+            if (!rc.sensePassability(centerWall)) {
+              Direction dirToCenter = centerWall.directionTo(ruinLoc);
+              if (!rc.sensePassability(myLoc.add(dirToCenter.rotateLeft())) && 
+              !rc.sensePassability(myLoc.add(dirToCenter.rotateRight()))) {
+                bugPathAroundWall = true;
+              }
+            }
+          }
+        }
+        if (bugPathAroundWall) {
+          BugPath.moveTo(ruinLoc);
+          int distance = rc.getLocation().distanceSquaredTo(ruinLoc);
+          if (distance < 19 && distance != 17 && distance != 16) {
+            bugPathAroundWall = false;
+          } else {
+            break;
+          }
+        }
         //fight using goalTower
         fightTower();
         //stop attacking if we killed the tower

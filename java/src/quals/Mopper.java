@@ -6,6 +6,8 @@ import quals.util.*;
 public final class Mopper extends Robot {
 
   private MapLocation completedRuinJob = null;
+
+  private boolean bugPathAroundWall = false;
   
   public Mopper(RobotController rc_) throws GameActionException {
     super(rc_);
@@ -87,6 +89,32 @@ public final class Mopper extends Robot {
 
     switch (GoalManager.current().type) {
       case CAPTURE_RUIN:
+        // Check if we are a dumbass running into a wall, if so bugnav
+        MapLocation ruinLoc = GoalManager.current().target;
+        if (!bugPathAroundWall) {
+          MapLocation myLoc = rc.getLocation();
+          int distance = myLoc.distanceSquaredTo(ruinLoc);
+          if (distance == 16 || distance == 17 || distance == 20) {
+            Direction dir = myLoc.directionTo(ruinLoc);
+            MapLocation centerWall = myLoc.add(dir);
+            if (!rc.sensePassability(centerWall)) {
+              Direction dirToCenter = centerWall.directionTo(ruinLoc);
+              if (!rc.sensePassability(myLoc.add(dirToCenter.rotateLeft())) && 
+              !rc.sensePassability(myLoc.add(dirToCenter.rotateRight()))) {
+                bugPathAroundWall = true;
+              }
+            }
+          }
+        }
+        if (bugPathAroundWall) {
+          BugPath.moveTo(ruinLoc);
+          int distance = rc.getLocation().distanceSquaredTo(ruinLoc);
+          if (distance < 19 && distance != 17 && distance != 16) {
+            bugPathAroundWall = false;
+          } else {
+            break;
+          }
+        }
         if (Painter.mopCaptureRuin()) { 
           if(!rc.canSenseRobotAtLocation(GoalManager.current().target)){
             //ruin has no more enemy paint around it, start exploring

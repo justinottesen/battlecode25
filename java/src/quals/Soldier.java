@@ -13,6 +13,8 @@ public final class Soldier extends Robot {
   private int followID; //2nd soldier spawned from the starting paint/money towers stores the 1st soldier's id (1st soldier store -1 here)
   private RobotInfo spawnTowerInfo; //true if this soldier is spawned from the starting paint tower
 
+  private boolean bugPathAroundWall = false;
+
 
   public Soldier(RobotController rc_) throws GameActionException {
     super(rc_);
@@ -168,9 +170,35 @@ public final class Soldier extends Robot {
 
     switch (GoalManager.current().type) {
       case FIGHT_TOWER:
+        // Check if we are a dumbass running into a wall, if so bugnav
+        MapLocation towerLoc = GoalManager.current().target;
+        if (!bugPathAroundWall) {
+          MapLocation myLoc = rc.getLocation();
+          int distance = myLoc.distanceSquaredTo(towerLoc);
+          if (distance == 16 || distance == 17 || distance == 20) {
+            Direction dir = myLoc.directionTo(towerLoc);
+            MapLocation centerWall = myLoc.add(dir);
+            if (!rc.sensePassability(centerWall)) {
+              Direction dirToCenter = centerWall.directionTo(towerLoc);
+              if (!rc.sensePassability(myLoc.add(dirToCenter.rotateLeft())) && 
+              !rc.sensePassability(myLoc.add(dirToCenter.rotateRight()))) {
+                bugPathAroundWall = true;
+              }
+            }
+          }
+        }
+        if (bugPathAroundWall) {
+          BugPath.moveTo(towerLoc);
+          int distance = rc.getLocation().distanceSquaredTo(towerLoc);
+          if (distance < 19 && distance != 17 && distance != 16) {
+            bugPathAroundWall = false;
+          } else {
+            break;
+          }
+        }
         Painter.paintFight(goalTower);
-        if (!rc.canSenseRobotAtLocation(GoalManager.current().target) || rc.senseRobotAtLocation(GoalManager.current().target).getTeam() != OPPONENT) {
-          GoalManager.setNewGoal(Goal.Type.CAPTURE_RUIN, GoalManager.current().target);
+        if (!rc.canSenseRobotAtLocation(towerLoc) || rc.senseRobotAtLocation(towerLoc).getTeam() != OPPONENT) {
+          GoalManager.setNewGoal(Goal.Type.CAPTURE_RUIN, towerLoc);
         }
         // If health is too low and no friends around, stop fighting and explore
         if (rc.getHealth() < 30 && rc.senseNearbyRobots(rc.getType().actionRadiusSquared, TEAM).length == 0) {
@@ -184,6 +212,32 @@ public final class Soldier extends Robot {
         }
         break;
       case CAPTURE_RUIN:
+        // Check if we are a dumbass running into a wall, if so bugnav
+        MapLocation ruinLoc = GoalManager.current().target;
+        if (!bugPathAroundWall) {
+          MapLocation myLoc = rc.getLocation();
+          int distance = myLoc.distanceSquaredTo(ruinLoc);
+          if (distance == 16 || distance == 17 || distance == 20) {
+            Direction dir = myLoc.directionTo(ruinLoc);
+            MapLocation centerWall = myLoc.add(dir);
+            if (!rc.sensePassability(centerWall)) {
+              Direction dirToCenter = centerWall.directionTo(ruinLoc);
+              if (!rc.sensePassability(myLoc.add(dirToCenter.rotateLeft())) && 
+              !rc.sensePassability(myLoc.add(dirToCenter.rotateRight()))) {
+                bugPathAroundWall = true;
+              }
+            }
+          }
+        }
+        if (bugPathAroundWall) {
+          BugPath.moveTo(ruinLoc);
+          int distance = rc.getLocation().distanceSquaredTo(ruinLoc);
+          if (distance < 19 && distance != 17 && distance != 16) {
+            bugPathAroundWall = false;
+          } else {
+            break;
+          }
+        }
         if (Painter.paintCaptureRuin()) {
           // Check if we actually finished ruin or if we just can't make progress
           if (rc.canSenseRobotAtLocation(GoalManager.current().target)) {

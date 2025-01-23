@@ -79,7 +79,7 @@ public class Painter {
     if (!Robot.rc.isActionReady()) { return false; }
     
     // Paint under self
-    if (paint(Robot.rc.getLocation())) {
+    if (Robot.rc.senseMapInfo(Robot.rc.getLocation()).getPaint() == PaintType.EMPTY && paint(Robot.rc.getLocation())) {
       return true;
     }
 
@@ -92,11 +92,18 @@ public class Painter {
     }
 
     // Paint elsewhere
-    MapLocation[] locs = Robot.rc.getAllLocationsWithinRadiusSquared(Robot.rc.getLocation(), Robot.rc.getType().actionRadiusSquared);
-    for (MapLocation loc : locs) {
-      if (paint(loc)) {
-        return true;
+    MapInfo[] infos = Robot.rc.senseNearbyMapInfos(Robot.rc.getLocation(), Robot.rc.getType().actionRadiusSquared);
+    MapLocation backup = infos[0].getMapLocation();
+    for (MapInfo info : infos) {
+      if (info.getPaint() == PaintType.EMPTY) {
+        if (paint(info.getMapLocation())) { return true; }
+      } else {
+        if (shouldPaint(info.getMapLocation())) { backup = info.getMapLocation(); }
       }
+    }
+
+    if (paint(backup)) {
+      return true;
     }
     
     return false;

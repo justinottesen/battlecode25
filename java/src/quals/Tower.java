@@ -46,7 +46,7 @@ public final class Tower extends Robot {
     }
 
     // Suicide for paint if worth it
-    if (rc.getType().getBaseType() != rc.getType() && // DO NOT suicide level 2 towers (starter towers only?)
+    if (rc.getType().getBaseType() == rc.getType() && // DO NOT suicide level 2 towers (starter towers only?)
        (rc.getPaint() < PAINT_SUICIDE_THRESHOLD) && // No more paint
         rc.getChips() > 2000 && // Enough chips (we hope)
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&

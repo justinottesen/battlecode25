@@ -141,7 +141,7 @@ public final class Soldier extends Robot {
     }
 
     // Look for nearby ruins if we aren't already fighting a tower
-    if (GoalManager.current().type.v < Goal.Type.FIGHT_TOWER.v && rc.getHealth() >= 30) {
+    if (GoalManager.current().type.v <= Goal.Type.FIGHT_TOWER.v && rc.getHealth() >= 30) {
       boolean setGoal = false;
       MapLocation[] ruins = rc.senseNearbyRuins(-1);
       for (MapLocation ruin : ruins) {
@@ -219,17 +219,35 @@ public final class Soldier extends Robot {
               }
             }
           } else {
-            // Only request backup if we don't already see a mopper
-            boolean foundMopper = false;
-            for (RobotInfo info : rc.senseNearbyRobots(-1, TEAM)) {
-              if (info.getType() == UnitType.MOPPER) {
-                foundMopper = true;
-                break;
+            rc.setIndicatorString("Ruin pattern complete + enemy paint");
+            //special case: we are trying to capture a tower near the front
+            MapLocation nearestFront = MapData.getNearestFront();
+            boolean quit = false;
+            if(nearestFront!=null){
+              //count the number of allied soldiers also trying to capture the tower, (we'll leave only 1 soldier)
+              for(RobotInfo info : rc.senseNearbyRobots(GoalManager.current().target,8,TEAM)){
+                //break soldier-ties with id num
+                if(info.getType()==UnitType.SOLDIER && info.getID()<rc.getID()){
+                  GoalManager.pushGoal(Goal.Type.FIGHT_TOWER,nearestFront);
+                  quit = true;
+                  rc.setIndicatorString("Quitting to attack "+nearestFront);
+                  break;
+                }
               }
             }
-            if (!foundMopper) {
-              MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
-              GoalManager.pushGoal(Goal.Type.GET_BACKUP, tower == null ? Robot.spawnTower : tower);
+            if(!quit){
+              // Only request backup if we don't already see a mopper
+              boolean foundMopper = false;
+              for (RobotInfo info : rc.senseNearbyRobots(-1, TEAM)) {
+                if (info.getType() == UnitType.MOPPER) {
+                  foundMopper = true;
+                  break;
+                }
+              }
+              if (!foundMopper) {
+                MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
+                GoalManager.pushGoal(Goal.Type.GET_BACKUP, tower == null ? Robot.spawnTower : tower);
+              }
             }
           }
         }

@@ -1271,9 +1271,11 @@ public class MapData {
       MapLocation front = new MapLocation((int)activeFronts.charAt(i),(int)activeFronts.charAt(i+1));
       Robot.rc.setIndicatorDot(front,0,255,255);
       if(!Robot.rc.canSenseLocation(front)) continue;
-      //if(Clock.getBytecodesLeft()<500) break;  //cut out early if we're out of bytecode
-      RobotInfo tower = Robot.rc.senseRobotAtLocation(front);
-      if(tower==null || tower.getTeam()==Robot.rc.getTeam()) removeFromFronts(front);
+      if(Clock.getBytecodesLeft()<500) break;  //cut out early if we're out of bytecode
+      RobotInfo[] enemies = Robot.rc.senseNearbyRobots(front,8,Robot.rc.getTeam().opponent());
+      for(RobotInfo enemy:enemies){
+        if(enemy.getType().isTowerType()) removeFromFronts(front);
+      }
     }
   }
 

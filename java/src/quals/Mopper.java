@@ -1,5 +1,7 @@
 package quals;
 
+import javax.sql.*;
+
 import battlecode.common.*;
 import quals.util.*;
 
@@ -12,17 +14,6 @@ public final class Mopper extends Robot {
   public Mopper(RobotController rc_) throws GameActionException {
     super(rc_);
 
-    // Read incoming messages
-    for (Message m : rc.readMessages(-1)) {
-      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
-        case Communication.SUICIDE: // INTENTIONAL FALLTHROUGH
-        case Communication.REQUEST_MOPPER:
-          GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
-          break;
-        default:
-          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
-      }
-    }
     MovementManager.setMode(MovementManager.Mode.NO_ENEMY);
   }
 
@@ -39,10 +30,19 @@ public final class Mopper extends Robot {
     // UPDATE GOAL ------------------------------------------------------------
 
     // Check for a suicide message, if received this is priority number 1
-    Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
-    for (Message m : messages) {
-      if (Communication.getMessageType(m.getBytes()) == Communication.SUICIDE) {
-        GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
+    // Read incoming messages
+    for (Message m : rc.readMessages(rc.getRoundNum()-1)) {
+      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
+        case Communication.SUICIDE: // INTENTIONAL FALLTHROUGH
+        case Communication.REQUEST_MOPPER:
+          GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
+          break;
+        case Communication.FRONT:
+          System.out.println("RECEIVED FRONT MESSAGE");
+          Communication.updateFronts(m.getBytes());
+          break;
+        default:
+          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
       }
     }
 

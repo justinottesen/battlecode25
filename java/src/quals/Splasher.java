@@ -26,8 +26,7 @@ public final class Splasher extends Robot {
     }
 
     // Check for a suicide message, if received this is priority number 1
-    Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
-    for (Message m : messages) {
+    for (Message m : rc.readMessages(rc.getRoundNum()-1)) {
       switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
         case Communication.SUICIDE:
           Goal goal = new Goal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
@@ -35,6 +34,10 @@ public final class Splasher extends Robot {
             GoalManager.replaceTopGoal(goal);
           };
           Robot.rc.setIndicatorString("Received Suicide message " + Communication.getCoordinates(m.getBytes()));
+          break;
+        case Communication.FRONT:
+          System.out.println("RECEIVED FRONT MESSAGE");
+          Communication.updateFronts(m.getBytes());
           break;
         default:
           System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);

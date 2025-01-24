@@ -126,18 +126,40 @@ public class Painter {
 
     // Try to attack someone
     RobotInfo[] robots = Robot.rc.senseNearbyRobots(Robot.rc.getType().actionRadiusSquared, Robot.rc.getTeam().opponent());
+    MapLocation nearestRobot = null;
     for (RobotInfo robot : robots) {
       if (mop(robot.getLocation())) {
         return true;
       }
+      //look for non-tower robots to chase down
+      if(!robot.getType().isTowerType() && (nearestRobot==null || Robot.rc.getLocation().distanceSquaredTo(robot.getLocation())<Robot.rc.getLocation().distanceSquaredTo(nearestRobot))){
+        nearestRobot = robot.getLocation();
+      }
+    }
+
+    //try to chase down the nearest enemy robot
+    if(Robot.rc.isMovementReady() && nearestRobot!=null){
+      BugPath.moveTo(nearestRobot);
+      if (mop(nearestRobot)) return true;
     }
 
     // Mop elsewhere
-    MapLocation[] locs = Robot.rc.getAllLocationsWithinRadiusSquared(Robot.rc.getLocation(), Robot.rc.getType().actionRadiusSquared);
-    for (MapLocation loc : locs) {
-      if (mop(loc)) {
+    //MapLocation[] locs = Robot.rc.getAllLocationsWithinRadiusSquared(Robot.rc.getLocation(), Robot.rc.getType().actionRadiusSquared);
+    MapInfo[] locs = Robot.rc.senseNearbyMapInfos();
+    MapLocation nearestEnemyPaint = null;
+    for (MapInfo loc : locs) {
+      if (mop(loc.getMapLocation())) {
         return true;
       }
+      if(loc.getPaint().isEnemy() && (nearestEnemyPaint == null || Robot.rc.getLocation().distanceSquaredTo(loc.getMapLocation())<Robot.rc.getLocation().distanceSquaredTo(nearestEnemyPaint))){
+        nearestEnemyPaint = loc.getMapLocation();
+      }
+    }
+
+    //try to move towards the nearest enemy paint
+    if(Robot.rc.isMovementReady() && nearestEnemyPaint!=null){
+      BugPath.moveTo(nearestEnemyPaint);
+      if (mop(nearestEnemyPaint)) return true;
     }
 
     return false;

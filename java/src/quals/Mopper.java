@@ -38,7 +38,6 @@ public final class Mopper extends Robot {
           GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
           break;
         case Communication.FRONT:
-          System.out.println("RECEIVED FRONT MESSAGE");
           Communication.updateFronts(m.getBytes());
           break;
         default:

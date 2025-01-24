@@ -259,7 +259,6 @@ public class Communication {
   public static boolean trySendMessage(int message, MapLocation target) throws GameActionException {
     if (message == 0) { return false; }
     if (!Robot.rc.canSenseRobotAtLocation(target) || !Robot.rc.canSendMessage(target)) { return false; }
-    System.out.println("SENDING MESSAGE" + (message & MESSAGE_TYPE_BITMASK));
     Robot.rc.sendMessage(target, message);
     return true;
   }
@@ -283,7 +282,6 @@ public class Communication {
   public static boolean tryBroadcastMessae(int message) throws GameActionException {
     if (message == 0) { return false; }
     if (!Robot.rc.canBroadcastMessage()) { return false; }
-    System.out.println("BROADCASTING MESSAGE" + (message & MESSAGE_TYPE_BITMASK));
     Robot.rc.broadcastMessage(message);
     return true;
   }

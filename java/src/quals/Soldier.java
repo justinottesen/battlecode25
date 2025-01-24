@@ -239,7 +239,9 @@ public final class Soldier extends Robot {
   }
 
   protected void doMacro() throws GameActionException {
+    if (DEBUG) { System.out.println("Entering doMacro"); }
     if (GoalManager.current().type != Goal.Type.FIGHT_TOWER || !rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.VISION_RADIUS_SQUARED)) {
+      if (DEBUG) { System.out.println("Pathfinding to target " + GoalManager.current().target); }
       Pathfinding.moveTo(GoalManager.current().target); //note that Soldier defaults to ANY, can be set anywhere, but must be set back to ANY
     }
     if(!initialSoldiers && GoalManager.current().type != Goal.Type.SURVIVE && GoalManager.current().type != Goal.Type.REFILL_PAINT){  //initial soldier, SURVIVE, and REFILL_PAINT soldiers shouldn't waste paint
@@ -250,10 +252,10 @@ public final class Soldier extends Robot {
   private void opening() throws GameActionException {
     boolean isExploring = GoalManager.current().type == Goal.Type.CAPTURE_RUIN; //note that the for loop can set the GoalManager, I want to remember what it had before we enter the for loop
     MapLocation closestRuin = null;
+    if (DEBUG) { System.out.println("Calling Opening (Goal: " + GoalManager.current() + ")"); }
     // Update any close ruins sites if we don't have a goal already
     if (goalTower == null) {
       for (MapLocation ruin : rc.senseNearbyRuins(-1)) {
-        MapData.updateData(rc.senseMapInfo(ruin));
         RobotInfo tower = rc.senseRobotAtLocation(ruin);
         if(tower!=null){
           if(tower.getTeam()==rc.getTeam().opponent()){
@@ -278,6 +280,8 @@ public final class Soldier extends Robot {
       }
     }
 
+    if (DEBUG ) { System.out.println("After goal ruin loop (Goal: " + GoalManager.current() + ")"); }
+    
     // if we have a ruin in sight, look for enemy paint around it
     // we use a while loop so we can calculate multiple ruins at once (if possible)
     while(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
@@ -310,10 +314,15 @@ public final class Soldier extends Robot {
       }
       if(ruinGood || Clock.getBytecodesLeft() < 500) break;
     }
+
+    if (DEBUG) { System.out.println("After contested ruin loop (Goal: " + GoalManager.current() + ")"); }
     
 
     if(GoalManager.current().type == Goal.Type.FIGHT_TOWER){
       Painter.emergencyBugNav();
+
+      if (DEBUG) { System.out.println("Fighting Tower (Goal: " + GoalManager.current() + ")"); }
+
       MapLocation enemyTower = GoalManager.current().target;
       //goalTower is a class variable set in the ruin-scanning for loop (only set to enemy towers in opening())
       Painter.paintFight(goalTower);
@@ -328,6 +337,9 @@ public final class Soldier extends Robot {
       }
     }else if(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
       Painter.emergencyBugNav();
+
+      if (DEBUG) { System.out.println("Capturing Ruin (Goal: " + GoalManager.current() + ")"); }
+
       MapLocation targetRuin = GoalManager.current().target;
       Painter.paintCaptureRuin();
       if (rc.canSenseLocation(targetRuin) && rc.canSenseRobotAtLocation(targetRuin)) {
@@ -345,6 +357,9 @@ public final class Soldier extends Robot {
         }
       }
     }else{ //explore
+
+      if (DEBUG) { System.out.println("Exploring (Goal: " + GoalManager.current() + ")"); }
+
       //roam if there's no ruin in sight
       if(followID!=-1 && rc.canSenseRobot(followID)){ //second soldier
         RobotInfo firstSoldier = rc.senseRobot(followID);
@@ -382,6 +397,7 @@ public final class Soldier extends Robot {
           }
 
           if(guessEnemyTower!=null){
+            if (DEBUG) { System.out.println("Setting goal to guess enemy tower : " + guessEnemyTower); }
             GoalManager.replaceTopGoal(Goal.Type.EXPLORE, guessEnemyTower);
           }else{
             //this should never run, since it rules out all 3 symmetries, but if it does, default to normal exploration
@@ -491,7 +507,10 @@ public final class Soldier extends Robot {
       }
 
       //give penalties based on enemy moppers and allied units
-      for(RobotInfo r : nearbyRobots){
+      // int friends = 0;
+      for(RobotInfo r : nearbyRobots) {
+        // If we see >2 nearby friends, someone has come to support us and we can go home
+        // if (r.getTeam() == rc.getTeam()) { if (++friends > 2) { GoalManager.setNewGoal(Goal.Type.EXPLORE, spawnTower); return; } }
         if(r.getType().isTowerType() || (r.getTeam()!=rc.getTeam() && r.getType()!=UnitType.MOPPER)) continue;  //ignore towers (both teams) and enemies that aren't moppers
         if(r.getTeam()==rc.getTeam() && r.getLocation().distanceSquaredTo(destination)<=2){
           //allied crowding penalty

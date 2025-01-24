@@ -129,9 +129,9 @@ public class Communication {
     int loc2bits = (loc2 == null ? FRONT_LOC_BITMASK : (loc2.x / 5) + (loc2.y / 5) * 12);
     int loc3bits = (loc3 == null ? FRONT_LOC_BITMASK : (loc3.x / 5) + (loc3.y / 5) * 12);
 
-    int add1bits = (add1 ? 1 << ADD_1_BITSHIFT : 0);
-    int add2bits = (add2 ? 1 << ADD_2_BITSHIFT : 0);
-    int add3bits = (add3 ? 1 << ADD_3_BITSHIFT : 0);
+    int add1bits = (add1 ? 1 : 0);
+    int add2bits = (add2 ? 1 : 0);
+    int add3bits = (add3 ? 1 : 0);
 
     return ((add3bits << ADD_3_BITSHIFT) | (loc3bits << LOC_3_BITSHIFT) | 
             (add2bits << ADD_2_BITSHIFT) | (loc2bits << LOC_2_BITSHIFT) | 
@@ -148,23 +148,23 @@ public class Communication {
     
     if (loc1bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_1_BITSHIFT)) > 0) {
-        MapData.removeFromFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
-      } else {
         MapData.addToFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
+      } else {
+        MapData.removeFromFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
       }
     }
     if (loc2bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_2_BITSHIFT)) > 0) {
-        MapData.removeFromFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
-      } else {
         MapData.addToFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
+      } else {
+        MapData.removeFromFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
       }
     }
     if (loc3bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_3_BITSHIFT)) > 0) {
-        MapData.removeFromFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
-      } else {
         MapData.addToFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
+      } else {
+        MapData.removeFromFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
       }
     }
   }

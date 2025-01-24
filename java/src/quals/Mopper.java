@@ -90,7 +90,13 @@ public final class Mopper extends Robot {
     switch (GoalManager.current().type) {
       case CAPTURE_RUIN:
         Painter.emergencyBugNav();
-        if (Painter.mopCaptureRuin()) { 
+        if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target)) {
+          rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
+          MapData.updateData(Robot.rc.senseMapInfo(GoalManager.current().target));
+          GoalManager.popGoal();
+          break;
+        }
+        if (Painter.mopCaptureRuin()) {   //TODO: make sure moppers don't ditch complete patterns that need rebuilding
           if(!rc.canSenseRobotAtLocation(GoalManager.current().target)){
             //ruin has no more enemy paint around it, start exploring
             completedRuinJob = GoalManager.current().target;

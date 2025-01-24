@@ -290,6 +290,22 @@ public final class Soldier extends Robot {
           break;
         }
       }
+      if(!ruinGood){
+        //try to block the ruin if it is contested (if we have to)
+        MapLocation emptyTile = null;
+        for(MapInfo m : towerPatternTiles){
+          if(m.getPaint().isAlly()){
+            emptyTile = null; //this is how we tell the post loop that we don't need to block
+            break;
+          }
+          if(emptyTile==null && m.getPaint()==PaintType.EMPTY && m.getMapLocation().distanceSquaredTo(rc.getLocation())<9){
+            emptyTile = m.getMapLocation();
+          }
+        }
+        if(emptyTile!=null && rc.isActionReady() && rc.canAttack(emptyTile)){
+          rc.attack(emptyTile,true);
+        }
+      }
       if(ruinGood || Clock.getBytecodesLeft() < 500) break;
     }
     

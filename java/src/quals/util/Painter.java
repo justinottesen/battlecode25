@@ -566,7 +566,7 @@ public class Painter {
     MapLocation towerLoc = GoalManager.current().target;
     MapLocation myLoc = Robot.rc.getLocation();
     int distance = myLoc.distanceSquaredTo(towerLoc);
-    if (distance == 16 || distance == 17 || distance == 20) {
+    if (distance >= 16) {
         BugPath.moveTo(towerLoc);
         Robot.rc.setIndicatorDot(towerLoc,255,0,255);
     }

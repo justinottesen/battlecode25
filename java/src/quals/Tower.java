@@ -33,7 +33,6 @@ public final class Tower extends Robot {
           trySpawn(UnitType.MOPPER, Communication.getCoordinates(m.getBytes()));
           break;
         case Communication.FRONT:
-          System.out.println("RECEIVED FRONT MESSAGE");
           Communication.updateFronts(m.getBytes());
           break;  
         default:

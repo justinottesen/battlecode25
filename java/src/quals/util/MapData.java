@@ -1226,10 +1226,6 @@ public class MapData {
   public static void addToFronts(MapLocation m) { addToFronts(m.x, m.y); }
 
   public static void addToFronts(int x, int y){
-    try { Robot.rc.setIndicatorLine(Robot.rc.getLocation(), new MapLocation(x, y), 255, 0, 0); } catch (Exception e) {
-      System.out.println("UH OH!");
-      e.printStackTrace();
-    }
     String locString = "";
     locString +=(char)x;
     locString +=(char)y;
@@ -1239,16 +1235,11 @@ public class MapData {
     }
     if(activeFronts.contains(locString)) return;
     activeFronts += locString;
-    System.out.println("AHHH " + activeFronts.length());
   }
 
   public static void removeFromFronts(MapLocation m) { removeFromFronts(m.x, m.y); }
 
   public static void removeFromFronts(int x, int y){
-    try { Robot.rc.setIndicatorLine(Robot.rc.getLocation(), new MapLocation(x, y), 0, 0, 255); } catch (Exception e) {
-      System.out.println("UH OH!");
-      e.printStackTrace();
-    }
     String locString = "";
     locString +=(char)x;
     locString +=(char)y;
@@ -1258,7 +1249,6 @@ public class MapData {
     }
     if(inactiveFronts.contains(locString)) return;
     inactiveFronts += locString;
-    System.out.println("INACT " + inactiveFronts.length());
   }
 
   //fronts are just enemy towers (for simplicity)

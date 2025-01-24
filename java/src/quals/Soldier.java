@@ -84,7 +84,6 @@ public final class Soldier extends Robot {
           Robot.rc.setIndicatorString("Received Suicide message " + Communication.getCoordinates(m.getBytes()));
           break;
         case Communication.FRONT:
-          System.out.println("RECEIVED FRONT MESSAGE");
           Communication.updateFronts(m.getBytes());
           break;
         default:

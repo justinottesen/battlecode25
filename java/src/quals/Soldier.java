@@ -431,7 +431,7 @@ public final class Soldier extends Robot {
       RobotInfo tower = rc.senseRobotAtLocation(GoalManager.current().target);
       if (tower!=null && tower.getType().isTowerType()) {
         int paintAmount = rc.getType().paintCapacity - rc.getPaint();
-        //if (tower.getPaintAmount() - UnitType.MOPPER.paintCost < paintAmount) { paintAmount = tower.getPaintAmount() - UnitType.MOPPER.paintCost; }
+        if (tower.getPaintAmount() < paintAmount) { paintAmount = tower.getPaintAmount(); }
         rc.setIndicatorString("failed to refill " + paintAmount);
         if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
           rc.setIndicatorString("succeeded in refilling " + paintAmount);

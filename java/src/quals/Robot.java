@@ -55,6 +55,15 @@ public abstract class Robot {
     doMacro(); // Secondarily act to achieve big picture goal
     MapData.lookForFrontsToAdd();
     MapData.analyzeExistingFronts();
+    // At the end of the turn, communicate fronts
+    if (!rc.getType().isTowerType()) {
+      for (RobotInfo info : rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM)) {
+        if (!info.getType().isTowerType()) { continue; }
+        if (!rc.canSendMessage(info.getLocation())) { continue; }
+        Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation());
+        break;
+      }
+    }
     ++turnNum;
   }
 

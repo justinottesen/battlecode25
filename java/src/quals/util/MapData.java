@@ -24,8 +24,8 @@ public class MapData {
   private static boolean[][] MONEY_ARRAY;
   private static boolean[][] DEFENSE_ARRAY;
   
-  private static String activeFronts;
-  private static String inactiveFronts;
+  public static String activeFronts;
+  public static String inactiveFronts;
 
   public static MapLocation foundSRP = null; // TODO: REMOVE THIS TEMPORARY WORKAROUND
 
@@ -1207,28 +1207,58 @@ public class MapData {
     mapData[index] |= (GOAL_COLOR_CANDIDATE | (SRP_ARRAY[4][4] ? GOAL_SECONDARY_PAINT : 0));
   }
 
-  public static void addToFronts(MapLocation m){
+  public static int numActiveFronts() { return activeFronts.length() / 3; }
+
+  public static MapLocation getActiveFrontAtIndex(int i) {
+    if (i < numActiveFronts()) {
+      return new MapLocation((int)activeFronts.charAt(3*i), (int)activeFronts.charAt(3*i+1));
+    } else { return null; }
+  }
+
+  public static int numInactiveFronts() { return inactiveFronts.length() / 3; }
+
+  public static MapLocation getInactiveFrontAtIndex(int i) {
+    if (i < numInactiveFronts()) {
+      return new MapLocation((int)inactiveFronts.charAt(3*i), (int)inactiveFronts.charAt(3*i+1));
+    } else { return null; }
+  }
+
+  public static void addToFronts(MapLocation m) { addToFronts(m.x, m.y); }
+
+  public static void addToFronts(int x, int y){
+    try { Robot.rc.setIndicatorLine(Robot.rc.getLocation(), new MapLocation(x, y), 255, 0, 0); } catch (Exception e) {
+      System.out.println("UH OH!");
+      e.printStackTrace();
+    }
     String locString = "";
-    locString +=(char)m.x;
-    locString +=(char)m.y;
+    locString +=(char)x;
+    locString +=(char)y;
     locString +=(char)69;
     if(inactiveFronts.contains(locString)){
       inactiveFronts = inactiveFronts.replace(locString,""); //effectively removes locString from inactiveFronts
     }
     if(activeFronts.contains(locString)) return;
     activeFronts += locString;
+    System.out.println("AHHH " + activeFronts.length());
   }
 
-  public static void removeFromFronts(MapLocation m){
+  public static void removeFromFronts(MapLocation m) { removeFromFronts(m.x, m.y); }
+
+  public static void removeFromFronts(int x, int y){
+    try { Robot.rc.setIndicatorLine(Robot.rc.getLocation(), new MapLocation(x, y), 0, 0, 255); } catch (Exception e) {
+      System.out.println("UH OH!");
+      e.printStackTrace();
+    }
     String locString = "";
-    locString +=(char)m.x;
-    locString +=(char)m.y;
+    locString +=(char)x;
+    locString +=(char)y;
     locString +=(char)69;
     if(activeFronts.contains(locString)){
       activeFronts = activeFronts.replace(locString,""); //effectively removes locString from activeFronts
     }
     if(inactiveFronts.contains(locString)) return;
     inactiveFronts += locString;
+    System.out.println("INACT " + inactiveFronts.length());
   }
 
   //fronts are just enemy towers (for simplicity)

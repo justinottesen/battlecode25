@@ -8,6 +8,8 @@ public final class Tower extends Robot {
 
   private final int TOWER_ATTACK_RADIUS;
 
+  private final int MAX_BROADCAST = 5;
+
   private final MapLocation LOCATION;
 
   private final int PAINT_SUICIDE_THRESHOLD = UnitType.MOPPER.paintCost;
@@ -25,11 +27,15 @@ public final class Tower extends Robot {
     attackEnemies();
 
     // Read incoming messages
-    for (Message m : rc.readMessages(-1)) {
+    for (Message m : rc.readMessages(rc.getRoundNum()-1)) {
       switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
         case Communication.REQUEST_MOPPER:
           trySpawn(UnitType.MOPPER, Communication.getCoordinates(m.getBytes()));
           break;
+        case Communication.FRONT:
+          System.out.println("RECEIVED FRONT MESSAGE");
+          Communication.updateFronts(m.getBytes());
+          break;  
         default:
           System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
       }
@@ -63,6 +69,12 @@ public final class Tower extends Robot {
 
   protected void doMacro() throws GameActionException {
     spawnRobots();
+
+    // Broadcast Fronts to other towers
+    int count = 0;
+    while (rc.canBroadcastMessage() && count++ < MAX_BROADCAST) {
+      if (!Communication.tryBroadcastMessae(Communication.createFrontsMessage())) { break; }
+    }
   }
 
   /**

@@ -148,23 +148,23 @@ public class Communication {
     
     if (loc1bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_1_BITSHIFT)) > 0) {
-        MapData.addToFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
-      } else {
         MapData.removeFromFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
+      } else {
+        MapData.addToFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
       }
     }
     if (loc2bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_2_BITSHIFT)) > 0) {
-        MapData.addToFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
-      } else {
         MapData.removeFromFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
+      } else {
+        MapData.addToFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
       }
     }
     if (loc3bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_3_BITSHIFT)) > 0) {
-        MapData.addToFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
-      } else {
         MapData.removeFromFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
+      } else {
+        MapData.addToFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
       }
     }
   }
@@ -230,7 +230,7 @@ public class Communication {
     return success;
   }
 
-  public static boolean tryBroadcastMessae(int message) throws GameActionException {
+  public static boolean tryBroadcastMessage(int message) throws GameActionException {
     if (message == 0) { return false; }
     if (!Robot.rc.canBroadcastMessage()) { return false; }
     Robot.rc.broadcastMessage(message);

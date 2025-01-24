@@ -257,7 +257,7 @@ public final class Soldier extends Robot {
       if (DEBUG) { System.out.println("Pathfinding to target " + GoalManager.current().target); }
       Pathfinding.moveTo(GoalManager.current().target); //note that Soldier defaults to ANY, can be set anywhere, but must be set back to ANY
     }
-    if(!initialSoldiers && GoalManager.current().type != Goal.Type.SURVIVE && GoalManager.current().type != Goal.Type.REFILL_PAINT){  //initial soldier, SURVIVE, and REFILL_PAINT soldiers shouldn't waste paint
+    if(!initialSoldiers && GoalManager.current().type == Goal.Type.EXPLORE && rc.getPaint()>100){  //initial soldier and soldiers low on paint shouldn't waste paint
       Painter.paint();
     }
   }

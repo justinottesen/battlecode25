@@ -290,7 +290,7 @@ public class Painter {
         MovementManager.move(dir);
         current = Robot.rc.getLocation();
         // Check if there is paint under our feet
-        if (paint(current)) { break; }
+        //if (paint(current)) { break; }
       }
       if (!shouldPaint(loc)) { continue; }
       if (paint(loc)) { break; }

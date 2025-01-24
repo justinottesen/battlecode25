@@ -43,16 +43,6 @@ public final class Soldier extends Robot {
   }
 
   protected void doMicro() throws GameActionException {
-    //surviving takes all precendent over everything
-    if(GoalManager.current().type == Goal.Type.SURVIVE || rc.getPaint()<7){
-      if(rc.getPaint()>7){
-        GoalManager.setNewGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
-      }else{
-        rc.setIndicatorString("SURVIVE");
-        survive();
-        return;
-      }
-    }
     //hard code the opening (ignores the rest of the function for now)
     if(initialSoldiers){
       rc.setIndicatorString("INITIAL SOLDIERS");
@@ -82,12 +72,35 @@ public final class Soldier extends Robot {
             GoalManager.replaceTopGoal(goal);
           };
           Robot.rc.setIndicatorString("Received Suicide message " + Communication.getCoordinates(m.getBytes()));
+          //rebuild a tower
+          BugPath.moveTo(GoalManager.current().target);
+          if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target)) {
+            rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
+            MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
+            //GoalManager.replaceTopGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
+          }
+          if(rc.canSenseRobotAtLocation(GoalManager.current().target)){
+            //ruin has no more enemy paint around it, start exploring
+            rc.setIndicatorDot(GoalManager.current().target,255,255,255);
+            GoalManager.popGoal();
+          }
           break;
         case Communication.FRONT:
           Communication.updateFronts(m.getBytes());
           break;
         default:
           System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
+      }
+    }
+
+    //surviving takes all precendent over everything
+    if(GoalManager.current().type == Goal.Type.SURVIVE || rc.getPaint()<7){
+      if(rc.getPaint()>7){
+        GoalManager.popGoal();
+      }else{
+        //rc.setIndicatorString("SURVIVE");
+        survive();
+        return;
       }
     }
 
@@ -176,7 +189,7 @@ public final class Soldier extends Robot {
         Painter.paintFight(goalTower);
         MapLocation towerLoc = GoalManager.current().target;
         if (!rc.canSenseRobotAtLocation(towerLoc) || rc.senseRobotAtLocation(towerLoc).getTeam() != OPPONENT) {
-          GoalManager.setNewGoal(Goal.Type.CAPTURE_RUIN, towerLoc);
+          GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, towerLoc);
         }
         // If health is too low and no friends around, stop fighting and explore
         if (rc.getHealth() < 30 && rc.senseNearbyRobots(rc.getType().actionRadiusSquared, TEAM).length == 0) {
@@ -329,11 +342,8 @@ public final class Soldier extends Robot {
       rc.setIndicatorDot(enemyTower,0,255,0);
       if(rc.canSenseLocation(enemyTower)&&!rc.canSenseRobotAtLocation(enemyTower)){
         //if we've killed the enemy tower
-        //set to survive mode
         initialSoldiers=false;  //we can be done with the opening if we successfully kill a tower
         GoalManager.setNewGoal(Goal.Type.EXPLORE, MapData.getExploreTarget());
-        //GoalManager.setNewGoal(Goal.Type.SURVIVE,rc.getLocation());
-        //survive();
       }
     }else if(GoalManager.current().type == Goal.Type.CAPTURE_RUIN){
       Painter.emergencyBugNav();
@@ -438,7 +448,7 @@ public final class Soldier extends Robot {
         if(rc.canAttack(ruin)) rc.attack(ruin); //kamikaze ig
       } else {
         // We found a friendly tower, explore in that direction
-        GoalManager.setNewGoal(Goal.Type.SURVIVE, ruin);
+        GoalManager.replaceTopGoal(Goal.Type.SURVIVE, ruin);
         //return;
       }
     }
@@ -572,7 +582,7 @@ public final class Soldier extends Robot {
     */
 
     //set goal to the best direction
-    GoalManager.setNewGoal(Goal.Type.SURVIVE,currentLoc.add(bestDirection));
+    GoalManager.replaceTopGoal(Goal.Type.SURVIVE,currentLoc.add(bestDirection));
     //rc.setIndicatorDot(currentLoc.add(bestDirection),0,0,255);
     if(rc.canMove(bestDirection)){
       rc.move(bestDirection);

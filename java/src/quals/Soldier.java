@@ -435,6 +435,7 @@ public final class Soldier extends Robot {
         enemyTowerString += (char) ruin.x;
         enemyTowerString += (char) ruin.y;
         enemyTowerString += (char) 69;  //hope that no map exceeds 68x68 cuz its funny
+        if(rc.canAttack(ruin)) rc.attack(ruin); //kamikaze ig
       } else {
         // We found a friendly tower, explore in that direction
         GoalManager.setNewGoal(Goal.Type.SURVIVE, ruin);
@@ -452,7 +453,7 @@ public final class Soldier extends Robot {
         if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
           rc.setIndicatorString("succeeded in refilling " + paintAmount);
           rc.transferPaint(GoalManager.current().target, -paintAmount);
-          emptyTowers = "";
+          //emptyTowers = "";
           GoalManager.popGoal();
           return;
         }

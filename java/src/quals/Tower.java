@@ -72,7 +72,7 @@ public final class Tower extends Robot {
     // Broadcast Fronts to other towers
     int count = 0;
     while (rc.canBroadcastMessage() && count++ < MAX_BROADCAST) {
-      if (!Communication.tryBroadcastMessae(Communication.createFrontsMessage())) { break; }
+      if (!Communication.tryBroadcastMessage(Communication.createFrontsMessage())) { break; }
     }
   }
 

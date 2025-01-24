@@ -1269,6 +1269,7 @@ public class MapData {
     //see if we need to transition any of our active fronts to inactive
     for(int i=0; i<activeFronts.length(); i+=3){
       MapLocation front = new MapLocation((int)activeFronts.charAt(i),(int)activeFronts.charAt(i+1));
+      Robot.rc.setIndicatorDot(front,0,255,255);
       if(!Robot.rc.canSenseLocation(front)) continue;
       //if(Clock.getBytecodesLeft()<500) break;  //cut out early if we're out of bytecode
       RobotInfo tower = Robot.rc.senseRobotAtLocation(front);

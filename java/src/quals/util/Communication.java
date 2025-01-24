@@ -55,6 +55,8 @@ public class Communication {
    */
   public static int getMessageType(int message) { return message & MESSAGE_TYPE_BITMASK; }
 
+  public static void resetSentFronts() { turnCount = -1; }
+
   /**
    * Creates the fronts message from the next fronts which should be updated
    */

@@ -40,6 +40,10 @@ public class Communication {
       public static final int ADD_2_BITSHIFT = 21;
       public static final int ADD_3_BITSHIFT = 30;
 
+      public static int turnCount = 0;
+      public static int turnSentActive = 0;
+      public static int turnSentInactive = 0;
+
       public static int activeFrontsIndex = 0;
       public static int inactiveFrontsIndex = 0;
 
@@ -55,9 +59,18 @@ public class Communication {
    * Creates the fronts message from the next fronts which should be updated
    */
   public static int createFrontsMessage() {
+    // Check if we need to reset the sent counter
+    if (turnCount < Robot.rc.getRoundNum()) {
+      turnCount = Robot.rc.getRoundNum();
+      turnSentActive = 0;
+      turnSentInactive = 0;
+    }
 
-    // If both lists are empty, no need
-    if (MapData.numActiveFronts() == 0 && MapData.numInactiveFronts() == 0) { return 0; }
+    int activeTotal = MapData.numActiveFronts();
+    int inactiveTotal = MapData.numInactiveFronts();
+
+    // If we already sent all the messages, no need
+    if (turnSentActive >= activeTotal && turnSentInactive >= inactiveTotal) { return 0; }
 
     // Create return values
     MapLocation loc1 = null;
@@ -70,12 +83,10 @@ public class Communication {
     // Want to stop after we have sent all fronts
     int activeSent = 0;
     int inactiveSent = 0;
-    int activeTotal = MapData.numActiveFronts();
-    int inactiveTotal = MapData.numInactiveFronts();
 
     // Start from where we previously left off (or 0 if end / resize)
-    int activeIndex = (activeFrontsIndex >= activeTotal ? activeFrontsIndex : 0);
-    int inactiveIndex = (inactiveFrontsIndex >= inactiveTotal ? inactiveFrontsIndex : 0);
+    int activeIndex = activeFrontsIndex;
+    int inactiveIndex = inactiveFrontsIndex;
 
     // Which one should we try to send (always prefer active)
     boolean activePriority = (activeSent < activeTotal);
@@ -121,10 +132,80 @@ public class Communication {
     return createFrontsMessage(loc1, add1, loc2, add2, loc3, add3);
   }
 
+  public static int createFrontsMessage(boolean active) {
+    // Check if we need to reset the sent counter
+    if (turnCount < Robot.rc.getRoundNum()) {
+      turnCount = Robot.rc.getRoundNum();
+      turnSentActive = 0;
+      turnSentInactive = 0;
+    }
+
+    // Don't send if we have sent all fronts
+    int total = (active ? MapData.numActiveFronts() : MapData.numInactiveFronts());
+    if ((active ? turnSentActive : turnSentInactive) > total) { return 0; }
+
+    int sent = 0;
+    int startIndex = (active ? activeFrontsIndex : inactiveFrontsIndex); 
+    int index = startIndex;
+
+    // Create return values
+    MapLocation loc1 = null;
+    MapLocation loc2 = null;
+    MapLocation loc3 = null;
+
+    // Stop after we have sent all fronts
+    while (sent < total) {
+      // Grab next location
+      MapLocation loc = (active ? MapData.getActiveFrontAtIndex(index) : MapData.getInactiveFrontAtIndex(index));
+      if (loc == null) {
+        System.out.println("Unreachable but just to be safe send 0");
+        return 0;
+      }
+
+      // Put it in the list
+      switch (sent++) {
+        case 0: loc1 = loc; break;
+        case 1: loc2 = loc; break;
+        case 3: loc3 = loc; break;
+      }
+
+      // Increment index
+      index = (index + 1) % total;
+    }
+
+    // Store starting point for next round
+    if (active) {
+      activeFrontsIndex = index;
+      inactiveFrontsIndex = index;
+    }
+
+    // Return the message
+    return createFrontsMessage(loc1, active, loc2, active, loc3, active);
+  }
+
   /**
    * Create Fronts message given all information
    */
   public static int createFrontsMessage(MapLocation loc1, boolean add1, MapLocation loc2, boolean add2, MapLocation loc3, boolean add3) {
+    // Check if we need to reset the sent counter
+    if (turnCount < Robot.rc.getRoundNum()) {
+      turnCount = Robot.rc.getRoundNum();
+      turnSentActive = 0;
+      turnSentInactive = 0;
+    }
+
+    // If all are null, no message needed
+    if (loc1 == null && loc2 == null && loc3 == null) { return 0; }
+
+    // Update the sent counters
+    if (add1) { ++turnSentActive; }
+    else { ++turnSentInactive; }
+    if (add2) { ++turnSentActive; }
+    else { ++turnSentInactive; }
+    if (add3) { ++turnSentActive; }
+    else { ++turnSentInactive; }
+    
+    // Calculate the message
     int loc1bits = (loc1 == null ? FRONT_LOC_BITMASK : (loc1.x / 5) + (loc1.y / 5) * 12);
     int loc2bits = (loc2 == null ? FRONT_LOC_BITMASK : (loc2.x / 5) + (loc2.y / 5) * 12);
     int loc3bits = (loc3 == null ? FRONT_LOC_BITMASK : (loc3.x / 5) + (loc3.y / 5) * 12);
@@ -210,6 +291,8 @@ public class Communication {
   public static boolean trySendMessage(int message, MapLocation target) throws GameActionException {
     if (message == 0) { return false; }
     if (!Robot.rc.canSenseRobotAtLocation(target) || !Robot.rc.canSendMessage(target)) { return false; }
+    Robot.rc.setIndicatorLine(Robot.rc.getLocation(), target, 255, 200, 200);
+    Robot.rc.setIndicatorDot(Robot.rc.getLocation(), 255, 200, 200);
     Robot.rc.sendMessage(target, message);
     return true;
   }

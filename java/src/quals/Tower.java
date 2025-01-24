@@ -69,10 +69,9 @@ public final class Tower extends Robot {
   protected void doMacro() throws GameActionException {
     spawnRobots();
 
-    // Broadcast Fronts to other towers
-    int count = 0;
-    while (rc.canBroadcastMessage() && count++ < MAX_BROADCAST) {
-      if (!Communication.tryBroadcastMessage(Communication.createFrontsMessage())) { break; }
+    // Broadcast active fronts to other towers
+    while (rc.canBroadcastMessage()) {
+      if (!Communication.tryBroadcastMessage(Communication.createFrontsMessage(true))) { break; }
     }
   }
 

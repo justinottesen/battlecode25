@@ -240,7 +240,7 @@ public final class Soldier extends Robot {
     if (GoalManager.current().type != Goal.Type.FIGHT_TOWER || !rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.VISION_RADIUS_SQUARED)) {
       Pathfinding.moveTo(GoalManager.current().target); //note that Soldier defaults to ANY, can be set anywhere, but must be set back to ANY
     }
-    if(!initialSoldiers && GoalManager.current().type != Goal.Type.SURVIVE && GoalManager.current().type != Goal.Type.REFILL_PAINT){  //initial soldier, SURVIVE, and REFILL_PAINT soldiers shouldn't waste paint
+    if(!initialSoldiers && GoalManager.current().type == Goal.Type.SURVIVE && GoalManager.current().type != Goal.Type.REFILL_PAINT){  //initial soldier, SURVIVE, and REFILL_PAINT soldiers shouldn't waste paint
       Painter.paint();
     }
   }
@@ -403,8 +403,25 @@ public final class Soldier extends Robot {
         enemyTowerString += (char) 69;  //hope that no map exceeds 68x68 cuz its funny
       } else {
         // We found a friendly tower, explore in that direction
-        GoalManager.setNewGoal(Goal.Type.EXPLORE, ruin);
-        return;
+        GoalManager.setNewGoal(Goal.Type.SURVIVE, ruin);
+        //return;
+      }
+    }
+    
+    // Refill if we find our tower
+    if(rc.canSenseLocation(GoalManager.current().target)){
+      RobotInfo tower = rc.senseRobotAtLocation(GoalManager.current().target);
+      if (tower!=null && tower.getType().isTowerType()) {
+        int paintAmount = rc.getType().paintCapacity - rc.getPaint();
+        //if (tower.getPaintAmount() - UnitType.MOPPER.paintCost < paintAmount) { paintAmount = tower.getPaintAmount() - UnitType.MOPPER.paintCost; }
+        rc.setIndicatorString("failed to refill " + paintAmount);
+        if (rc.canTransferPaint(GoalManager.current().target, -paintAmount)) {
+          rc.setIndicatorString("succeeded in refilling " + paintAmount);
+          rc.transferPaint(GoalManager.current().target, -paintAmount);
+          emptyTowers = "";
+          GoalManager.popGoal();
+          return;
+        }
       }
     }
 

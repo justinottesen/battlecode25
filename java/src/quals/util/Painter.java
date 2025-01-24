@@ -270,6 +270,7 @@ public class Painter {
 
 
     // If we are standing in the ruin and can't move, prioritize paint under our feet
+    /*
     if (!Robot.rc.isMovementReady()) {
       int my_x_offset = current.x - low_x;
       int my_y_offset = current.y - low_y;
@@ -278,6 +279,7 @@ public class Painter {
         paint(current);
       }
     }
+    */
   
     boolean jobComplete = true;
     boolean enemyPaintSeen = false;
@@ -566,6 +568,7 @@ public class Painter {
     int distance = myLoc.distanceSquaredTo(towerLoc);
     if (distance == 16 || distance == 17 || distance == 20) {
         BugPath.moveTo(towerLoc);
+        Robot.rc.setIndicatorDot(towerLoc,255,0,255);
     }
   }
 }

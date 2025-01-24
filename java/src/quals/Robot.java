@@ -61,12 +61,13 @@ public abstract class Robot {
     MapData.lookForFrontsToAdd();
     MapData.analyzeExistingFronts();
     // At the end of the turn, communicate fronts
-    if (!rc.getType().isTowerType()) {
-      for (RobotInfo info : rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM)) {
-        if (!info.getType().isTowerType()) { continue; }
-        if (!rc.canSendMessage(info.getLocation())) { continue; }
-        Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation());
-        break;
+    for (RobotInfo info : rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM)) {
+      if (info.getType().isTowerType() == Robot.rc.getType().isTowerType()) { continue; }
+      if (!rc.canSendMessage(info.getLocation())) { continue; }
+      // If we are a tower, only send active messages
+      int message = Robot.rc.getType().isTowerType() ? Communication.createFrontsMessage(true) : Communication.createFrontsMessage();
+      if (Communication.trySendMessage(message, info.getLocation()) && !Robot.rc.getType().isTowerType()) {
+        break; // Only loop if we are a tower
       }
     }
     ++turnNum;

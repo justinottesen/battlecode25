@@ -36,27 +36,30 @@ public final class Tower extends Robot {
     }
 
     // Spawn a unit specifically for suicide strat
-    if (rc.getChips() > 5000 &&
+    if(rc.getRoundNum()%6==rc.getID()%6){
+      if (rc.getChips() > 5000 &&
         towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER)) {
-      if (rc.getPaint() >= UnitType.SOLDIER.paintCost) {
-        trySpawn(UnitType.SOLDIER);
-      } else if (rc.getPaint() >= UnitType.MOPPER.paintCost) {
-        trySpawn(UnitType.MOPPER);
+        if (rc.getPaint() >= UnitType.SOLDIER.paintCost) {
+          trySpawn(UnitType.SOLDIER);
+        } else if (rc.getPaint() >= UnitType.MOPPER.paintCost) {
+          trySpawn(UnitType.MOPPER);
+        }
+      }
+
+      // Suicide for paint if worth it
+      if (rc.getType().getBaseType() == rc.getType() && // DO NOT suicide level 2 towers (starter towers only?)
+        (rc.getPaint() < PAINT_SUICIDE_THRESHOLD) && // No more paint
+          rc.getChips() > 2000 && // Enough chips (we hope)
+          towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
+          Communication.trySendAllMessage( // We successfully sent the message to an adjacent bot
+            Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM))) {
+        rc.setIndicatorString("Sent suicide message");
+        rc.disintegrate();
+        return;
       }
     }
-
-    // Suicide for paint if worth it
-    if (rc.getType().getBaseType() == rc.getType() && // DO NOT suicide level 2 towers (starter towers only?)
-       (rc.getPaint() < PAINT_SUICIDE_THRESHOLD) && // No more paint
-        rc.getChips() > 4000 && // Enough chips (we hope)
-        towerPatternComplete(UnitType.LEVEL_ONE_MONEY_TOWER) &&
-        Communication.trySendAllMessage( // We successfully sent the message to an adjacent bot
-          Communication.addCoordinates(Communication.SUICIDE, LOCATION), rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM))) {
-      rc.setIndicatorString("Sent suicide message");
-      rc.disintegrate();
-      return;
-    }
   }
+    
 
   protected void doMacro() throws GameActionException {
     spawnRobots();

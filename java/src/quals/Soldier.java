@@ -240,7 +240,7 @@ public final class Soldier extends Robot {
     if (GoalManager.current().type != Goal.Type.FIGHT_TOWER || !rc.getLocation().isWithinDistanceSquared(GoalManager.current().target, GameConstants.VISION_RADIUS_SQUARED)) {
       Pathfinding.moveTo(GoalManager.current().target); //note that Soldier defaults to ANY, can be set anywhere, but must be set back to ANY
     }
-    if(!initialSoldiers && GoalManager.current().type == Goal.Type.SURVIVE && GoalManager.current().type != Goal.Type.REFILL_PAINT){  //initial soldier, SURVIVE, and REFILL_PAINT soldiers shouldn't waste paint
+    if(!initialSoldiers && GoalManager.current().type != Goal.Type.SURVIVE && GoalManager.current().type != Goal.Type.REFILL_PAINT){  //initial soldier, SURVIVE, and REFILL_PAINT soldiers shouldn't waste paint
       Painter.paint();
     }
   }
@@ -288,6 +288,22 @@ public final class Soldier extends Robot {
           GoalManager.popGoal();
           ruinGood = false;
           break;
+        }
+      }
+      if(!ruinGood){
+        //try to block the ruin if it is contested (if we have to)
+        MapLocation emptyTile = null;
+        for(MapInfo m : towerPatternTiles){
+          if(m.getPaint().isAlly()){
+            emptyTile = null; //this is how we tell the post loop that we don't need to block
+            break;
+          }
+          if(emptyTile==null && m.getPaint()==PaintType.EMPTY && m.getMapLocation().distanceSquaredTo(rc.getLocation())<9){
+            emptyTile = m.getMapLocation();
+          }
+        }
+        if(emptyTile!=null && rc.isActionReady() && rc.canAttack(emptyTile)){
+          rc.attack(emptyTile,true);
         }
       }
       if(ruinGood || Clock.getBytecodesLeft() < 500) break;

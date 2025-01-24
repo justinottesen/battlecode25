@@ -25,6 +25,22 @@ public final class Splasher extends Robot {
       rc.setIndicatorLine(rc.getLocation(), GoalManager.current().target, 255, 0, 255);
     }
 
+    // Check for a suicide message, if received this is priority number 1
+    Message[] messages = rc.readMessages(rc.getRoundNum() - 1);
+    for (Message m : messages) {
+      switch (m.getBytes() & Communication.MESSAGE_TYPE_BITMASK) {
+        case Communication.SUICIDE:
+          Goal goal = new Goal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
+          if (!GoalManager.pushGoal(goal)) { // CANNOT fail to push this goal
+            GoalManager.replaceTopGoal(goal);
+          };
+          Robot.rc.setIndicatorString("Received Suicide message " + Communication.getCoordinates(m.getBytes()));
+          break;
+        default:
+          System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
+      }
+    }
+
     // If received paint transfer from mopper, update goal
     if (GoalManager.current().type == Goal.Type.REFILL_PAINT && rc.getPaint() > REFILL_PAINT_THRESHOLD * rc.getType().paintCapacity / 100) {
       GoalManager.popGoal();
@@ -104,6 +120,19 @@ public final class Splasher extends Robot {
               emptyTowers = "";
             }
           }
+        }
+        break;
+      case CAPTURE_RUIN:
+        BugPath.moveTo(GoalManager.current().target);
+        if (rc.canCompleteTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target)) {
+          rc.completeTowerPattern(UnitType.LEVEL_ONE_MONEY_TOWER, GoalManager.current().target);
+          MapData.updateData(rc.senseMapInfo(GoalManager.current().target));
+          //GoalManager.replaceTopGoal(Goal.Type.EXPLORE,MapData.getExploreTarget());
+        }
+        if(rc.canSenseRobotAtLocation(GoalManager.current().target)){
+          //ruin has no more enemy paint around it, start exploring
+          rc.setIndicatorDot(GoalManager.current().target,255,255,255);
+          GoalManager.popGoal();
         }
         break;
       case EXPLORE:

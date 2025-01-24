@@ -34,13 +34,12 @@ public class Communication {
       // 9 bits per coordinate, 8 for the 5x5 chunk, 1 for add / remove
       public static final int FRONT_LOC_BITMASK = 0b11111111; // Must be shifted
       public static final int LOC_1_BITSHIFT = 4;
-      public static final int LOC_2_BITSHIFT = 12;
-      public static final int LOC_3_BITSHIFT = 20;
-      public static final int ADD_1_BITSHIFT = 11;
-      public static final int ADD_2_BITSHIFT = 19;
-      public static final int ADD_3_BITSHIFT = 27;
+      public static final int LOC_2_BITSHIFT = 13;
+      public static final int LOC_3_BITSHIFT = 22;
+      public static final int ADD_1_BITSHIFT = 12;
+      public static final int ADD_2_BITSHIFT = 21;
+      public static final int ADD_3_BITSHIFT = 30;
 
-      public static boolean activePriority = true;
       public static int activeFrontsIndex = 0;
       public static int inactiveFrontsIndex = 0;
 
@@ -57,134 +56,86 @@ public class Communication {
    */
   public static int createFrontsMessage() {
 
+    // If both lists are empty, no need
+    if (MapData.numActiveFronts() == 0 && MapData.numInactiveFronts() == 0) { return 0; }
+
+    // Create return values
     MapLocation loc1 = null;
     boolean add1 = false;
     MapLocation loc2 = null;
     boolean add2 = false;
     MapLocation loc3 = null;
     boolean add3 = false;
-    if (MapData.numActiveFronts() > 0) {
-      loc1 = MapData.getActiveFrontAtIndex(0);
-      add1 = true;
-    } else if (MapData.numInactiveFronts() > 0) {
-      loc1 = MapData.getInactiveFrontAtIndex(0);
-    }
-    if (loc1 != null) {
-      if ( MapData.numActiveFronts() > 1) {
-        loc2 = MapData.getActiveFrontAtIndex(1);
-        add2 = true;
-      } else if (MapData.numInactiveFronts() > 1) {
-        loc2 = MapData.getInactiveFrontAtIndex(1);
+
+    // Want to stop after we have sent all fronts
+    int activeSent = 0;
+    int inactiveSent = 0;
+    int activeTotal = MapData.numActiveFronts();
+    int inactiveTotal = MapData.numInactiveFronts();
+
+    // Start from where we previously left off (or 0 if end / resize)
+    int activeIndex = (activeFrontsIndex >= activeTotal ? activeFrontsIndex : 0);
+    int inactiveIndex = (inactiveFrontsIndex >= inactiveTotal ? inactiveFrontsIndex : 0);
+
+    // Which one should we try to send (always prefer active)
+    boolean activePriority = (activeSent < activeTotal);
+
+    // While there are still messages to send
+    while (activeSent < activeTotal || inactiveSent < inactiveTotal) {
+      // Grab the next location
+      MapLocation loc = (activePriority ? MapData.getActiveFrontAtIndex(activeIndex) : MapData.getInactiveFrontAtIndex(inactiveIndex));
+      if (loc == null) {
+        System.out.println("Unreachable but just to be safe send 0");
+        return 0;
       }
-      if (loc2 != null) {
-        if (MapData.numActiveFronts() > 2) {
-          loc3 = MapData.getActiveFrontAtIndex(2);
-          add3 = true;
-        } else {
-          loc3 = MapData.getInactiveFrontAtIndex(2);
-        }
+
+      // Put it in the list
+      switch (activeSent + inactiveSent) {
+        case 0: loc1 = loc; add1 = activePriority; break;
+        case 1: loc2 = loc; add2 = activePriority; break;
+        case 2: loc3 = loc; add3 = activePriority; break;
+      }
+
+      // Increment indices & counters
+      if (activePriority) {
+        ++activeSent;
+        activeIndex = (activeIndex + 1) % activeTotal;
+      } else {
+        ++inactiveSent;
+        inactiveIndex = (inactiveIndex + 1) % inactiveTotal;
+      }
+
+      // Alternate between the coordinate types
+      if (activePriority) { // If currently active, only flip if more inactive to send
+        activePriority = !(inactiveSent < inactiveTotal);
+      } else { // If currently inactive, only flip if more active to send
+        activePriority = (activeSent < activeTotal);
       }
     }
 
+    // Store starting point for next round
+    activeFrontsIndex = activeIndex;
+    inactiveFrontsIndex = inactiveIndex;
+
+    // Return the message
     return createFrontsMessage(loc1, add1, loc2, add2, loc3, add3);
-
-    // Ijottesen_test.util.f both lists are empty, no need
-    // if (MapData.numActiveFronts() == 0 && MapData.numInactiveFronts() == 0) { return 0; }
-
-    // // Reset the indices
-    // if (activeFrontsIndex >= MapData.numActiveFronts()) { activeFrontsIndex = 0;}
-    // if (inactiveFrontsIndex >= MapData.numInactiveFronts()) { inactiveFrontsIndex = 0;}
-
-    // // Create return values
-    // MapLocation loc1 = null;
-    // boolean add1 = false;
-    // MapLocation loc2 = null;
-    // boolean add2 = false;
-    // MapLocation loc3 = null;
-    // boolean add3 = false;
-
-    // // Get the indices to work with
-    // int activeI = activeFrontsIndex;
-    // boolean firstActive = MapData.numActiveFronts() > 0;
-    // int inactiveI = inactiveFrontsIndex;
-    // boolean firstInactive = MapData.numInactiveFronts() > 0;
-    
-    // // Get the next messgae, alternating active and inactive
-    // for (int locNum = 0; locNum < 3; /* Incremented in loop */) {
-    //   if (activePriority && MapData.numActiveFronts() > 0) {
-    //     // Get the next front
-    //     MapLocation loc = MapData.getActiveFrontAtIndex(activeI);
-    //     if (loc != null) {
-    //       // Set the correct parameter
-    //       switch (locNum++) {
-    //         case 0: loc1 = loc; add1 = true; break;
-    //         case 1: loc2 = loc; add2 = true; break;
-    //         case 2: loc3 = loc; add3 = true; break;
-    //       }
-    //       // Increment the index
-    //       activeI = (activeI + 1) % MapData.numActiveFronts();
-    //     } else {
-    //       // If we end up outside the list, stop
-    //       activeI = activeFrontsIndex;
-    //       firstActive = false;
-    //     }
-    //     // Start and end are the same
-    //     if (activeI == activeFrontsIndex && firstActive) {
-    //       firstActive = false;
-    //     }
-    //     ++activeI;
-    //     // Switch priority if we aren't at the end of the other
-    //     if (firstInactive || inactiveI != inactiveFrontsIndex) {
-    //       activePriority = false;
-    //     }
-    //   } else if (MapData.numInactiveFronts() > 0) {
-    //     MapLocation loc = MapData.getInactiveFrontAtIndex(inactiveI);
-    //     if (loc != null) {
-    //       switch (locNum++) {
-    //         case 0: loc1 = loc; add1 = false; break;
-    //         case 1: loc2 = loc; add2 = false; break;
-    //         case 2: loc3 = loc; add3 = false; break;
-    //       }
-    //       inactiveI = (inactiveI + 1) % MapData.numInactiveFronts();
-    //     } else {
-    //       inactiveI = inactiveFrontsIndex;
-    //       firstInactive = false;
-    //     }
-    //     if (inactiveI == inactiveFrontsIndex && firstInactive) {
-    //       firstInactive = false;
-    //     }
-    //     ++inactiveI;
-    //     if (firstActive || activeI != activeFrontsIndex) {
-    //       activePriority = true;
-    //     }
-    //   }
-
-    //   // If we exhausted both lists, exit loop
-    //   if (activeI == activeFrontsIndex && !firstActive && inactiveI == inactiveFrontsIndex && !firstInactive) {
-    //     break;
-    //   }
-    // }
-
-    // // Update the most recently sent indices
-    // activeFrontsIndex = activeI;
-    // inactiveFrontsIndex = inactiveI;
-
-    // return createFrontsMessage(loc1, add1, loc2, add2, loc3, add3);
   }
 
   /**
    * Create Fronts message given all information
    */
   public static int createFrontsMessage(MapLocation loc1, boolean add1, MapLocation loc2, boolean add2, MapLocation loc3, boolean add3) {
-    int loc1bits = (loc1 == null ? 0 : (loc1.x / 5) + (loc1.y / 5) * 12) << LOC_1_BITSHIFT;
-    int loc2bits = (loc2 == null ? 0 : (loc2.x / 5) + (loc2.y / 5) * 12) << LOC_2_BITSHIFT;
-    int loc3bits = (loc3 == null ? 0 : (loc3.x / 5) + (loc3.y / 5) * 12) << LOC_3_BITSHIFT;
+    int loc1bits = (loc1 == null ? FRONT_LOC_BITMASK : (loc1.x / 5) + (loc1.y / 5) * 12);
+    int loc2bits = (loc2 == null ? FRONT_LOC_BITMASK : (loc2.x / 5) + (loc2.y / 5) * 12);
+    int loc3bits = (loc3 == null ? FRONT_LOC_BITMASK : (loc3.x / 5) + (loc3.y / 5) * 12);
 
     int add1bits = (add1 ? 1 << ADD_1_BITSHIFT : 0);
     int add2bits = (add2 ? 1 << ADD_2_BITSHIFT : 0);
     int add3bits = (add3 ? 1 << ADD_3_BITSHIFT : 0);
 
-    return (add3bits | loc3bits | add2bits | loc2bits | add1bits | loc1bits | FRONT);
+    return ((add3bits << ADD_3_BITSHIFT) | (loc3bits << LOC_3_BITSHIFT) | 
+            (add2bits << ADD_2_BITSHIFT) | (loc2bits << LOC_2_BITSHIFT) | 
+            (add1bits << ADD_1_BITSHIFT) | (loc1bits << LOC_1_BITSHIFT) | FRONT);
   }
 
   /**
@@ -194,26 +145,26 @@ public class Communication {
     int loc1bits = (message >> LOC_1_BITSHIFT) & FRONT_LOC_BITMASK;
     int loc2bits = (message >> LOC_2_BITSHIFT) & FRONT_LOC_BITMASK;
     int loc3bits = (message >> LOC_3_BITSHIFT) & FRONT_LOC_BITMASK;
-
-    if (loc1bits != 0) {
+    
+    if (loc1bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_1_BITSHIFT)) > 0) {
-        MapData.addToFronts(loc1bits % 12, loc1bits / 12);
+        MapData.addToFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
       } else {
-        MapData.removeFromFronts(loc1bits % 12, loc1bits / 12);
+        MapData.removeFromFronts((loc1bits % 12) * 5 + 2, (loc1bits / 12) * 5 + 2);
       }
     }
-    if (loc2bits != 0) {
+    if (loc2bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_2_BITSHIFT)) > 0) {
-        MapData.addToFronts(loc2bits % 12, loc2bits / 12);
+        MapData.addToFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
       } else {
-        MapData.removeFromFronts(loc2bits % 12, loc2bits / 12);
+        MapData.removeFromFronts((loc2bits % 12) * 5 + 2, (loc2bits / 12) * 5 + 2);
       }
     }
-    if (loc3bits != 0) {
+    if (loc3bits != FRONT_LOC_BITMASK) {
       if ((message & (1 << ADD_3_BITSHIFT)) > 0) {
-        MapData.addToFronts(loc3bits % 12, loc3bits / 12);
+        MapData.addToFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
       } else {
-        MapData.removeFromFronts(loc3bits % 12, loc3bits / 12);
+        MapData.removeFromFronts((loc3bits % 12) * 5 + 2, (loc3bits / 12) * 5 + 2);
       }
     }
   }

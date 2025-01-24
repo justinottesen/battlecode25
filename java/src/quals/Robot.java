@@ -9,6 +9,8 @@ public abstract class Robot {
   
   public static RobotController rc;
   
+  public static boolean DEBUG;
+  
   public static Random rng;
 
   public static Team TEAM;
@@ -25,6 +27,8 @@ public abstract class Robot {
   public Robot(RobotController rc_) throws GameActionException {
     rc = rc_;
 
+    DEBUG = false;
+
     rng = new Random(rc.getID());
     
     TEAM = rc.getTeam();
@@ -39,6 +43,7 @@ public abstract class Robot {
     if (spawnTower == null) { // If the tower suicides, might be a ruin now
       spawnTower = MapData.closestRuin();
     }
+    rc.setIndicatorLine(rc.getLocation(), spawnTower, 0, 255, 255);
     GoalManager.init();
   };
 

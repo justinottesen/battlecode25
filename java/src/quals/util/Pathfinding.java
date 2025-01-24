@@ -60,7 +60,7 @@ public class Pathfinding {
     // Try going towards it
     Direction l_dir = loc.directionTo(goal);
     MapLocation l_next = loc.add(l_dir);
-    if (MapData.passable(l_next) && 
+    if (Robot.rc.onTheMap(l_next) && MapData.passable(l_next) && 
         (!checkCanMove || Robot.rc.canMove(l_dir)) &&
         (switch (mode) { 
           case MovementManager.Mode.ANY -> true;
@@ -125,8 +125,7 @@ public class Pathfinding {
   public static Direction getGreedyMove(MapLocation loc, Direction dir, boolean checkCanMove, MovementManager.Mode mode) throws GameActionException {
     // Try going towards it
     MapLocation next = loc.add(dir);
-    if(!Robot.rc.onTheMap(next)) return null;
-    if (MapData.passable(next) && 
+    if (Robot.rc.onTheMap(next) && MapData.passable(next) && 
         (!checkCanMove || Robot.rc.canMove(dir)) &&
         (switch (mode) { 
           case MovementManager.Mode.ANY -> true;

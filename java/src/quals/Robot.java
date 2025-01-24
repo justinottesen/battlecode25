@@ -65,10 +65,13 @@ public abstract class Robot {
       if (info.getType().isTowerType() == Robot.rc.getType().isTowerType()) { continue; }
       if (!rc.canSendMessage(info.getLocation())) { continue; }
       // If we are a tower, only send active messages
-      int message = Robot.rc.getType().isTowerType() ? Communication.createFrontsMessage(true) : Communication.createFrontsMessage();
-      if (Communication.trySendMessage(message, info.getLocation()) && !Robot.rc.getType().isTowerType()) {
-        break; // Only loop if we are a tower
+      if (Robot.rc.getType().isTowerType()) {
+        Communication.resetSentFronts(); // We want to send all fronts to all robots
+        while (Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation())) {}
+      } else if (Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation())) {
+        break;
       }
+      if (Clock.getBytecodesLeft() < 200) { break; }
     }
     ++turnNum;
   }

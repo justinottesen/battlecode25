@@ -119,11 +119,6 @@ public class Painter {
   public static boolean mop() throws GameActionException {
     if (!Robot.rc.isActionReady()) { return false; }
 
-    // Mop under self (if enemy paint)
-    if (mop(Robot.rc.getLocation())) {
-      return true;
-    }
-
     // Try to attack someone
     RobotInfo[] robots = Robot.rc.senseNearbyRobots(Robot.rc.getType().actionRadiusSquared, Robot.rc.getTeam().opponent());
     MapLocation nearestRobot = null;

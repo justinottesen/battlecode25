@@ -89,6 +89,11 @@ public final class Mopper extends Robot {
     //     }
     //   }
     // }
+    //mop swinging is always good
+    if (rc.isActionReady()){
+      Direction mopSwingDirection = pickMopSwingDirection();
+      if(mopSwingDirection!=Direction.CENTER && rc.canMopSwing(mopSwingDirection)) rc.mopSwing(mopSwingDirection);
+    }
 
     switch (GoalManager.current().type) {
       case CAPTURE_RUIN:
@@ -138,12 +143,6 @@ public final class Mopper extends Robot {
         Painter.mop();
         break;
       default: break;
-    }
-
-    //mop swing
-    if (rc.isActionReady()){
-      Direction mopSwingDirection = pickMopSwingDirection();
-      if(mopSwingDirection!=Direction.CENTER && rc.canMopSwing(mopSwingDirection)) rc.mopSwing(mopSwingDirection);
     }
   }
 

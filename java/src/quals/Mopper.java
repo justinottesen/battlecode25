@@ -37,6 +37,8 @@ public final class Mopper extends Robot {
         case Communication.REQUEST_MOPPER:
           GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, Communication.getCoordinates(m.getBytes()));
           break;
+        case Communication.SYMMETRY_KNOWLEDGE:
+          MapData.incorporateSymmetryInfo(Communication.readSymmetryValue(m.getBytes()));
         case Communication.FRONT:
           Communication.updateFronts(m.getBytes());
           break;

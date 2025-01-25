@@ -35,6 +35,8 @@ public final class Splasher extends Robot {
           };
           Robot.rc.setIndicatorString("Received Suicide message " + Communication.getCoordinates(m.getBytes()));
           break;
+        case Communication.SYMMETRY_KNOWLEDGE:
+          MapData.incorporateSymmetryInfo(Communication.readSymmetryValue(m.getBytes()));
         case Communication.FRONT:
           Communication.updateFronts(m.getBytes());
           break;

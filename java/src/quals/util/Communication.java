@@ -19,6 +19,7 @@ public class Communication {
 
       // Bits 4-6: Symmetry Value
       public static final int SYMMETRY_VALUE_MASK = 0b111_0000;
+      public static final int SYMMETRY_BITSHIFT = 4;
 
   // TODO: IMPLEMENT THIS COMMUNICATION
   public static final int REQUEST_MOPPER = 0b0010; // --------------------------------
@@ -281,6 +282,14 @@ public class Communication {
     message &= ~(X_COORDINATE_MASK | Y_COORDINATE_MASK); // Clear previous coordinates
     message |= (x << X_COORDINATE_BITSHIFT) | (y << Y_COORDINATE_BITSHIFT);
     return message;
+  }
+  
+  public static int makeSymmetryMessage() {
+    return (MapData.symmetryType << SYMMETRY_BITSHIFT) | SYMMETRY_KNOWLEDGE;
+  }
+
+  public static int readSymmetryValue(int message) {
+    return (message & SYMMETRY_VALUE_MASK) >> SYMMETRY_BITSHIFT;  
   }
 
   /**

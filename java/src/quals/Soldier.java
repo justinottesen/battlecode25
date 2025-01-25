@@ -85,6 +85,8 @@ public final class Soldier extends Robot {
             GoalManager.popGoal();
           }
           break;
+        case Communication.SYMMETRY_KNOWLEDGE:
+          MapData.incorporateSymmetryInfo(Communication.readSymmetryValue(m.getBytes()));
         case Communication.FRONT:
           Communication.updateFronts(m.getBytes());
           break;

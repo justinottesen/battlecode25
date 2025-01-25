@@ -106,42 +106,6 @@ public final class Soldier extends Robot {
       }
     }
 
-    // Check if someone else finished the current SRP
-    // TODO: Should this check stay here? Duplicated in Painter
-    if (GoalManager.current().type == Goal.Type.CAPTURE_SRP) {
-      MapLocation target = GoalManager.current().target;
-      boolean contested = MapData.isContested(target);
-      // If we don't think it is contested, look for enemy paint
-      if(!contested){
-        MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(target,8);
-        for(MapInfo m : towerPatternTiles){
-          if(m.getPaint().isEnemy()){
-            contested = true;
-            break;
-          }
-        }
-      }
-      // If there is enemy paint, look for moppers
-      if(contested){
-        //look for nearby moppers
-        RobotInfo[] nearbyAllies = rc.senseNearbyRobots(-1,rc.getTeam());
-        for(RobotInfo ally : nearbyAllies){
-          if(ally.getType()==UnitType.MOPPER){
-            contested=false;
-            break;
-          }
-        }
-        // Move on if contested, stay if uncontested (or moppers are there)
-        if (!contested) { MapData.setUncontested(GoalManager.current().target); }
-        else { GoalManager.popGoal(); }
-      }
-      
-      if (rc.canSenseLocation(target) && rc.senseMapInfo(target).isResourcePatternCenter()) {
-        MapData.updateData(rc.senseMapInfo(target));
-        GoalManager.popGoal();
-      }
-    }
-
     // Look for nearby ruins if we aren't already fighting a tower
     if (GoalManager.current().type.v <= Goal.Type.FIGHT_TOWER.v && rc.getHealth() >= 30) {
       boolean setGoal = false;
@@ -174,6 +138,33 @@ public final class Soldier extends Robot {
           GoalManager.pushGoal(Goal.Type.CAPTURE_SRP, loc);
           break;
         }
+      }
+    }
+
+    // Check if someone else finished the current SRP
+    if (GoalManager.current().type == Goal.Type.CAPTURE_SRP) {
+      MapLocation target = GoalManager.current().target;
+      boolean contested = MapData.isContested(target);
+      // If we don't think it is contested, look for enemy paint
+      if(!contested){
+        MapInfo[] towerPatternTiles = rc.senseNearbyMapInfos(target,8);
+        for(MapInfo m : towerPatternTiles){
+          if(m.getPaint().isEnemy()){
+            contested = true;
+            break;
+          }
+        }
+      }
+      // Move on if contested, stay if uncontested (or moppers are there)
+      if (!contested) { MapData.setUncontested(GoalManager.current().target); }
+      else { 
+        MapData.setContested(GoalManager.current().target);
+        GoalManager.popGoal(); 
+      }
+      
+      if (rc.canSenseLocation(target) && rc.senseMapInfo(target).isResourcePatternCenter()) {
+        MapData.updateData(rc.senseMapInfo(target));
+        GoalManager.popGoal();
       }
     }
 

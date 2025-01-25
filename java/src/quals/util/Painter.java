@@ -431,7 +431,7 @@ public class Painter {
     // Try cleaning the rest of the ruin
     for (MapLocation loc : paintCache) {
       if(!Robot.rc.canSenseLocation(loc)) { jobComplete = false; }
-      if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isAlly()) { ruinComplete = false; }
+      if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isAlly() && !loc.equals(GoalManager.current().target)) { ruinComplete = false; }
       // Only interested in enemy (or unknown) paint
       if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
       jobComplete = false;

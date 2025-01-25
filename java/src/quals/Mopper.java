@@ -118,6 +118,7 @@ public final class Mopper extends Robot {
         }
         break;
       case CAPTURE_SRP:
+        Painter.emergencyBugNav();
         if (Painter.mopCaptureSRP()) {
           completedRuinJob = GoalManager.current().target;
           GoalManager.popGoal();

@@ -9,7 +9,7 @@ import quals.*;
  */
 public class GoalManager {
   
-  private static final int GOAL_STACK_SIZE = 10;
+  private static final int GOAL_STACK_SIZE = 25;
   private static final Stack<Goal> goalStack = new Stack<Goal>(GOAL_STACK_SIZE);
 
   public static void init() {

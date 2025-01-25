@@ -186,7 +186,7 @@ public final class Soldier extends Robot {
         Painter.paintFight(goalTower);
         MapLocation towerLoc = GoalManager.current().target;
         if (!rc.canSenseRobotAtLocation(towerLoc) || rc.senseRobotAtLocation(towerLoc).getTeam() != OPPONENT) {
-          GoalManager.pushGoal(Goal.Type.CAPTURE_RUIN, towerLoc);
+          GoalManager.replaceTopGoal(Goal.Type.CAPTURE_RUIN, towerLoc);
         }
         // If health is too low and no friends around, stop fighting and explore
         if (rc.getHealth() < 30 && rc.senseNearbyRobots(rc.getType().actionRadiusSquared, TEAM).length == 0) {
@@ -242,6 +242,7 @@ public final class Soldier extends Robot {
                 }
               }
               if (!foundMopper) {
+                rc.setIndicatorString("Get a mopper to help");
                 MapLocation tower = MapData.closestFriendlyTower(emptyTowers);
                 GoalManager.pushGoal(Goal.Type.GET_BACKUP, tower == null ? Robot.spawnTower : tower);
               }

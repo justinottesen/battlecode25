@@ -32,6 +32,8 @@ public final class Tower extends Robot {
         case Communication.REQUEST_MOPPER:
           trySpawn(UnitType.MOPPER, Communication.getCoordinates(m.getBytes()));
           break;
+        case Communication.SYMMETRY_KNOWLEDGE:
+          MapData.incorporateSymmetryInfo(Communication.readSymmetryValue(m.getBytes()));
         case Communication.FRONT:
           Communication.updateFronts(m.getBytes());
           break;  
@@ -68,6 +70,11 @@ public final class Tower extends Robot {
 
   protected void doMacro() throws GameActionException {
     spawnRobots();
+    
+    // Tell other towers about symmmetry
+    if (MapData.symmetryKnown() && Robot.rc.getRoundNum() % 10 == 2) {
+      Communication.tryBroadcastMessage(Communication.makeSymmetryMessage());
+    }
 
     // Broadcast active fronts to other towers
     while (rc.canBroadcastMessage()) {
@@ -186,7 +193,14 @@ public final class Tower extends Robot {
    */
   private MapLocation trySpawn(UnitType type, MapLocation target) throws GameActionException {
     MapLocation loc = getSpawnLoc(target);
-    if (loc != null && rc.canBuildRobot(type, loc)) { rc.buildRobot(type, loc); return loc; }
+    if (loc != null && rc.canBuildRobot(type, loc)) {
+      rc.buildRobot(type, loc);
+      // If we know symmetry, tell the robot on spawn
+      if (MapData.symmetryKnown()) {
+        Communication.trySendMessage(Communication.makeSymmetryMessage(), loc);
+      }
+      return loc;
+    }
     return null;
   }
 

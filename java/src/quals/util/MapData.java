@@ -29,10 +29,11 @@ public class MapData {
 
   public static MapLocation foundSRP = null; // TODO: REMOVE THIS TEMPORARY WORKAROUND
 
-  private static int symmetryType     = 0b111;
-  private static final int ROTATIONAL = 0b001;
-  private static final int HORIZONTAL = 0b010;
-  private static final int VERTICAL   = 0b100;
+  public static int symmetryType     = 0b111;
+  public static final int ROTATIONAL = 0b001;
+  public static final int HORIZONTAL = 0b010;
+  public static final int VERTICAL   = 0b100;
+  public static boolean hasCommedSymmetry = false;
 
   private static int[] knownRuins;
   private static int ruinIndex;
@@ -97,6 +98,10 @@ public class MapData {
 
     activeFronts = "";
     inactiveFronts = "";
+  }
+
+  public static void incorporateSymmetryInfo(int info) {
+    symmetryType &= info;
   }
 
   /**

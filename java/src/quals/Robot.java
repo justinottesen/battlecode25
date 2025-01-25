@@ -64,6 +64,12 @@ public abstract class Robot {
     for (RobotInfo info : rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM)) {
       if (info.getType().isTowerType() == Robot.rc.getType().isTowerType()) { continue; }
       if (!rc.canSendMessage(info.getLocation())) { continue; }
+      if (Robot.rc.getType().isRobotType() && MapData.symmetryKnown() && !MapData.hasCommedSymmetry) {
+        if (Communication.trySendMessage(Communication.makeSymmetryMessage(), info.getLocation())) {
+          MapData.hasCommedSymmetry = true;
+          break;
+        }
+      }
       // If we are a tower, only send active messages
       if (Robot.rc.getType().isTowerType()) {
         Communication.resetSentFronts(); // We want to send all fronts to all robots

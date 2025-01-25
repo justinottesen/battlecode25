@@ -180,9 +180,6 @@ public final class Soldier extends Robot {
     // Can't do anything, no point
     if (!rc.isMovementReady() && !rc.isActionReady()) { return; }
 
-    // Can't move, might as well try and paint
-    if (!rc.isMovementReady() && rc.isActionReady()) { Painter.paint(); return; }
-
     switch (GoalManager.current().type) {
       case FIGHT_TOWER:
         Painter.emergencyBugNav();

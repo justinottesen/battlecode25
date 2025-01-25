@@ -415,6 +415,7 @@ public class Painter {
     }
 
     // If we are standing in the ruin, prioritize paint under our feet
+    /*
     if (!Robot.rc.isMovementReady()) {
       int my_x_offset = current.x - low_x;
       int my_y_offset = current.y - low_y;
@@ -423,11 +424,14 @@ public class Painter {
         mop(current);
       }
     }
+      */
     
     boolean jobComplete = true;
+    boolean ruinComplete = true;
     // Try cleaning the rest of the ruin
     for (MapLocation loc : paintCache) {
       if(!Robot.rc.canSenseLocation(loc)) { jobComplete = false; }
+      if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isAlly()) { ruinComplete = false; }
       // Only interested in enemy (or unknown) paint
       if (Robot.rc.canSenseLocation(loc) && !Robot.rc.senseMapInfo(loc).getPaint().isEnemy()) { continue; }
       jobComplete = false;
@@ -444,7 +448,7 @@ public class Painter {
         MovementManager.move(dir);
         current = Robot.rc.getLocation();
         // Check if there is enemy paint under our feet
-        if (mop(current)) { break; }
+        //if (mop(current)) { break; }
       }
       if (!shouldMop(loc)) { continue; }
       if (mop(loc)) { break; }
@@ -459,7 +463,7 @@ public class Painter {
     }
 
     //this only runs if there's no enemy paint in the tower pattern
-    return jobComplete;
+    return jobComplete && !ruinComplete;
   }
 
   /**

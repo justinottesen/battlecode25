@@ -14,6 +14,8 @@ public final class Tower extends Robot {
 
   private final int PAINT_SUICIDE_THRESHOLD = UnitType.MOPPER.paintCost;
 
+  private UnitType buildNext = null;
+
   public Tower(RobotController rc_) throws GameActionException {
     super(rc_);
 
@@ -135,13 +137,15 @@ public final class Tower extends Robot {
       default: break;
     }
 
-    // If we see enemy paint and don't see a mopper, spawn one
+    // If we see enemy paint and an enemy robot and don't see a mopper, spawn one
+    ///*
     boolean seenMopper = false;
-    for (RobotInfo info : rc.senseNearbyRobots(-1, TEAM)) {
-      if (info.getType() == UnitType.MOPPER) { seenMopper = true; break; }
+    boolean seenEnemy = false;
+    for (RobotInfo info : rc.senseNearbyRobots()) {
+      if (info.getType() == UnitType.MOPPER && info.getTeam() == rc.getTeam()) { seenMopper = true; }
+      if (info.getTeam() != rc.getTeam()) { seenEnemy = true; }
     }
-    /*
-    if (!seenMopper && rc.getRoundNum()>50) {
+    if (!seenMopper && seenEnemy && rc.getRoundNum()>50) {
       for (MapInfo info : rc.senseNearbyMapInfos()) {
         if (info.getPaint().isEnemy()) {
           trySpawn(UnitType.MOPPER, info.getMapLocation());
@@ -149,15 +153,19 @@ public final class Tower extends Robot {
         }
       }
     }
-      */
+    //*/
+
+    if(buildNext==null){
+      switch (rc.getRoundNum() % 4) {
+        case 0: buildNext = UnitType.MOPPER; break;
+        case 1: buildNext = UnitType.SPLASHER; break;
+        default: buildNext = UnitType.SOLDIER; break;
+      }
+    }
 
     // Spawn more if we got hella chips
     if ((rc.getRoundNum()<50 &&rc.getChips() > rc.getType().moneyCost * 2) || (rc.getRoundNum()>=50 &&rc.getChips() >rc.getType().moneyCost+250)) {
-      switch (rc.getRoundNum() % 4) {
-        case 0: trySpawn(UnitType.MOPPER, MapData.MAP_CENTER); break;
-        case 1: trySpawn(UnitType.SPLASHER, MapData.MAP_CENTER); break;
-        default: trySpawn(UnitType.SOLDIER, MapData.MAP_CENTER); break;
-      }
+      trySpawn(buildNext,MapData.MAP_CENTER);
     }
   }
 

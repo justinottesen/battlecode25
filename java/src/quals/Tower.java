@@ -35,7 +35,9 @@ public final class Tower extends Robot {
         case Communication.SYMMETRY_KNOWLEDGE:
           MapData.incorporateSymmetryInfo(Communication.readSymmetryValue(m.getBytes()));
         case Communication.FRONT:
-          Communication.updateFronts(m.getBytes());
+          if (rc.getRoundNum() % 100 != 8) {
+            Communication.updateFronts(m.getBytes());
+          }
           break;  
         default:
           System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);
@@ -77,8 +79,10 @@ public final class Tower extends Robot {
     }
 
     // Broadcast active fronts to other towers
-    while (rc.canBroadcastMessage()) {
-      if (!Communication.tryBroadcastMessage(Communication.createFrontsMessage(true))) { break; }
+    if (Robot.rc.getRoundNum() % 100 != 7) {  // Don't send any front messages every 100 rounds
+      while (rc.canBroadcastMessage()) {
+        if (!Communication.tryBroadcastMessage(Communication.createFrontsMessage(true))) { break; }
+      }
     }
   }
 

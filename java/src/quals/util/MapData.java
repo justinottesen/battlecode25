@@ -1275,7 +1275,7 @@ public class MapData {
     MapLocation[] ruins = Robot.rc.senseNearbyRuins(-1);
     for(int i=0; i<activeFronts.length(); i+=3){
       MapLocation front = new MapLocation((int)activeFronts.charAt(i),(int)activeFronts.charAt(i+1));
-      Robot.rc.setIndicatorDot(front,0,255,255);
+      Robot.rc.setIndicatorLine(Robot.rc.getLocation(), front,0,0,0);
       if(!Robot.rc.canSenseLocation(front)) continue;
       if(Clock.getBytecodesLeft()<500) break;  //cut out early if we're out of bytecode
       //make sure we have good vision of the 5x5 block where the tower could be (MapLocation front could be noisy)
@@ -1304,7 +1304,8 @@ public class MapData {
     return closestLoc;
   }
 
-  public static void robotCommunicateFrontToTower() throws GameActionException{
-
+  public static void resetFronts() { 
+    activeFronts = "";
+    inactiveFronts = "";
   }
 }

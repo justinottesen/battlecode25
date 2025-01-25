@@ -1267,15 +1267,23 @@ public class MapData {
   //check if an enemy tower is still at the location
   public static void analyzeExistingFronts() throws GameActionException{
     //see if we need to transition any of our active fronts to inactive
+    MapLocation[] ruins = Robot.rc.senseNearbyRuins(-1);
     for(int i=0; i<activeFronts.length(); i+=3){
       MapLocation front = new MapLocation((int)activeFronts.charAt(i),(int)activeFronts.charAt(i+1));
       Robot.rc.setIndicatorDot(front,0,255,255);
       if(!Robot.rc.canSenseLocation(front)) continue;
       if(Clock.getBytecodesLeft()<500) break;  //cut out early if we're out of bytecode
-      RobotInfo[] enemies = Robot.rc.senseNearbyRobots(front,8,Robot.rc.getTeam().opponent());
-      for(RobotInfo enemy:enemies){
-        if(enemy.getType().isTowerType()) removeFromFronts(front);
+      //make sure we have good vision of the 5x5 block where the tower could be (MapLocation front could be noisy)
+      if(Robot.rc.getLocation().distanceSquaredTo(front)>3) continue;
+      //boolean activeFront = false;
+      for(MapLocation ruin : ruins){
+        RobotInfo towerInfo = Robot.rc.senseRobotAtLocation(ruin);
+        if(towerInfo!=null && towerInfo.getType().isTowerType() && towerInfo.getTeam()!=Robot.rc.getTeam()){
+          //activeFront = true;
+          return;
+        }
       }
+      removeFromFronts(front);
     }
   }
 

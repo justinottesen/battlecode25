@@ -18,7 +18,7 @@ public class Stack<T> {
    * @return Whether the item was successfully added to the stack
    */
   public boolean push(T item) {
-    if (index == data.length) { return false; }
+    if (index == data.length) { remove(0); }
     data[index++] = item;
     return true;
   }
@@ -32,7 +32,8 @@ public class Stack<T> {
    * @return Whether the item was successfully inserted
    */
   public boolean insert(T item, int i) {
-    if (index == data.length || i > index) { return false; }
+    if (i > index) { return false; }
+    if (index == data.length) { remove(0); }
     for (int j = index++; j > i; --j) {
       data[j] = data[j - 1];
     }

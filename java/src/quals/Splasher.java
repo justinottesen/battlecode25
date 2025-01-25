@@ -38,7 +38,9 @@ public final class Splasher extends Robot {
         case Communication.SYMMETRY_KNOWLEDGE:
           MapData.incorporateSymmetryInfo(Communication.readSymmetryValue(m.getBytes()));
         case Communication.FRONT:
-          Communication.updateFronts(m.getBytes());
+          if (rc.getRoundNum() % 100 != 8) {
+            Communication.updateFronts(m.getBytes());
+          }
           break;
         default:
           System.out.println("RECEIVED UNKNOWN MESSAGE: " + m);

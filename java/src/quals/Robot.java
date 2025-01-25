@@ -48,6 +48,10 @@ public abstract class Robot {
   };
 
   final public void run() throws GameActionException {
+    if (Robot.rc.getRoundNum() % 100 == 8) {
+      Robot.rc.setTimelineMarker("Reset fronts", 255, 0, 0);
+      MapData.resetFronts();
+    }
     if (turnNum == 2) {
       BugPath.init();
     }
@@ -55,7 +59,6 @@ public abstract class Robot {
     if (turnNum != 1) {
       MapData.updateVisibleRuins();
     }
-    Goal.Type currentGoalType = GoalManager.current().type;
     doMicro(); // Act based on immediate surroundings
     doMacro(); // Secondarily act to achieve big picture goal
     MapData.lookForFrontsToAdd();
@@ -64,18 +67,14 @@ public abstract class Robot {
     for (RobotInfo info : rc.senseNearbyRobots(GameConstants.MESSAGE_RADIUS_SQUARED, TEAM)) {
       if (info.getType().isTowerType() == Robot.rc.getType().isTowerType()) { continue; }
       if (!rc.canSendMessage(info.getLocation())) { continue; }
-      if (Robot.rc.getType().isRobotType() && MapData.symmetryKnown() && !MapData.hasCommedSymmetry) {
-        if (Communication.trySendMessage(Communication.makeSymmetryMessage(), info.getLocation())) {
-          MapData.hasCommedSymmetry = true;
+      // If we are a tower, only send active messages
+      if (Robot.rc.getRoundNum() % 100 != 7) { // Don't send any front messages every 100 rounds
+        if (Robot.rc.getType().isTowerType()) {
+          Communication.resetSentFronts(); // We want to send all fronts to all robots
+          while (Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation())) {}
+        } else if (Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation())) {
           break;
         }
-      }
-      // If we are a tower, only send active messages
-      if (Robot.rc.getType().isTowerType()) {
-        Communication.resetSentFronts(); // We want to send all fronts to all robots
-        while (Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation())) {}
-      } else if (Communication.trySendMessage(Communication.createFrontsMessage(), info.getLocation())) {
-        break;
       }
       if (Clock.getBytecodesLeft() < 200) { break; }
     }

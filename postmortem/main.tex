@@ -220,6 +220,9 @@
     \item We no longer have to coordinate what tower types we are building, since we are always building money towers (we ignore defense towers for now).
     \item Since chips are global and paint is local, we can use money towers that are far away from the active parts of the map to subsidize tower production where it is needed most.
   \end{enumerate}
+
+  \subsubsection{Special Resource Patterns}
+
   However, once SRPs are introduced, this math changes. Each active SRP boosts paint production by 3 units per tower per turn. The following table shows how the number of SRPs affects the per turn production rates of different towers:
   \begin{center}
     \begin{tabular}{c | c | c | c}
@@ -233,11 +236,15 @@
       5 & 35 & 17.5 & 20
     \end{tabular}
   \end{center}
-  As you can see, once there are 4 or more SRPs, paint towers are better suited for their intended purpose. We decided not to worry about this and stick with our money tower only strategy, to keep things simple for Sprint 1.
+  As you can see, once there are 4 or more SRPs, paint towers are better suited for their intended purpose. We decided not to worry about this and stick with our money tower only strategy, to keep things simple for Sprint 1. Plus, we (regrettably) did not prioritize SRPs for Sprint 1, our soldiers simply checked if the current location could have an SRP and if so, they marked one.
 
-  \medskip
-  
-  We already had a BugNav algorithm from XSquare \url{https://github.com/IvanGeffner/BTC24/blob/master/BugPath.java}, and it worked with minor tweaking. If you have questions about how to implement this, there was a lecture on it this year \href{https://www.youtube.com/live/Mqk50BQH3oQ?si=6qL5WAXmSOS2K3OR}{here}.\\
+  \subsubsection{Pathfinding \& Map Representation}
+
+  Units stored their knowledge of the map in memory, however we ended up rewriting this system, so this will be described further later. Units traversed the map using a BugNav algorithm. We reused an algorithm from XSquare \url{https://github.com/IvanGeffner/BTC24/blob/master/BugPath.java}, and it worked with minor tweaking. If you have questions about how this works, there was a lecture on it this year \href{https://www.youtube.com/live/Mqk50BQH3oQ?si=6qL5WAXmSOS2K3OR}{here}.\\
   Pathfinding wasn't a high priority this year since ruins/towers guaranteed a lot of open space. In theory, Teh Devs could've made maps with few ruins and many walls, but that never happened. Even though something like unrolled BFS would've been optimal, BugNave worked well enough in practice, and because source code for it already existed, we saved a lot of time not worrying about pathfinding.
   
+  \subsubsection{Sprint 1 Performance}
+
+  We entered the tournament as the 55 seed out of 160 teams, with a rating of 1533, our first match was a 4-1 win against the 74 seed, "be right back" with a rating of 1483. 
+
 \end{document}

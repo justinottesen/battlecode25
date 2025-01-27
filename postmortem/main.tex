@@ -2,9 +2,11 @@
 \usepackage{framed}
 \usepackage[letterpaper, margin=1in]{geometry}
 \usepackage{hyperref}
+\usepackage{pgfplots}
 
 \setlength{\parindent}{0pt}
 \hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
+\pgfplotsset{compat=1.18}
 
 \title{The Kragle - Battlecode 25 Postmortem}
 \author{Justin Ottesen, Andrew Bank, Matt Voynovich}
@@ -111,8 +113,130 @@
 
   Communication was relatively restricted this year. Robots could not communicate with each other, they could only communicate by messaging towers when they were close by and there was a path of friendly paint connecting them. Towers could send messages to robots and they could broadcast messaged to other towers within a slightly larger range. Robots could only send one message per round, and towers could send 20. The message consisted of the round number, the sending robot ID, and a 32 bit integer.
 
+  \medskip
+
+  The other simpler way of communicating is that robots can mark a 1 or a 2 on any empty tile. This is intended for robots to let others know what color tiles should be painted, but it can also be used for very simple communication.
+
   \section{Strategy \& Implementation}
 
+  \subsection{Sprint 1}
+
+  \subsubsection{Setup}
+
+  The first thing we did was decide how to structure our code. We created an abstract \verb|Robot| class, and created a subclass for each robot type (\verb|Soldier|, \verb|Splasher|, \verb|Mopper|, \verb|Tower|). This heavily simplified our \verb|RobotPlayer| class, and helped us split functionality between differing robot types\footnote{In hindsight, it may have been even smarter to have another level to the hierarchy where we had Unit as the base class, Robot and Tower as subclasses, and other types inherit from these. Towers don't need to do pathfinding, and they can't really learn much about the map, so this was bad organization and wasted bytecode}. Along with these classes, we also had utility classes, like \verb|MapData|, \verb|Explore|, \verb|Bugpath|, and others.
+
+  \medskip
+
+  Our first priority was getting a bot that could effectively explore and capture towers. We had each tower spawn a soldier and a mopper who would search for a ruin. The soldier was to paint the pattern around the tower, and the mopper was to clear any enemy paint in the way.
+
+  \subsubsection{Resources \& Towers}
+
+  We made two observations very early on about resources:
+  \begin{enumerate}
+    \item It is not worth upgrading towers.
+    \item It Money towers are always better than Paint towers.
+  \end{enumerate}
+  The first one is relatively obvious looking at the costs of new towers vs upgrades. For Money towers, the following table shows the cost associated with each level of the tower:
+  \begin{center}
+    \begin{tabular}{c | c | c}
+      Level & Upgrade Cost (Chips) & Mining Rate (Chips / Turn) \\
+      \hline 
+      1 & 1000 & 20   \\
+      2 & 2500 & 30   \\
+      3 & 5000 & 40   \\
+    \end{tabular}
+  \end{center}
+  From this table, we can graph the cost and mining rates:
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        axis lines = left,
+        xlabel = Total Cost,
+        ylabel = Mining Rate,
+        legend pos = north west
+      ]
+      \addplot [
+        color = red
+      ]
+      coordinates {
+        (0,0)(1000,20)(3500,30)(8000,40)
+      };
+      \addlegendentry{Upgrading}
+
+      \addplot [
+        color = blue,
+        domain = 0:5000
+      ]
+      { x / 50 };
+      \addlegendentry{New}
+        
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+  As is clearly shown here, when you have the choice between spending on a new tower, or upgrading an existing one, it is no question to upgrade. The same can be said for Paint towers, but the next observation makes that redundant.
+
+  \medskip
+
+  Even though paint is arguably the more important resource, Paint towers are useless\footnote{This is true until you factor in SRPs, but we are getting there} because money towers actually produce paint more effectively than paint towers. Each tower spawns with 500 paint. Since money towers produce 20 chips per turn and they cost 1,000 chips, they pay for themselves in 50 turns. So, if a Money tower calls \verb|rc.disintegrate()|, we can trade 1,000 chips for 500 paint. If we do this every 50 turns, money towers have an effective paint mining rate of 10 paint per turn, which is double what paint towers are capable of.
+
+  \medskip
+
+  Here is the corresponding graph to the above for paint production vs chip cost:
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        axis lines = left,
+        xlabel = Cost,
+        ylabel = Mining Rate,
+        legend pos = north west
+      ]
+      \addplot [
+        color = red
+      ]
+      coordinates {
+        (0,0)(1000,5)(2500,10)(5000,15)
+      };
+      \addlegendentry{Upgrading}
+
+      \addplot [
+        color = blue,
+        domain = 0:5000
+      ]
+      { x / 200 };
+      \addlegendentry{New}
+      
+      \addplot [
+        color = orange,
+        domain = 0:5000
+      ]
+      { x / 100 };
+      \addlegendentry{Disintegration}
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+  There are a few other big bonuses of this strategy:
+  \begin{enumerate}
+    \item We now have the choice of converting chips to paint. With paint towers, if we have more paint than we need or can use, we are stuck with it.
+    \item We no longer have to coordinate what tower types we are building, since we are always building money towers.
+    \item Since chips are global and paint is local, we can use money towers that are far away from the active parts of the map to subsidize tower production where it is needed most.
+  \end{enumerate}
+  However, once SRPs are introduced, this math changes. Each active SRP boosts paint production by 3 units per tower per turn. The following table shows how the number of SRPs affects the per turn production rates of different towers:
+  \begin{center}
+    \begin{tabular}{c | c | c | c}
+      SRPs & Money Tower Chips & Money Tower Paint\footnote{This represents the amount of paint which can be effectively achieved per turn by disintegrating and rebuilding money towers} & Paint Tower Paint \\
+      \hline
+      0 & 20 & 10 & 5 \\
+      1 & 23 & 11.5 & 8 \\
+      2 & 26 & 13 & 11 \\
+      3 & 29 & 14.5 & 14 \\
+      4 & 32 & 16 & 17 \\
+      5 & 35 & 17.5 & 20
+    \end{tabular}
+  \end{center}
+  As you can see, once there are 4 or more SRPs, paint towers are better suited for their intended purpose. We decided not to worry about this and stick with our money tower only strategy, to keep things simple for Sprint 1.
+
+  \medskip
   
+  We already had a BugNav algorithm from a previous year, and it worked with minor tweaking. If you have questions about how to implement this, there was a lecture on it this year \href{https://www.youtube.com/live/Mqk50BQH3oQ?si=6qL5WAXmSOS2K3OR}{here}.
 
 \end{document}

@@ -198,19 +198,10 @@
 
   \subsubsection{Pathfinding \& Map Representation}
 
-  Units stored their knowledge of the map in memory, however we ended up rewriting this system, so this will be described further later. Units traversed the map using a BugNav algorithm. We reused an algorithm from XSquare \url{https://github.com/IvanGeffner/BTC24/blob/master/BugPath.java}, and it worked with minor tweaking. If you have questions about how this works, there was a lecture on it this year \href{https://www.youtube.com/live/Mqk50BQH3oQ?si=6qL5WAXmSOS2K3OR}{here}.\\
-  Pathfinding wasn't a high priority this year since ruins/towers guaranteed a lot of open space. In theory, Teh Devs could've made maps with few ruins and many walls, but that never happened. Even though something like unrolled BFS would've been optimal, BugNave worked well enough in practice, and because source code for it already existed, we saved a lot of time not worrying about pathfinding.
-  
+  Units stored their knowledge of the map in memory, however we ended up rewriting this system, so this will be described further later. Units traversed the map using a BugNav algorithm. We reused an algorithm from a previous year, and it worked with minor tweaking. If you have questions about how this works, there was a lecture on it this year \href{https://www.youtube.com/live/Mqk50BQH3oQ?si=6qL5WAXmSOS2K3OR}{here}.
+
   \subsubsection{Sprint 1 Performance}
 
-  We entered the tournament as the 55 seed out of 160 teams, with a rating of 1533, our first match was a 4-1 win against the 74 seed, ``be right back'' with a rating of 1483. Their strategy was to do an early rush with soldiers to try and take out our towers, then produce a single splasher to cover some paint. This worked against us on the first game, as our starting soldiers got stuck trying to capture an SRP with enemy paint, and our moppers didn't help them.
-
-  \medskip
-
-  The left image below shows the result of our loss, and the right image shows one of our wins. On this particular map, the opponent's rush got trapped against a wall, 
-  \begin{center}
-    \includegraphics[scale=0.1]{images/sprint1_loss.png}
-    \includegraphics[scale=0.1]{images/sprint1_win.png}
-  \end{center}
+  We entered the tournament as the 55 seed out of 160 teams, with a rating of 1533, our first match was a 4-1 win against the 74 seed, "be right back" with a rating of 1483. 
 
 \end{document}

@@ -1,3 +1,7 @@
+postmortem/*
+!postmortem/main.tex
+!postmortem/main.pdf
+
 *.DS_Store
 
 ###### BATTLECODE ######

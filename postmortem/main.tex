@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage{framed}
+\usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{hyperref}
+
+\setlength{\parindent}{0pt}
+\hypersetup{colorlinks=true, linkcolor=blue, filecolor=magenta, urlcolor=cyan}
+
+\title{The Kragle - Battlecode 25 Postmortem}
+\author{Justin Ottesen, Andrew Bank, Matt Voynovich}
+\date{Last Updated: \today}
+
+\begin{document}
+
+  \maketitle
+
+  \section{Introduction}  
+
+  \subsection{Our Team - The Kragle}
+
+  We are a team of three computer science students at Rensselaer Polytechnic Institute (RPI). We are historically terrible at coming up with team names, and ended up choosing ``The Kragle'' after Justin had a burst of inspiration working on a \verb|MicroManager| class shortly after re-watching The Lego Movie. Just you wait for what we cook up next year. Some more information about us is below:
+  
+  \medskip
+
+  \textbf{Andrew Bank} 
+
+  \medskip
+
+  \textbf{Justin Ottesen} has competed in Battlecode since 2022. He began his undergraduate degree in Computer Science in Fall 2021, and graduated early in Spring 2024. He stayed at RPI for his Master's, where he does research with the BRAINS Lab under Oshani Seneviratne with a focus on incentive design for smart contract protocols, and is on track to graduate in Fall 2025. Outside of classwork, he has worked as an intern at Nasuni since Summer 2023, and is on the D3 NCAA Cross Country and Track teams at RPI. In his free time, he enjoys hiking, running, programming, and playing Mario Kart Wii.
+
+  \medskip
+
+  \textbf{Matt Voynovich}
+
+  \subsection{Past Performance}
+
+  Andrew was the only member to compete in 2021. \textbf{How did it go?} In 2022, Justin joined Andrew, working together again in 2023 and 2024 along with some other teammates. We did not perform particularly well in any of these years, typically holding a 1200-1500 rating, with no notable performances in any of the tournaments. Unfortunately, the RPI spring semester starts very early, so we were always balancing classwork along with the competition. This year we went all in, and entered the US qualifier tournament with the 10 seed, rated at 1730. I guess you'll have read this to see how we did...
+
+  \medskip
+
+  Although we aren't sure our mess of a repository will be useful to anyone else, our GitHub repositories can be found below:
+  \begin{enumerate}
+    \item[2021] \textbf{Fire Nation} - URL?
+    \item[2022] \textbf{Kernel Byters} - \url{https://github.com/justinottesen/Kernel-Byters}
+    \item[2023] \textbf{PC Ghosts} - \url{https://github.com/andrewkbank/bc2023}
+    \item[2024] \textbf{Goat House} - \url{https://github.com/justinottesen/battlecode24}
+    \item[2025] \textbf{The Kragle} - \url{https://github.com/justinottesen/battlecode25}
+  \end{enumerate}
+
+  \section{Battlecode 2025: Chromatic Conflict}
+
+  \subsection{Game Overview}
+
+  This year's introduction message is shown below:
+
+  \begin{quote}
+    \textit{The bread and food of yore has begun to run out, forcing robot society to adapt. Gone are the jovial ducks, replaced by steampunk robot bunnies who have converted their need for nutrients into a reliance on paint. These bunnies have become territorial, forming clans and defense formations to protect the resource that keeps them running.}
+    
+    \medskip
+    
+    \textit{For the past two centuries, these bunnies have stayed within their own territory, but clans have begun to degrade their environment and need to start branching out. Will these clans be able to expand their territory and generate enough paint to protect their families? Or will they stray too close to other clans and be wiped out in conflict?}
+  \end{quote}
+
+  As hinted above, this year's game was a competition of territory control between paint-crazy bunnies. The first team to paint 70\% of the map their color would win. Each team had two starting towers, which could produce robots. These robots had different abilities, but their goal was to work together to build more towers and paint as much territory as possible.
+
+  \subsection{Resources}
+
+  The two resources of this year's game were Money (also referred to as Chips) and Paint. Money was a globally shared resource and could only be generated through towers. Money could be spent on new towers, tower upgrades, or new units. Paint was a more complicated resource to manage, since it was held by individual units. Paint could be produced by towers or stolen from enemies, and could be spent to attack, expand territory, or produce new robots.
+
+  \subsection{Towers}
+
+  \subsection{Robots}
+
+\end{document}

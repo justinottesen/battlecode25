@@ -71,57 +71,9 @@
 
   As hinted above, this year's game was a competition of territory control between paint-crazy bunnies. The first team to paint 70\% of the map would win. Each team had two starting towers, which could produce robots. These robots had different abilities, but their goal was to work together to build more towers and paint as much territory as possible.
 
-  \subsection{Map}
-
-  The map style was rather simple this year. All maps were within $20 \times 20$ to $60 \times 60$ (inclusive) discrete tiles, and were guaranteed to be either vertically, horizontally, or rotationally symmetrical. Tiles were either empty, walls, or ruins. Robots could move on and paint empty tiles, but they could not for walls and ruins. As always in Battlecode, the map was 
-
-  \subsection{Resources}
-
-  The two resources of this year's game were Money (also referred to as Chips) and Paint.
-  
   \medskip
 
-  \textbf{Money} was a globally shared resource and could only be generated through towers. Money could be spent on new towers, tower upgrades, or new robots.
-  
-  \medskip
-
-  \textbf{Paint} was a more complicated resource to manage, since it was held by individual units. Paint could be produced by towers or stolen from enemies, and could be spent to attack, expand territory, or produce new robots. When painted on the map, paint could be either a primary or secondary color for each team, and this was used to designate special patterns, which are described further below.
-
-  \subsection{Towers}
-
-  There were three tower types: Money towers, Paint towers, and Defense towers. Money and Paint towers passively produced their respective resources, and Defense towers initially just had high attack and health, but were buffed to also produce chips on every attack.
-
-  \medskip
-
-  Towers could do a weak attack to all enemies in their attack radius, and a stronger attack to a single enemy per turn. Towers could only be constructed at sites on the map called Ruins. Each tower type had its own $5 \times 5$ pattern that needed to be painted around a ruin before a tower could be built there. In addition, teams were limited to 25 towers at any given time.
-
-  \subsection{Robots}
-
-  There were three robot types: Soldiers, Splashers, and Moppers.
-
-  \medskip
-
-  \textbf{Soldiers} were the ``standard'' unit of this year. They could paint tiles to a team's color or attack enemy towers. Importantly, soldiers could not paint over enemy paint. They could only paint empty tiles, or allied tiles (which was useful in painting a pattern).
-
-  \medskip
-
-  \textbf{Splashers} could paint a group of tiles, regardless of their current paint status. However, they were more expensive than soldiers, and their attack was far less paint efficient. This attack also damaged enemy towers in range.
-
-  \medskip
-
-  \textbf{Moppers} could remove enemy paint from tiles. If an enemy was on the tile, it would also steal some of their paint and give it to the mopper. They also had the ability to swing their mop, which could attack close-by groups of clustered enemies, taking away enemy paint.
-
-  \subsection{Special Resource Patterns}
-
-  In addition to the tower patterns that could be painted on the map, robots could paint Special Resource Patterns (SRPs), which boosted the production rate of all friendly towers. A balance change caused these to have a 200 chip cost to complete, and would only activate after being completed for 50 consecutive turns. As soon as the pattern was disturbed, it would be deactivated.
-
-  \subsection{Communication}
-
-  Communication was relatively restricted this year. Robots could not communicate with each other, they could only communicate by messaging towers when they were close by and there was a path of friendly paint connecting them. Towers could send messages to robots and they could broadcast messaged to other towers within a slightly larger range. Robots could only send one message per round, and towers could send 20. The message consisted of the round number, the sending robot ID, and a 32 bit integer.
-
-  \medskip
-
-  The other simpler way of communicating is that robots can mark a 1 or a 2 on any empty tile. This is intended for robots to let others know what color tiles should be painted, but it can also be used for very simple communication.
+  We saved copies of both the initial and final specs to our repository in case they are taken down in the future. For a full description of the game, see \href{https://github.com/justinottesen/battlecode25}{our repository}.
 
   \section{Strategy \& Implementation}
 

@@ -1,6 +1,7 @@
 postmortem/*
 !postmortem/main.tex
 !postmortem/images
+!postmortem/source
 
 *.DS_Store
 

@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage{framed}
 \usepackage[letterpaper, margin=1in]{geometry}
+\usepackage{graphics}
 \usepackage{hyperref}
 \usepackage{pgfplots}
 
@@ -18,6 +19,12 @@
 
   \section{Introduction}  
 
+  We believe our postmortem will be of unique help to future Battlecode participants. Often, teams who make postmortems are those who have consistently placed highly from the start. We have the perspective of a team that spent years with no consideration of qualifiers, who this year made the jump to be one of the higher level contenders, going toe-to-toe with the 2 seed in the US qualifiers.
+
+  \medskip
+
+  Hopefully you find this useful!
+
   \subsection{Our Team - The Kragle}
 
   We are a team of three computer science students at Rensselaer Polytechnic Institute (RPI). In this year's competition, we made 'the leap' from being a team that couldn't submit a final bot to being a contender for the final tournament. We'll outline some tips and tricks for other aspiring teams to make 'the leap' themselves. We are historically terrible at coming up with team names, and ended up choosing ``The Kragle'' after Justin had a burst of inspiration working on a \verb|MicroManager| class shortly after re-watching The Lego Movie. Just you wait for what we cook up next year. Some more information about us is below:
@@ -34,6 +41,7 @@
 
   \textbf{Matthew Voynovich} started competing in Battlecode this year. He began his undergraduate degree majoring in both Computer Science and Information Technology and Web Science at RPI in Fall of 2023. He is scheduled to graduate in Spring 2026 and plans to pursue a masters under the Co-Terminal program at RPI. Currently, Matthew works as an undergrad researcher under Thomas Morgan studying quantum phase investigations, and in his free time enjoys long distance running with his friends in the Rensselaer Running Club.
 
+  \newpage
   \subsection{Past Performance}
 
   Andrew was the only member to compete in 2021. In 2022, Justin joined Andrew, working together again in 2023 and 2024 along with some other teammates. We did not perform particularly well in any of these years, typically holding a 1200-1500 rating, with no notable performances in any of the tournaments. Unfortunately, the RPI spring semester starts very early, so we were always balancing classwork along with the competition. This year we went all in, and entered the US qualifier tournament with the 10 seed, rated at 1730. I guess you'll have read this to see how we did...
@@ -42,14 +50,12 @@
 
   Although we aren't sure our mess of a repository will be useful to anyone else, our GitHub repositories can be found below:
   \begin{enumerate}
-    \item[2021] \textbf{Fire Nation} - Lost to time
+    \item[2021] \textbf{Fire Nation} - Lost to the sands of time\dots
     \item[2022] \textbf{Kernel Byters} - \url{https://github.com/justinottesen/Kernel-Byters}
     \item[2023] \textbf{PC Ghosts} - \url{https://github.com/andrewkbank/bc2023} (This is still private)
     \item[2024] \textbf{Goat House} - \url{https://github.com/justinottesen/battlecode24}
     \item[2025] \textbf{The Kragle} - \url{https://github.com/justinottesen/battlecode25} (This is still private)
   \end{enumerate}
-
-  \section{Battlecode 2025: Chromatic Conflict}
 
   \subsection{Game Overview}
 
@@ -63,11 +69,11 @@
     \textit{For the past two centuries, these bunnies have stayed within their own territory, but clans have begun to degrade their environment and need to start branching out. Will these clans be able to expand their territory and generate enough paint to protect their families? Or will they stray too close to other clans and be wiped out in conflict?}
   \end{quote}
 
-  As hinted above, this year's game was a competition of territory control between paint-crazy bunnies. The first team to paint 70\% of the map would win. Each team had two starting towers, which could gain resources and produce robots. These robots had different abilities, but their goal was to work together to build more towers and paint as much territory as possible.
+  As hinted above, this year's game was a competition of territory control between paint-crazy bunnies. The first team to paint 70\% of the map would win. Each team had two starting towers, which could produce robots. These robots had different abilities, but their goal was to work together to build more towers and paint as much territory as possible.
 
   \subsection{Map}
 
-  The map style was rather simple this year. Every year, maps were within $20 \times 20$ to $60 \times 60$ (inclusive) discrete tiles, and were guaranteed to be either vertically, horizontally, or rotationally symmetrical. This year, tiles were either empty, walls, or ruins. Robots could move on and paint empty tiles, but they could not for walls and ruins. 
+  The map style was rather simple this year. All maps were within $20 \times 20$ to $60 \times 60$ (inclusive) discrete tiles, and were guaranteed to be either vertically, horizontally, or rotationally symmetrical. Tiles were either empty, walls, or ruins. Robots could move on and paint empty tiles, but they could not for walls and ruins. As always in Battlecode, the map was 
 
   \subsection{Resources}
 
@@ -79,7 +85,7 @@
   
   \medskip
 
-  \textbf{Paint} was the lifeblood of every unit, as well as the main tool to controlling the map. Paint could be produced by towers or stolen from enemies, and could be spent to attack, expand territory, or produce new robots. When painted on the map, paint could be either a primary or secondary color for each team, and this was used to designate special patterns, which are described further below.
+  \textbf{Paint} was a more complicated resource to manage, since it was held by individual units. Paint could be produced by towers or stolen from enemies, and could be spent to attack, expand territory, or produce new robots. When painted on the map, paint could be either a primary or secondary color for each team, and this was used to designate special patterns, which are described further below.
 
   \subsection{Towers}
 
@@ -87,7 +93,7 @@
 
   \medskip
 
-  Towers could do a weak attack to all enemies in their attack radius, and a stronger attack to a single enemy per turn. Towers could only be constructed at sites on the map called Ruins, whose locations are predetermined by the map. Each tower type had its own $5 \times 5$ pattern that needed to be painted around a ruin before a tower could be built there. In addition, teams were limited to 25 towers at any given time.
+  Towers could do a weak attack to all enemies in their attack radius, and a stronger attack to a single enemy per turn. Towers could only be constructed at sites on the map called Ruins. Each tower type had its own $5 \times 5$ pattern that needed to be painted around a ruin before a tower could be built there. In addition, teams were limited to 25 towers at any given time.
 
   \subsection{Robots}
 
@@ -95,7 +101,7 @@
 
   \medskip
 
-  \textbf{Soldiers} were the ``standard'' unit of this year. They could paint empty tiles to a team's color or attack enemy towers. Importantly, soldiers could not paint over enemy paint. They could only paint empty tiles, or allied tiles (which was useful in painting a pattern). Soldiers were also the most useful unit for attacking enemy towers, since their 'gun' attack allowed 2 soldiers to solo-kill a tower.
+  \textbf{Soldiers} were the ``standard'' unit of this year. They could paint tiles to a team's color or attack enemy towers. Importantly, soldiers could not paint over enemy paint. They could only paint empty tiles, or allied tiles (which was useful in painting a pattern).
 
   \medskip
 
@@ -245,6 +251,14 @@
   
   \subsubsection{Sprint 1 Performance}
 
-  We entered the tournament as the 55 seed out of 160 teams, with a rating of 1533, our first match was a 4-1 win against the 74 seed, "be right back" with a rating of 1483. 
+  We entered the tournament as the 55 seed out of 160 teams, with a rating of 1533, our first match was a 4-1 win against the 74 seed, ``be right back'' with a rating of 1483. Their strategy was to do an early rush with soldiers to try and take out our towers, then produce a single splasher to cover some paint. This worked against us on the first game, as our starting soldiers got stuck trying to capture an SRP with enemy paint, and our moppers didn't help them.
+
+  \medskip
+
+  The left image below shows the result of our loss, and the right image shows one of our wins. On this particular map, the opponent's rush got trapped against a wall, 
+  \begin{center}
+    \includegraphics[scale=0.1]{images/sprint1_loss.png}
+    \includegraphics[scale=0.1]{images/sprint1_win.png}
+  \end{center}
 
 \end{document}

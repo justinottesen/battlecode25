@@ -20,11 +20,11 @@
 
   \subsection{Our Team - The Kragle}
 
-  We are a team of three computer science students at Rensselaer Polytechnic Institute (RPI). We are historically terrible at coming up with team names, and ended up choosing ``The Kragle'' after Justin had a burst of inspiration working on a \verb|MicroManager| class shortly after re-watching The Lego Movie. Just you wait for what we cook up next year. Some more information about us is below:
+  We are a team of three computer science students at Rensselaer Polytechnic Institute (RPI). In this year's competition, we made 'the leap' from being a team that couldn't submit a final bot to being a contender for the final tournament. We'll outline some tips and tricks for other aspiring teams to make 'the leap' themselves. We are historically terrible at coming up with team names, and ended up choosing ``The Kragle'' after Justin had a burst of inspiration working on a \verb|MicroManager| class shortly after re-watching The Lego Movie. Just you wait for what we cook up next year. Some more information about us is below:
   
   \medskip
 
-  \textbf{Andrew Bank} 
+  \textbf{Andrew Bank} has competed in Battlecode since 2021. He is an Computer Science and Computer Systems Engineer at RPI and will graduate in this spring 2025. Andrew has interned at Johns Hopkins Applied Physics Lab, he has created the Circuit Randomizer for Personalized Learning as an undergraduate research project under Professor Shayla Sawyer, and is currently working on another undergraduate research project: the MusicX project for Professor Sawyer's Mercer Xlab. In his free time, Andrew enjoys having more Strava follwers than Instagram followers, and he enjoys treating Stardew Valley like an operating systems optimization problem while playing with his siblings.
 
   \medskip
 
@@ -42,7 +42,7 @@
 
   Although we aren't sure our mess of a repository will be useful to anyone else, our GitHub repositories can be found below:
   \begin{enumerate}
-    \item[2021] \textbf{Fire Nation} - URL?
+    \item[2021] \textbf{Fire Nation} - Lost to time
     \item[2022] \textbf{Kernel Byters} - \url{https://github.com/justinottesen/Kernel-Byters}
     \item[2023] \textbf{PC Ghosts} - \url{https://github.com/andrewkbank/bc2023}
     \item[2024] \textbf{Goat House} - \url{https://github.com/justinottesen/battlecode24}
@@ -63,11 +63,11 @@
     \textit{For the past two centuries, these bunnies have stayed within their own territory, but clans have begun to degrade their environment and need to start branching out. Will these clans be able to expand their territory and generate enough paint to protect their families? Or will they stray too close to other clans and be wiped out in conflict?}
   \end{quote}
 
-  As hinted above, this year's game was a competition of territory control between paint-crazy bunnies. The first team to paint 70\% of the map would win. Each team had two starting towers, which could produce robots. These robots had different abilities, but their goal was to work together to build more towers and paint as much territory as possible.
+  As hinted above, this year's game was a competition of territory control between paint-crazy bunnies. The first team to paint 70\% of the map would win. Each team had two starting towers, which could gain resources and produce robots. These robots had different abilities, but their goal was to work together to build more towers and paint as much territory as possible.
 
   \subsection{Map}
 
-  The map style was rather simple this year. All maps were within $20 \times 20$ to $60 \times 60$ (inclusive) discrete tiles, and were guaranteed to be either vertically, horizontally, or rotationally symmetrical. Tiles were either empty, walls, or ruins. Robots could move on and paint empty tiles, but they could not for walls and ruins. As always in Battlecode, the map was 
+  The map style was rather simple this year. Every year, maps were within $20 \times 20$ to $60 \times 60$ (inclusive) discrete tiles, and were guaranteed to be either vertically, horizontally, or rotationally symmetrical. This year, tiles were either empty, walls, or ruins. Robots could move on and paint empty tiles, but they could not for walls and ruins. 
 
   \subsection{Resources}
 
@@ -79,7 +79,7 @@
   
   \medskip
 
-  \textbf{Paint} was a more complicated resource to manage, since it was held by individual units. Paint could be produced by towers or stolen from enemies, and could be spent to attack, expand territory, or produce new robots. When painted on the map, paint could be either a primary or secondary color for each team, and this was used to designate special patterns, which are described further below.
+  \textbf{Paint} was the lifeblood of every unit, as well as the main tool to controlling the map. Paint could be produced by towers or stolen from enemies, and could be spent to attack, expand territory, or produce new robots. When painted on the map, paint could be either a primary or secondary color for each team, and this was used to designate special patterns, which are described further below.
 
   \subsection{Towers}
 
@@ -87,7 +87,7 @@
 
   \medskip
 
-  Towers could do a weak attack to all enemies in their attack radius, and a stronger attack to a single enemy per turn. Towers could only be constructed at sites on the map called Ruins. Each tower type had its own $5 \times 5$ pattern that needed to be painted around a ruin before a tower could be built there. In addition, teams were limited to 25 towers at any given time.
+  Towers could do a weak attack to all enemies in their attack radius, and a stronger attack to a single enemy per turn. Towers could only be constructed at sites on the map called Ruins, whose locations are predetermined by the map. Each tower type had its own $5 \times 5$ pattern that needed to be painted around a ruin before a tower could be built there. In addition, teams were limited to 25 towers at any given time.
 
   \subsection{Robots}
 
@@ -95,7 +95,7 @@
 
   \medskip
 
-  \textbf{Soldiers} were the ``standard'' unit of this year. They could paint tiles to a team's color or attack enemy towers. Importantly, soldiers could not paint over enemy paint. They could only paint empty tiles, or allied tiles (which was useful in painting a pattern).
+  \textbf{Soldiers} were the ``standard'' unit of this year. They could paint empty tiles to a team's color or attack enemy towers. Importantly, soldiers could not paint over enemy paint. They could only paint empty tiles, or allied tiles (which was useful in painting a pattern). Soldiers were also the most useful unit for attacking enemy towers, since their 'gun' attack allowed 2 soldiers to solo-kill a tower.
 
   \medskip
 
@@ -123,11 +123,11 @@
 
   \subsubsection{Setup}
 
-  The first thing we did was decide how to structure our code. We created an abstract \verb|Robot| class, and created a subclass for each robot type (\verb|Soldier|, \verb|Splasher|, \verb|Mopper|, \verb|Tower|). This heavily simplified our \verb|RobotPlayer| class, and helped us split functionality between differing robot types\footnote{In hindsight, it may have been even smarter to have another level to the hierarchy where we had Unit as the base class, Robot and Tower as subclasses, and other types inherit from these. Towers don't need to do pathfinding, and they can't really learn much about the map, so this was bad organization and wasted bytecode}. Along with these classes, we also had utility classes, like \verb|MapData|, \verb|Explore|, \verb|Bugpath|, and others.
+  The first thing we did was decide how to structure our code. We took a lot of inspiration from XSquare's 2024 code \url{https://github.com/IvanGeffner/BTC24}. We created an abstract \verb|Robot| class, and created a subclass for each robot type (\verb|Soldier|, \verb|Splasher|, \verb|Mopper|, \verb|Tower|). This heavily simplified our \verb|RobotPlayer| class, and helped us split functionality between differing robot types\footnote{In hindsight, it may have been even smarter to have another level to the hierarchy where we had Unit as the base class, Robot and Tower as subclasses, and other types inherit from these. Towers don't need to do pathfinding, and they can't really learn much about the map, so this was bad organization and wasted bytecode}. Along with these classes, we also had utility classes, like \verb|MapData|, \verb|Explore|, \verb|Bugpath|, and others.
 
   \medskip
 
-  Our first priority was getting a bot that could effectively explore and capture towers. We had each tower spawn a soldier and a mopper who would search for a ruin. The soldier was to paint the pattern around the tower, and the mopper was to clear any enemy paint in the way.
+  Our first priority was getting a bot that could effectively explore and capture towers. This was our first priority since building towers would allow our team to increase their resource income and create more robots. We had each tower spawn a soldier and a mopper who would search for a ruin. We copied the capture logic from examplefuncsplayer. The soldier was to paint the pattern around the tower, and the mopper was to clear any enemy paint in the way.
 
   \subsubsection{Resources \& Towers}
 
@@ -173,7 +173,7 @@
       \end{axis}
     \end{tikzpicture}
   \end{center}
-  As is clearly shown here, when you have the choice between spending on a new tower, or upgrading an existing one, it is no question to upgrade. The same can be said for Paint towers, but the next observation makes that redundant.
+  As is clearly shown here, when you have the choice between spending on a new tower, or upgrading an existing one, there is no reason to upgrade. The same can be said for Paint towers, but the next observation makes that redundant.
 
   \medskip
 
@@ -217,7 +217,7 @@
   There are a few other big bonuses of this strategy:
   \begin{enumerate}
     \item We now have the choice of converting chips to paint. With paint towers, if we have more paint than we need or can use, we are stuck with it.
-    \item We no longer have to coordinate what tower types we are building, since we are always building money towers.
+    \item We no longer have to coordinate what tower types we are building, since we are always building money towers (we ignore defense towers for now).
     \item Since chips are global and paint is local, we can use money towers that are far away from the active parts of the map to subsidize tower production where it is needed most.
   \end{enumerate}
   However, once SRPs are introduced, this math changes. Each active SRP boosts paint production by 3 units per tower per turn. The following table shows how the number of SRPs affects the per turn production rates of different towers:
@@ -237,6 +237,7 @@
 
   \medskip
   
-  We already had a BugNav algorithm from a previous year, and it worked with minor tweaking. If you have questions about how to implement this, there was a lecture on it this year \href{https://www.youtube.com/live/Mqk50BQH3oQ?si=6qL5WAXmSOS2K3OR}{here}.
-
+  We already had a BugNav algorithm from XSquare \url{https://github.com/IvanGeffner/BTC24/blob/master/BugPath.java}, and it worked with minor tweaking. If you have questions about how to implement this, there was a lecture on it this year \href{https://www.youtube.com/live/Mqk50BQH3oQ?si=6qL5WAXmSOS2K3OR}{here}.\\
+  Pathfinding wasn't a high priority this year since ruins/towers guaranteed a lot of open space. In theory, Teh Devs could've made maps with few ruins and many walls, but that never happened. Even though something like unrolled BFS would've been optimal, BugNave worked well enough in practice, and because source code for it already existed, we saved a lot of time not worrying about pathfinding.
+  
 \end{document}

@@ -99,6 +99,10 @@ There are a few other big bonuses of this strategy:
 \end{enumerate}
 With this, it made a very useful optimization trivial. Marking a tower pattern costs 25 paint, which is significant considering the soldier's paint capacity is 200, and it already takes a minimum of 120 paint to capture a ruin. Since we knew we were only building money towers, we could avoid marking the pattern and save paint.
 
+\medskip
+
+As a side note, we thought this strategy was pretty well known, however this ended up winning Gone Whalin' the ``Most Innovative Breakthrough Prize'', and most teams noticed it when they started doing it right before US Qualifiers. Overall they simply had a much better bot than us, holding a pretty stable rating around 1900.
+
 \subsubsection{Special Resource Patterns}
 
 Once SRPs are introduced, the math on paint production changes. Each active SRP boosts paint production by 3 units per tower per turn. The following table shows how the number of SRPs affects the per turn production rates of different towers:
@@ -134,7 +138,7 @@ We entered the tournament as the 55 seed out of 160 teams, with a rating of 1533
 
 \medskip
 
-The left image below shows the result of our loss, and the right image shows one of our wins. On this particular map, the opponent's rush got trapped against a wall.
+The left image below shows the result of our loss, and the right image shows one of our wins. On this particular map, the opponent's rush got trapped against a wall, allowing us to expand freely.
 \begin{center}
   \includegraphics[scale=0.1]{images/sprint1_loss.png}
   \includegraphics[scale=0.1]{images/sprint1_win.png}
@@ -142,7 +146,7 @@ The left image below shows the result of our loss, and the right image shows one
 Our next matchup did not go as well for us. We faced against the 10 seed ``immutable'', who was had a rating of 1737 at the time, and got swept 5-0. We kept up in the early game, our initial soldiers seemed to perform about equally in finding ruins, but after some starting territory was established, they always pulled away with a commanding lead. There were three main reasons for this:
 \begin{enumerate}
   \item They prioritized SRPs heavily. In Sprint 1, this was definitely the meta, since the pattern allowed for an absurd amount of overlap, and there was no cost to making them. This gave them a much stronger economy than ours.
-  \item They used their economy better, setting on about 50\% soldiers, and 25\% each of moppers and splashers. We usually ended up with about even soldiers and moppers with no splashers, since we did not have time to create splasher logic by this point. Their balance allowed for much better expansion.
+  \item They used their economy better, settling around 50\% soldiers, and 25\% each of moppers and splashers. We usually ended up with about even soldiers and moppers with no splashers, since we did not have time to create splasher logic by this point. Their balance allowed for much better expansion.
   \item They explored the map better. Our soldiers would often get stuck on ruins they couldn't complete without help, and our moppers were terrible at finding soldiers to help. This meant we got stuck anytime we saw enemy paint.
 \end{enumerate}
 We are sure there are many other things they did better than us, but these were the three big differences that made the others negligible.

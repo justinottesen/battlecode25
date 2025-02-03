@@ -5,6 +5,9 @@ postmortem/*
 
 *.DS_Store
 
+# Other teams bots added after tournament
+java/src/_*
+
 ###### BATTLECODE ######
 
 **/matches

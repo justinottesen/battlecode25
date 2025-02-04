@@ -1,1 +1,59 @@
-Add conclusion writeup here
+\subsection{Reflection of our process}
+
+Overall, we exceeded all of our expectations this year. We did an excellent job of identifying reusable code from XSquare, and modifying/augmenting it for our own purposes. This allowed us to get out a high-quality bot much quicker than previous years.
+
+\medskip
+
+From there, we did a good job of identifying key, game-specific tasks to implement, such as capturing towers, basic combat, and opening logic. This allowed our team to achieve good results quickly, as these tasks had the highest reward for the lowest effort.
+
+\medskip
+
+Finally, we were able to make consistent improvements to our bot by identifying inefficiencies in resource management and idle time. These efforts were all it took for our team to make the leap to being a top-level team.
+
+\medskip
+
+However, there were certainly areas where we could improve. Justin spent a lot of time re-doing XSquare code such as pathfinding when realistically, he couldn't really improve it and ended up wasting a lot of time. Andrew spent a lot of time on the SURVIVE behavior of bots, which was not an efficient use of his time since the SURVIVE behavior never really impacted the result of any matches.
+
+\medskip
+
+Additionally, the way we ended up dealing with goal objectives was messy. Each robot was able to keep track of multiple different goal objectives, however, we didn't define a formal framework for how to resolve having multiple different goal objectives. As a result, our goal resolution was a bunch of unorganized if-statements that was difficult to modify/debug. We could've benefited greatly from a formal goal resolution framework, so we will give one in the next section.
+
+\medskip
+
+Finally, we did not pay that much attention to other teams' strategies. Copying other teams' strategies is a Battlecode staple because it allows you to easily identify improvements for your own bot that other teams have conveniently tested for you. Our team neglecting this strategy resulted in a unique bot. However, it also resulted in our bot lacking obvious features such as ignoring refills, having a good build order, and having soldiers seek out enemy towers to kill.
+
+\subsection{Reflection on the game}
+
+The game this year was probably the best game we've taken part in. The 2025 game did a great job removing all of the game elements that made the last 2/3 years micro-heavy games while also adding new elements that made decision-making interesting. 
+
+\medskip
+
+Opening theory was interesting since choosing between double soldier openings, rushing, mopper openings, or even srp/splasher openings was a non-obvious choice. 
+
+\medskip
+
+Paint management was a very interesting task since you had to balance normal pathfinding, staying on allied paint, and choosing when to paint tiles where no option was the obvious choice.
+
+\medskip
+
+Build order being an essential part of the gameplan was back from 2021, since you always had the option to build every robot type and every tower type. Each team had to tackle difficult questions such as ``when do we start building splashers?'' or ``when are defense towers worth it?''
+
+\medskip
+
+SRPs were a great addition, since they gave access to an NP problem (a packing problem) that could be solved at any time for a small economic gain. However, since it was nearly always more worth it to capture more towers, it provided an interesting choice: explore for ruins, or build SRPs. Additionally, since finding the optimal SRP placement is an NP problem, it meant that every team could have slightly different approximation algorithms for SRP placement.
+
+\medskip
+
+Overall, Teh Devs did a fantastic job releasing patches. They did a great job of nerfing overtuned strategies such as SRP spam or rushing while not making those strategies useless with the nerfs. However, we have some gripes with how they treated defense towers. 
+
+\medskip
+
+Historically, static defense in Battlecode was never a meta-relevant strategy. In 2022, watchtowers were weak since they were a large investement, which was a death sentence in that year's game since cheap units could snowball very quickly. However, the 2025 game was the perfect opportunity for static defense. Map control was crucial to the game, so static defense having higher power in exchange for not being able to move was actually an appealing tradoff. However, Teh Devs caved to early complaints about defense tower being too strong before sprint 1 even happened. In the end, defense towers just turned into slightly different money towers.
+
+\medskip
+
+Static defense is a fascinating game aspect, that we believe still hasn't been fully explored by Teh Devs. Had defense towers been changed to prevent them from having paint and building robots, they would've fulfilled an interesting niche. Their polarizing strength would be offset by the opportunity cost of building a resource tower. In addition, defense towers being truly static (unlike 2022 watchtowers) means that they can be avoided. In RTS games, the counter to static defense is to disengage and gain an economic advantage since the opponent put a large investment in static defense. We believe this would add an extra dimension to any meta, since every meta usually devolves into ``always attack.''
+
+\medskip
+
+Overall, Teh Devs made massive improvements this year. They upgraded to a newer Java version, they added Python compatibility, they updated the client, and they made the best game in years. They deserve all the praise, and we are optimistic they can keep the good momentum into next year.

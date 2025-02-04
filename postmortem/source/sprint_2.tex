@@ -38,19 +38,32 @@ We managed the target destinations by creating a fixed buffer \verb|Stack| class
 
 \medskip
 
-The main reasons this failed were because of high bytecode cost, greedy search instead of BFS, and bad handling of the case of maximum stack depth of locations. It would outperform our old algorithm in ``easy'' pathfinding scenarios, but would often unpredictably get stuck on the harder situations. Traditional BugNav was a more reliable solution.
+The main reasons this failed were because of high bytecode cost, greedy search instead of BFS, and bad handling of the case of maximum stack depth of locations. It would outperform our old algorithm in ``easy'' pathfinding scenarios, but would often unpredictably get stuck on the harder situations. Traditional BugNav from XSquare's codebase was a more reliable solution.
 
-\subsubsection{Opening Rush}
+\subsubsection{Opening Theory}
 
 Up until this point, we hadn't really considered any type of coordinated effort. Our entire goal was just to build up economy, and if you see any enemies, try and beat them. This is the point we started to consider higher level strategy, so we made a \verb|sprint_2| bot to test our changes against the previous \verb|jottesen_test| and make sure we were in fact making improvements.
 
 \medskip
 
-Rush was very strong at this point of the competition, since two initial soldiers could fully take out an opponent tower. We decided to fight fire with fire, and Andrew meticulously coded a coordinated rush strategy. Each tower would spawn two soldiers, and using the map symmetry, we sent each pair to a different candidate enemy tower location. However, if the soldiers found an uncontested ruin\footnote{A ruin with no enemy paint blocking the pattern} on the way to the enemy tower, they would try to capture the ruin. Until the soldiers finished the first ruin, they were in ``opening mode'', meaning if their current ruin became contested, they continued the rush.
+The goal of the opening is to get a tower-count lead over your opponent. SRPs are not worth it since they take too long to activate, they don't provide enough resources, your team always starts with more than enough chips for towers, and there are always available towers to capture (this is something Teh Devs could've, but never really messed with). In the opening, each tower could spawn two robots before running out of initial paint. The logical choices were either spawning 1 soldier and 1 mopper, or spawning 2 soldiers. 2 soldiers is ideal since together, they could capture a tower without any surrounding paint in 12 turns. However, a mopper would allow the its soldier partner to capture a tower with enemy paint in its pattern. This provides quite the dilemna and was one of the most interesting part of optimizing strategy. 
 
 \medskip
 
-If the soldiers successfully took out an enemy tower, we assumed that the enemy had done the same to us, and the soldiers went into pure survival mode to try and help us win on tiebreakers in case all towers were taken out. This was not a problem if the opponent didn't rush us, since our towers would just produce more units, and these soldiers were low enough on paint and health after fighting the enemy tower that they wouldn't be able to make it back or do anything useful.
+After Sprint 1, we were made aware that rushing with a soldier-pair in the opening was a viable strategy. This provided an elegant solution to the opening dilemna: the soldier pair is better.
+
+\medskip
+
+Each tower spawns 2 soldiers. The first priority of the soldier pair is always to capture an ``uncontested'' ruin\footnote{A ruin with no enemy paint blocking the pattern}. Until the soldiers finished the first ruin, they were in ``opening mode.'' However, in the case that the soldiers only found ruins that were ``contested,'' they would rush. This is theoretically the perfect scenario for rushing since the best counter to rushing is to capture a ruin as fast as possible. However, if every nearby ruin is contested, rushes become stronger since it is more difficult to capture ruins.\\
+
+\medskip
+
+This opening strategy was wildly successful on the ladder. On 90\% of the test maps, the soldier pair would find an uncontested ruin and capture it before turn 20. Our logic didn't result in the soldiers rushing often, but when they did, it was often successful in giving our team a large lead. It wasn't infrequent to see our team with a marginal lead over top teams out of the opening.
+
+\medskip
+
+Our opening strategy remained unchanged after Sprint 2. This lead to some pitfalls. First, requiring the soldiers to pair up meant that if they found an uncontested ruin, they could capture it quicker than if they split up and both found uncontested ruins. However, requiring the soldiers to pair up was very high variance: sometimes, they would miss an obvious ruin since they didn't spread out. Secondly, since rushes happened so infrequently, we never had good logic for what to do after a rush completed, and relied mostly on the rush being disruptive enough to give us a massive lead that we couldn't fumble.
+
 
 \subsubsection{GoalManager}
 

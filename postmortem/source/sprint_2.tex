@@ -54,7 +54,16 @@ After Sprint 1, we were made aware that rushing with a soldier-pair in the openi
 
 \medskip
 
-Each tower spawns 2 soldiers. The first priority of the soldier pair is always to capture an ``uncontested'' ruin\footnote{A ruin with no enemy paint blocking the pattern}. Until the soldiers finished the first ruin, they were in ``opening mode.'' However, in the case that the soldiers only found ruins that were ``contested,'' they would rush. This is theoretically the perfect scenario for rushing since the best counter to rushing is to capture a ruin as fast as possible. However, if every nearby ruin is contested, rushes become stronger since it is more difficult to capture ruins.\\
+Each tower spawns 2 soldiers. The first priority of the soldier pair is always to capture an ``uncontested'' ruin\footnote{A ruin with no enemy paint blocking the pattern}. Until the soldiers finished the first ruin, they were in ``opening mode.'' However, in the case that the soldiers only found ruins that were ``contested,'' they would rush. This is theoretically the perfect scenario for rushing since the best counter to rushing is to capture a ruin as fast as possible. However, if every nearby ruin is contested, rushes become stronger since it is more difficult to capture ruins.
+\begin{center}
+  \includegraphics[scale=0.1]{images/round_17_capture.png}
+  \caption{Both soldier pairs quickly capturing uncontested ruins by round 17}
+\end{center}
+
+\begin{center}
+  \includegraphics[scale=0.1]{images/rush.png}
+  \caption{A soldier pairs finding an enemy tower before an uncontested ruin. Note that enemy soldiers aren't close to capturing a ruin yet.}
+\end{center}
 
 \medskip
 
@@ -62,7 +71,7 @@ This opening strategy was wildly successful on the ladder. On 90\% of the test m
 
 \medskip
 
-Our opening strategy remained unchanged after Sprint 2. This lead to some pitfalls. First, requiring the soldiers to pair up meant that if they found an uncontested ruin, they could capture it quicker than if they split up and both found uncontested ruins. However, requiring the soldiers to pair up was very high variance: sometimes, they would miss an obvious ruin since they didn't spread out. Secondly, since rushes happened so infrequently, we never had good logic for what to do after a rush completed, and relied mostly on the rush being disruptive enough to give us a massive lead that we couldn't fumble.
+Our opening strategy remained unchanged after Sprint 2. This lead to some pitfalls. First, requiring the soldiers to pair up meant that if they found an uncontested ruin, they could capture it quicker than if they split up and both found uncontested ruins. However, requiring the soldiers to pair up resulted in high variance: sometimes, they would miss an obvious ruin since they didn't spread out. Secondly, since rushes happened so infrequently, we never had good logic for what to do after a rush completed, and relied mostly on the rush being disruptive enough to give us a massive lead that we couldn't fumble.
 
 
 \subsubsection{GoalManager}

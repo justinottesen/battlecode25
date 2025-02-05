@@ -12,7 +12,7 @@ Finally, we were able to make consistent improvements to our bot by identifying 
 
 \medskip
 
-However, there were certainly areas where we could improve. Justin spent a lot of time re-doing XSquare code such as pathfinding when realistically, he couldn't really improve it and ended up wasting a lot of time. Andrew spent a lot of time on the SURVIVE behavior of bots, which was not an efficient use of his time since the SURVIVE behavior never really impacted the result of any matches.
+However, there were certainly areas where we could improve. Justin spent a lot of time re-doing XSquare code such as pathfinding when realistically, he couldn't really improve it and ended up wasting a lot of time. Andrew spent a lot of time on the SURVIVE behavior of bots, which was not an efficient use of his time since the SURVIVE behavior never really impacted the result of any matches. It was Matt's first year, so he was climbing the learning curve while also being busy with class.
 
 \medskip
 
@@ -28,7 +28,7 @@ The game this year was probably the best game we've taken part in. The 2025 game
 
 \medskip
 
-Opening theory was interesting since choosing between double soldier openings, rushing, mopper openings, or even srp/splasher openings was a non-obvious choice. 
+Opening theory was interesting since choosing between double soldier openings, rushing, mopper openings, or even SRP/splasher openings was a non-obvious choice. 
 
 \medskip
 
@@ -48,7 +48,7 @@ Overall, Teh Devs did a fantastic job releasing patches. They did a great job of
 
 \medskip
 
-Historically, static defense in Battlecode was never a meta-relevant strategy. In 2022, watchtowers were weak since they were a large investement, which was a death sentence in that year's game since cheap units could snowball very quickly. However, the 2025 game was the perfect opportunity for static defense. Robots not being able to engage in direct combat with each other meant that offense and defense could be seperate entities. Ie: a good offense wouldn't just automatically double as a good defense, which would've given static defense a unique role. Additionally, map control was crucial to the game, so static defense having higher power in exchange for not being able to move would've been an appealing tradeoff.
+Historically, static defense in Battlecode was never a meta-relevant strategy. In 2022, watchtowers were weak since they were a large investment, which was a death sentence in that year's game since cheap units could snowball very quickly. However, the 2025 game was the perfect opportunity for static defense. Robots not being able to engage in direct combat with each other meant that offense and defense could be separate entities, i.e.: a good offense wouldn't just automatically double as a good defense, which would've given static defense a unique role. Additionally, map control was crucial to the game, so static defense having higher power in exchange for not being able to move would've been an appealing trade-off.
 
 \medskip
 
@@ -61,3 +61,21 @@ Static defense is a fascinating game aspect that we believe still hasn't been fu
 \medskip
 
 Overall, Teh Devs made massive improvements this year. They upgraded to a newer Java version, they added Python compatibility, they updated the client, and they made the best game in years. They deserve all the praise, and we are optimistic they can keep the good momentum into next year.
+
+\subsection{Advice}
+
+We have learned a lot through our years of Battlecode.
+\begin{center}
+  Add more stuff here idk I don't feel like writing it right now
+\end{center}
+
+\begin{enumerate}
+  \item \textbf{Spend time preparing} - Before the competition starts, read Postmortems, look at code from other teams, and make a general plan for how you want to break up work amongst your team. You can even create a structure for your code ahead of time. For us, using a \verb|Robot| base class and different utility classes (\verb|MapData|, \verb|Communication|, etc.) seems to have worked the best.
+  \item \textbf{Budget Your Time} - As mentioned previously, one of our big downfalls this year was spending a lot of time to perfect things that either don't need to be perfected, or don't end up getting used. Battlecode is a short competition, and no one creates the perfect bot. Often the important things to do are the easy things and the things that make a big difference. Usually the simplest thing that works ends up being the best.
+  \item \textbf{Prioritize Economy} - Our workflow generally revolves around economy. The first thing we always do is plan how to get a strong economy as soon as possible. Once you have done this, you can branch off into working on converting the economy into the win condition, and working on an opening that sets you up to build your economy. Micro and Macro are important, but they don't mean anything if you can't afford to expand.
+  \item \textbf{Learn from Others} - Watch replays, collaborate in the discord, talk with your teammates. Chances are you can learn something from every team out there, whether it is an insight or strategy they use, or some niche condition that breaks your bot. See where you are strong, see where you are weak, find out why you are weak, and figure out how to improve.
+  \item \textbf{Stand on the Shoulders of Giants} - Similarly to the above, use every resource available to you. There are many past repositories that have been posted on the discord. We view \textbf{XSquare} as the God of Battlecode. He has several years of his past bots posted \href{https://github.com/IvanGeffner}{here}, and has consistently been on top of the leaderboard. His micro, exploring, and pathfinding are all unmatched.
+  \item \textbf{Test your code} - We have never bothered to write unit tests, but we realistically should. At minimum, run several games, closely analyzing whatever behavior you changed. Make custom maps, designed to expose your problems. Save old versions of your bot and compete against them. Run scrimmages against other teams. The more your code runs, the more problems you will find and fix. DO NOT upload untested bots right before important submission deadlines. At minimum, test against older versions of your code.
+\end{enumerate}
+
+Obviously, there is more to Battlecode than just these points, but these are the biggest lessons we have learned and hope you find useful as well.

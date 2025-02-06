@@ -1,13 +1,15 @@
 \subsubsection{Rewrite}
 
-Our sprint 1 code was messy and not well documented, so we did a full rewrite after the submission deadline. This was in the \verb|jottesen_test| folder, named so because it was initially a test of a new pathfinding algorithm. Similarly to \verb|sprint_1|, each robot type had its own class, along with several utility classes. We ended up (mostly) sticking with these utility classes for the rest of the competition, so we will describe them here.
+Our \verb|sprint_1| code was messy and not well documented, so we did a full rewrite after the submission deadline. This was in the \verb|jottesen_test| folder, named so because it was initially a test of a new pathfinding algorithm. Similarly to \verb|sprint_1|, each robot type had its own class, along with several utility classes. We ended up (mostly) sticking with these utility classes for the rest of the competition, so we will describe them here.
 
 \subsubsection{MapData}
 
 This is really the core of ``what the bot knows''. It stores an array in memory, with one 32-bit int per tile on the map. Below is how we encoded the information in these bits:
-\begin{center}
+\begin{figure}[H]
+  \centering
   \includegraphics[scale=0.25]{images/mapData_bits.png}
-\end{center}
+  \caption{The way we encoded map information in bits}
+\end{figure}
 We had plenty of bits left over, and many which were initially used and taken out. Upon spawning, each robot called \verb|MapData.updateAllVisible()| to load all known information about the immediate surroundings into the \verb|mapData| array. Each time the robot moved, it updated only the newly visible tiles. This was a bytecode compromise, since updating all the visible locations was expensive, but only updating newly visible leaves a blind spot around the robot. To help mitigate this, we also kept a list of the known ruins, and updated that list every turn.
 
 \subsubsection{Painter}
@@ -38,7 +40,7 @@ We managed the target destinations by creating a fixed buffer \verb|Stack| class
 
 \medskip
 
-The main reasons this failed were because of high bytecode cost, greedy search instead of BFS, and bad handling of the case of maximum stack depth of locations. It would outperform our old algorithm in ``easy'' pathfinding scenarios, but would often unpredictably get stuck on the harder situations. Traditional BugNav from XSquare's codebase was a more reliable solution.
+The main reasons this failed were because of high bytecode cost, greedy search instead of BFS\footnote{During the final tournament stream, the third place finishers \textbf{Om Nom} mentioned they used this optimization of BugNav and BFS, so it seems we turned back from mining right as we were about to hit diamonds. Definitely a skill issue on our part}, and bad handling of the case of maximum stack depth of locations. It would outperform our old algorithm in ``easy'' pathfinding scenarios, but would often unpredictably get stuck on the harder situations. Traditional BugNav from XSquare's codebase was a more reliable solution.
 
 \subsubsection{Opening Theory}
 
@@ -55,13 +57,13 @@ After Sprint 1, we were made aware that rushing with a soldier-pair in the openi
 \medskip
 
 Each tower spawns 2 soldiers. The first priority of the soldier pair is always to capture an ``uncontested'' ruin\footnote{A ruin with no enemy paint blocking the pattern}. Until the soldiers finished the first ruin, they were in ``opening mode.'' However, in the case that the soldiers only found ruins that were ``contested,'' they would rush. This is theoretically the perfect scenario for rushing since the best counter to rushing is to capture a ruin as fast as possible. However, if every nearby ruin is contested, rushes become stronger since it is more difficult to capture ruins.
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.75]{images/round_17_capture.png}
   \caption{Both soldier pairs quickly capturing uncontested ruins by round 17}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
   \centering
   \includegraphics[scale=0.5]{images/rush.png}
   \caption{A soldier pairs finding an enemy tower before an uncontested ruin. Note that enemy soldiers aren't close to capturing a ruin yet.}
@@ -82,11 +84,11 @@ The last big change we made before Sprint 2 was introducing the \verb|GoalManage
 
 \medskip
 
-We decided to use a stack for the goals, giving robots a lot more choice in their intended actions on goals. This ended up being a huge improvement, and we will definitely be bringing this back in future years.
+We decided to use a stack for the goals, giving robots a lot more choice in their intended actions on goals. This ended up being a huge improvement, and we will definitely be bringing an enhanced version of this back in future years.
 
 \subsubsection{Paint Towers?}
 
-At some point, we made a change where we built some paint towers. I forgot we did this, but we ended up reverting this decision later. As explained in previous sections, money towers are simply better until you have 4+ SRPs. We did not prioritize SRPs whatsoever, so paint towers didn't make any sense for us.
+At some point, we made a change where we built some paint towers. I forgot we did this, but we ended up reverting this decision later. As explained in previous sections, money towers are simply better until you have 4+ SRPs. We did not prioritize SRPs whatsoever, so paint towers didn't make any sense for us, especially since we had robots fighting over whether to make paint or money towers, wasting time and resources.
 
 \subsubsection{Sprint 2 Performance}
 
@@ -94,8 +96,8 @@ The bracket for Sprint 2 can be found \href{https://challonge.com/bc25javasprint
 
 \medskip
 
-We entered the tournament as the 63 seed out of 183 teams, with a rating of 1559. Our first match was a 5-0 win against the 66 seed, ``achromatic'' with a rating of 1551. There was not much of note in these matches, we outplayed them by a wide margin, expanding faster and winning any direct territory battles.
+We entered the tournament as the 63 seed out of 183 teams, with a rating of 1559. Our first match was a 5-0 win against the 66 seed, \textbf{achromatic} with a rating of 1551. There was not much of note in these matches, we outplayed them by a wide margin, expanding faster and winning any direct territory battles.
 
 \medskip
 
-Our second match was the opposite, we were against the 2 seed ``Super Cow Powers'' with a rating of 2017. We were no match for them and lost 5-0. They were much more purposeful with their expansion, and we had too many bugs that caused us to sit idle doing nothing.
+Our second match was the opposite, we were against the 2 seed \textbf{Super Cow Powers} with a rating of 2017. We were no match for them and lost 5-0. While they simply did everything better than us, the big details were that they were much more purposeful with their expansion and we had too many bugs that caused us to sit idle doing nothing.

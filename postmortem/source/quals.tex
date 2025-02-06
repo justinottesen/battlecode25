@@ -1,12 +1,14 @@
+Between Sprint 2 and the US Qualifier tournament we made our biggest improvements. We came out of Sprint 2 at 1570 ranked 63rd, and finished the competition around 1800, ranked 27th. Granted, our rating after Sprint 2 did not reflect our changes since we made several upgrades right before the submission deadline, but this is where we really started to have a chance of making Finals.
+
 \subsubsection{Floating Resources}
 
 Thanks to our excellent opening strategy, we often found ourselves with a resource lead, even against higher rated teams. However, our bot was fantastic at throwing leads. We would quickly get out-expanded in the mid-game, and we would float\footnote{terminology from RTS games meaning to be in possesion of unused resources. You always want to fully utilize your resource, so floating resources is bad.} tons of paint in all stages of the game.
 
 \medskip
 
-One of the unforeseen issues with only using money towers is that if they get stuck with less than 100 paint, they can never build units. This became a major issue when our soldiers would all refill on paint and leave every money tower with around 70 paint. Even with only 10 towers, this would result in us floating 700 paint. Since we were basically the only top team completely reliant on money towers, we could have a paint lead on paper, but if all of that paint was not spendable, it wasn't a paint lead in practice.
+One of the unforeseen issues with only using money towers is that if they get stuck with less than 100 paint, they can never build units. This became a major problem when our soldiers would all refill on paint and leave every money tower with around 70 paint. Even with only 10 towers, this would result in us floating 700 paint. Since we were basically the only top team completely reliant on money towers, we could have a paint lead on paper, but if all of that paint was not spendable, it wasn't a paint lead in practice.
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.5]{images/floating_resources.png}
     \caption{We have a sizeable resource lead against Silicon Geese. However, we are floating thousands of paint in towers that could go towards making robots.}
@@ -20,7 +22,7 @@ The solution was quite simple: make refilling soldiers leave precise amounts of 
 
 Besides floating resources, the other main culprit for our bot throwing leads was idle time. Often, we'd find ourselves with not just a resource lead, but a robot count lead. On paper, the team with more robots is always at an advantage. However, a robot-count lead means nothing if half of your robots are derping around.
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.5]{images/idle_time.png}
     \caption{A gaggle of soldiers and splashers in the upper right derping around far away from where they could be useful...}
@@ -38,7 +40,7 @@ Finally we came to the obvious realization that other teams didn't bother having
 
 \medskip
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=1]{images/waiting_for_refill.png}
     \caption{10 soldiers waiting for a refill on a money tower that is out of paint...}
@@ -68,20 +70,20 @@ We even believed we had a chance of upsetting the 7 seed, since the day of the s
 
 \medskip
 
-Disaster struck for us when the 15 seed, ``Podemice,'' miraculously upset the 2 seed, ``JDK? More like IDK.'' We narrowly lost our matchup against the 7 seed, ``placeholder name 2,'' in a score of 3-2. We were then given the daunting task of beating the 2 seed, ``JDK, More like IDK'' in losers. Tragically, we lost again 3-2 to be the only top 12 team not to make the finals.
+Disaster struck for us when the 15 seed, \textbf{podemice} miraculously upset the 2 seed, \textbf{JDK? More like IDK.} We narrowly lost our matchup against the 7 seed, \textbf{placeholder name 2,} in a score of 3-2. We were then given the daunting task of beating the 2 seed, \textbf{JDK, More like IDK} in losers. Tragically, we lost again 3-2 to be the only top 12 team not to make the finals.
 
 \subsubsection{Tournament Structure Suggestions (and Complaints)}
 
-There were a few factors that made this result particularly bitter. The first was the knowledge that both of our decisive sets were 1 game away from flipping. The second was that we didn't get to watch our losses on the stream, despite both games deciding a team to qualify for the finals\footnote{We think the qualifier stream should start earlier in the bracket, and stop once the qualifiers are determined. Otherwise, we just end up watching the finals twice, and not a single streamed game ``matters'' in the qualifier tournament}. The third and final factor was that we believed our team was top-12 strength. It just so happened that ``Podemice'' was horrifically underseeded, since they were very clearly also top-12 strength. As a result, our ``quadrant'' of the bracket was far and away the hardest one.
+There were a few factors that made this result particularly bitter. The first was the knowledge that both of our decisive sets were 1 game away from flipping. The second was that we didn't get to watch our losses on the stream, despite both games deciding a team to qualify for the finals\footnote{We think the qualifier stream should start earlier in the bracket, and stop once the qualifiers are determined. Otherwise, we just end up watching the finals twice, and not a single streamed game ``matters'' in the qualifier tournament}. The third and final factor was that we believed our team was top-12 strength. It just so happened that \textbf{podemice} was horrifically underseeded, since they were very clearly also top-12 strength. As a result, our ``quadrant'' of the bracket was far and away the hardest one.
 
 \medskip
 
-The traditional bracket is designed such that the higher seeds will always have the better matchups \textbf{if no upsets occur}. This is passable in a single-elimination bracket (such as March Madness), since a lower-seed inheriting the bracket positioning of a higher-seed only punishes the losing team, which clearly makes sense. However, in a double-elimination bracket, upsets mean that a higher-seed inherits the bracket positioning of a lower-seed, which can easily screw teams over. Despite going 2-3 with the both 2 and 7 seeds, never losing a single round against any other team, and going into the tournament ranked in the top 12, we did not finish in the top 12.
+The traditional bracket is designed such that the higher seeds will always have the better matchups \textit{if no upsets occur}. This is passable in a single-elimination bracket (such as March Madness), since a lower-seed inheriting the bracket positioning of a higher-seed only punishes the losing team. However, in a double-elimination bracket, upsets mean that a higher-seed inherits the bracket positioning of a lower-seed, which can easily screw teams over. Despite going 2-3 with the both 2 and 7 seeds, never losing a single round against any other team, and going into the tournament ranked in the top 12, we did not finish in the top 12.
 
 \medskip
 
-Our proposed solution to this issue is to reseed when teams drop to the losers bracket. This means that instead of a rigid bracket, the higher seeds will always have the better matchups regardless of whether upsets occur. As a result, instead of the 2 seed and the 10 seed battling it out for losers top 12, the 2 seed would get reseeded to play the lowest available seed (which would've been the 17 seed). This better ensures the true top-12 strength teams qualify. This does punish the 17 seed however, since their matchup goes from a close game against the 15 seed to a brutal matchup against the 2 seed, so this system is not perfect either. We believe it is more fair since the 17 seed would have needed an upset to qualify anyways, and we are giving the lowest available seed the shortest end of the stick, which is the exact purpose of seeding.
+Our proposed solution to this issue is to reseed when teams drop to the losers bracket. This means that instead of a rigid bracket, the higher seeds will always have the better matchups regardless of whether upsets occur. As a result, instead of the 2 seed and the 10 seed battling it out for losers top 12, the 2 seed would get reseeded to play the lowest available seed (which would've been the 17 seed). This better ensures the true top-12 strength teams qualify. This does punish the 17 seed however, since their matchup goes from a close game against the 15 seed to a brutal matchup against the 2 seed, so this system is not perfect either. Someone always gets the short end of the stick.
 
 \medskip
 
-At the end of the day, we could give all the bracket-luck excuses in the world. However, that wouldn't change the fact that we couldn't win the sets that mattered most. ``Podemice,'' ``JDK? More like IDK,'' and ``placeholder name 2'' all deserved to make the finals over us, and we have nothing but the highest respect for them. Seeding doesn't matter if you just win the damn games. In the words of Ichiro Suzuki, "I like imperfection. Because one is imperfect, it makes you want to keep moving forward."
+At the end of the day, we could give all the bracket-luck excuses in the world. However, that wouldn't change the fact that we couldn't win the sets that mattered most. \textbf{podemice}, \textbf{JDK? More like IDK,} and \textbf{placeholder name 2} all deserved to make the finals over us, and we have nothing but the highest respect for them. Seeding doesn't matter if you just win the damn games. In the words of Ichiro Suzuki, "I like imperfection. Because one is imperfect, it makes you want to keep moving forward."
